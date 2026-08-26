@@ -2,6 +2,8 @@
 
 ![IronPath icon](icon.png)
 
+[![Build](https://github.com/gabworknestio-beep/ironpath/actions/workflows/build.yml/badge.svg)](https://github.com/gabworknestio-beep/ironpath/actions/workflows/build.yml)
+
 **Your Ironman progression companion.** IronPath is a decision-first RuneLite sidebar plugin that answers one question: *what is the smartest useful thing for this account to do next?*
 
 IronPath projects a canonical Efficient Ironman route and a dynamic gear catalog against the character's actual skills, quest log, carried equipment, locally observed bank, account type, selected goal, and manual choices. The overview follows one decision chain: **You are here → Do this now → Why this now → What this unlocks → What comes next**. Chaptered **Path** and grouped **Gear** views provide the detail without turning the sidebar into a giant checklist.
