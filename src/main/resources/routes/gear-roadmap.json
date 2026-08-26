@@ -1,0 +1,712 @@
+{
+  "routeId": "ironman-gear-roadmap",
+  "version": 1,
+  "name": "Gear Roadmap",
+  "description": "A consensus Ironman equipment progression with a compact core and explicitly optional RNG or playstyle branches.",
+  "auditedAt": "2026-08-25",
+  "sources": [
+    {
+      "type": "wiki-guide",
+      "title": "Yazi's Ironman Gear Progression 2025",
+      "url": "https://oldschool.runescape.wiki/w/Guide:Yazi%27s_Ironman_Gear_Progression_2025",
+      "auditedAt": "2026-08-25",
+      "notes": "Modern milestone and loadout reference; factual item and activity relationships only."
+    },
+    {
+      "type": "wiki-guide",
+      "title": "OSRS Wiki Ironman guide",
+      "url": "https://oldschool.runescape.wiki/w/Ironman_guide",
+      "auditedAt": "2026-08-25",
+      "notes": "Current mid-game alternatives and Barrows/Moons/Slayer context."
+    },
+    {
+      "type": "community-guide",
+      "title": "ironman.guide gear progression",
+      "url": "https://ironman.guide/gear",
+      "auditedAt": "2026-08-25",
+      "notes": "Cross-style early, mid, late, and endgame item coverage."
+    },
+    {
+      "type": "community-chart",
+      "title": "Ladlor's Interactive Gear Progression Chart",
+      "url": "https://ladlorchart.com",
+      "auditedAt": "2026-08-25",
+      "notes": "Efficient sequencing reference. IronPath does not reproduce its chart or source data."
+    },
+    {
+      "type": "community-discussion",
+      "title": "Ironman gear progression checklist — not a strict order",
+      "url": "https://www.reddit.com/r/osrs/comments/1tgh158/ironman_gear_progression_checklist_not_a_strict/",
+      "auditedAt": "2026-08-25",
+      "notes": "Used to identify optionality, modern bridge content, and low-priority grinds."
+    }
+  ],
+  "sections": [
+    {
+      "id": "gear.early",
+      "name": "Early game",
+      "steps": [
+        {
+          "id": "gear.early.melee-weapon",
+          "type": "EQUIP",
+          "title": "Dragon scimitar or stronger melee weapon",
+          "category": "Early game",
+          "instruction": "Establish a dependable general-purpose melee weapon; later melee upgrades also satisfy this milestone.",
+          "reason": "It is the standard early melee baseline and remains useful until a Zombie axe, whip, raid weapon, or equivalent takes over.",
+          "completion": {"type": "ITEM_ANY", "label": "Dragon scimitar or stronger", "source": "ANY", "itemIds": [4587, 28810, 4151, 12006, 28997, 23995, 22324, 26219, 25484, 22325]},
+          "wikiPage": "Dragon scimitar",
+          "tags": ["gear", "core", "melee"],
+          "optional": false,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.early.defender",
+          "type": "EQUIP",
+          "title": "Dragon defender",
+          "category": "Early game",
+          "instruction": "Reach the basement cyclopes and obtain a Dragon defender.",
+          "reason": "This is a durable offensive off-hand and the direct foundation for the Avernic defender.",
+          "completion": {"type": "ITEM_ANY", "label": "Dragon or Avernic defender", "source": "ANY", "itemIds": [12954, 22322]},
+          "wikiPage": "Dragon defender",
+          "tags": ["gear", "core", "melee"],
+          "optional": false,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.early.gloves",
+          "type": "EQUIP",
+          "title": "Barrows gloves",
+          "category": "Early game",
+          "instruction": "Finish Recipe for Disaster for the universal early-to-late combat glove.",
+          "reason": "Barrows gloves cover all three styles and avoid early clue or boss RNG for a high-value slot.",
+          "completion": {"type": "ITEM_ANY", "label": "Barrows gloves or later combat gloves", "source": "ANY", "itemIds": [7462, 22981, 19544, 26235, 31106]},
+          "wikiPage": "Barrows gloves",
+          "tags": ["gear", "core", "all-styles"],
+          "optional": false,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.early.helm",
+          "type": "EQUIP",
+          "title": "Helm of Neitiznot",
+          "category": "Early game",
+          "instruction": "Obtain the Helm of Neitiznot or a later strength-focused helmet.",
+          "reason": "It is cheap, quest-gated rather than RNG-gated, and remains a strong general melee helm for a long time.",
+          "completion": {"type": "ITEM_ANY", "label": "Neitiznot-tier helm", "source": "ANY", "itemIds": [10828, 24271, 11864, 11865, 29028, 26382, 30750, 30777]},
+          "wikiPage": "Helm of neitiznot",
+          "tags": ["gear", "core", "melee"],
+          "optional": false,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.early.strength-body",
+          "type": "EQUIP",
+          "title": "Fighter torso or strength body",
+          "category": "Early game",
+          "instruction": "Obtain a Fighter torso, or let a later strength body satisfy this slot naturally.",
+          "reason": "The torso supplies lasting melee strength without a long drop grind, but Moons, Bandos, Torva, and Oathplate are valid later replacements.",
+          "completion": {"type": "ITEM_ANY", "label": "Strength body", "source": "ANY", "itemIds": [10551, 29022, 11832, 26384, 30753, 30779]},
+          "wikiPage": "Fighter torso",
+          "tags": ["gear", "core", "melee"],
+          "optional": false,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.early.ranged-weapon",
+          "type": "EQUIP",
+          "title": "Practical ranged weapon",
+          "category": "Early game",
+          "instruction": "Secure a Rune crossbow, Magic shortbow (i), Hunters' sunlight crossbow, or a later ranged weapon.",
+          "reason": "These weapons cover early questing and boss mechanics without demanding a single mandatory ranged path.",
+          "completion": {"type": "ITEM_ANY", "label": "Useful ranged weapon", "source": "ANY", "itemIds": [9185, 12788, 28869, 29000, 25865, 12926, 26374, 20997]},
+          "wikiPage": "Ironman Guide/Ranged",
+          "tags": ["gear", "core", "ranged"],
+          "optional": false,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.early.ava",
+          "type": "EQUIP",
+          "title": "Ava's accumulator",
+          "category": "Early game",
+          "instruction": "Complete Animal Magnetism and upgrade the device when Vorkath becomes available.",
+          "reason": "Ava's devices conserve ammunition and provide the default ranged cape progression.",
+          "completion": {"type": "ITEM_ANY", "label": "Accumulator or assembler", "source": "ANY", "itemIds": [10499, 22109]},
+          "wikiPage": "Ava's accumulator",
+          "tags": ["gear", "core", "ranged"],
+          "optional": false,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.early.magic-weapon",
+          "type": "EQUIP",
+          "title": "Iban's staff (u) or powered upgrade",
+          "category": "Early game",
+          "instruction": "Upgrade Iban's staff, then replace it only when Warped, Titans, Slayer, or boss progression supports the change.",
+          "reason": "It gives an Ironman a strong, accessible spell before powered staves become practical.",
+          "completion": {"type": "ITEM_ANY", "label": "Iban's staff (u) or stronger magic weapon", "source": "ANY", "itemIds": [12658, 28585, 30634, 11907, 12899, 28988, 22323, 27275, 31113]},
+          "wikiPage": "Iban's staff (u)",
+          "tags": ["gear", "core", "magic"],
+          "optional": false,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.early.god-cape",
+          "type": "EQUIP",
+          "title": "God cape",
+          "category": "Early game",
+          "instruction": "Complete Mage Arena I for a God cape; its imbued form also satisfies this milestone.",
+          "reason": "This is a fast, deterministic magic-damage cape upgrade with no drop grind.",
+          "completion": {"type": "ITEM_ANY", "label": "God cape", "source": "ANY", "itemIds": [2412, 2413, 2414, 21791, 21793, 21795]},
+          "wikiPage": "Mage Arena I",
+          "tags": ["gear", "core", "magic"],
+          "optional": false,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.early.fire-cape",
+          "type": "EQUIP",
+          "title": "Fire cape",
+          "category": "Early game",
+          "instruction": "Complete the Fight Caves once the account has comfortable supplies and ranged gear.",
+          "reason": "The cape is a major permanent melee upgrade and a useful first PvM execution milestone.",
+          "completion": {"type": "ITEM_ANY", "label": "Fire or Infernal cape", "source": "ANY", "itemIds": [6570, 21295]},
+          "wikiPage": "TzHaar Fight Cave",
+          "tags": ["gear", "core", "melee", "pvm"],
+          "optional": false,
+          "importance": "MAJOR"
+        }
+      ]
+    },
+    {
+      "id": "gear.mid",
+      "name": "Mid game",
+      "steps": [
+        {
+          "id": "gear.mid.slayer-helm",
+          "type": "EQUIP",
+          "title": "Imbued Slayer helmet",
+          "category": "Mid game",
+          "instruction": "Build and imbue a Slayer helmet as the Black mask progression becomes available.",
+          "reason": "Its on-task bonuses scale across melee, ranged, and magic and make Slayer a central equipment engine.",
+          "completion": {"type": "ITEM_ANY", "label": "Black mask or Slayer helmet", "source": "ANY", "itemIds": [8921, 11784, 11864, 11865]},
+          "wikiPage": "Slayer helmet (i)",
+          "tags": ["gear", "core", "slayer"],
+          "optional": false,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.mid.glory",
+          "type": "EQUIP",
+          "title": "Amulet of glory",
+          "category": "Mid game",
+          "instruction": "Reach an Amulet of glory through Crafting, Hunter, or another reliable Ironman method.",
+          "reason": "It is the first broadly useful combat necklace and a stepping stone to Fury and Zenyte jewellery.",
+          "completion": {"type": "ITEM_ANY", "label": "Glory or later combat necklace", "source": "ANY", "itemIds": [1704, 6585, 19550, 19547, 19553, 29801]},
+          "wikiPage": "Amulet of glory",
+          "tags": ["gear", "core", "jewellery"],
+          "optional": false,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.mid.berserker-ring",
+          "type": "EQUIP",
+          "title": "Berserker ring (i) or late-game ring",
+          "category": "Mid game",
+          "instruction": "Add a meaningful combat ring when Dagannoth Kings are comfortable, or let a later raid or DT2 ring replace the grind.",
+          "reason": "The strength bonus is valuable, but this slot should not halt broader account progression if Rex is poorly timed.",
+          "completion": {"type": "ITEM_ANY", "label": "Useful combat ring", "source": "ANY", "itemIds": [6737, 11773, 25975, 25485, 25486, 25487, 25488]},
+          "wikiPage": "Berserker ring (i)",
+          "tags": ["gear", "core", "jewellery"],
+          "optional": false,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.mid.imbued-cape",
+          "type": "EQUIP",
+          "title": "Imbued God cape",
+          "category": "Mid game",
+          "instruction": "Complete Mage Arena II for one imbued God cape.",
+          "reason": "It is the lasting pre-endgame magic cape and does not depend on boss-table RNG.",
+          "completion": {"type": "ITEM_ANY", "label": "Imbued God cape", "source": "ANY", "itemIds": [21791, 21793, 21795]},
+          "wikiPage": "Mage Arena II",
+          "tags": ["gear", "core", "magic"],
+          "optional": false,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.mid.dragon-boots",
+          "type": "EQUIP",
+          "title": "Dragon boots",
+          "category": "Mid game",
+          "instruction": "Obtain Dragon boots at 83 Slayer, or count their upgraded descendants.",
+          "reason": "They are a straightforward strength-slot upgrade on the Slayer path and feed directly into Primordial boots or Avernic treads.",
+          "completion": {"type": "ITEM_ANY", "label": "Dragon boots or upgrade", "source": "ANY", "itemIds": [11840, 13239, 31088]},
+          "wikiPage": "Dragon boots",
+          "tags": ["gear", "core", "slayer", "melee"],
+          "optional": false,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.mid.whip",
+          "type": "EQUIP",
+          "title": "Abyssal whip or stronger melee weapon",
+          "category": "Mid game",
+          "instruction": "Use the Slayer, raid, or boss path to move beyond the early melee weapon tier.",
+          "reason": "This milestone marks the transition from quest-shop weapons to durable mid- and late-game melee damage.",
+          "completion": {"type": "ITEM_ANY", "label": "Whip-tier melee weapon", "source": "ANY", "itemIds": [4151, 12006, 23995, 22324, 26219, 25484, 22325]},
+          "wikiPage": "Abyssal whip",
+          "tags": ["gear", "core", "melee", "slayer"],
+          "optional": false,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.mid.powered-staff",
+          "type": "EQUIP",
+          "title": "Powered staff progression",
+          "category": "Mid game",
+          "instruction": "Move from Iban's staff into a Warped sceptre, Trident, or stronger powered magic weapon.",
+          "reason": "A powered staff makes magic damage scale cleanly with levels and unlocks efficient bossing and raids.",
+          "completion": {"type": "ITEM_ANY", "label": "Powered magic weapon", "source": "ANY", "itemIds": [28585, 11907, 12899, 22323, 27275, 31113]},
+          "wikiPage": "Powered staff",
+          "tags": ["gear", "core", "magic"],
+          "optional": false,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.mid.first-zenyte",
+          "type": "EQUIP",
+          "title": "First Zenyte jewellery",
+          "category": "Mid game",
+          "instruction": "Craft the first Zenyte piece that best supports the account's current content.",
+          "reason": "The first Zenyte is a major account milestone; its exact order should follow content preference rather than a rigid universal sequence.",
+          "completion": {"type": "ITEM_ANY", "label": "Any Zenyte jewellery", "source": "ANY", "itemIds": [19550, 19547, 19553, 19544]},
+          "wikiPage": "Zenyte jewellery",
+          "tags": ["gear", "core", "jewellery"],
+          "optional": false,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.mid.zombie-axe",
+          "type": "EQUIP",
+          "title": "Zombie axe bridge",
+          "category": "Mid game",
+          "instruction": "Use the Zombie axe as an accessible slash/crush bridge when it improves the content you want to do.",
+          "reason": "It is powerful before a whip or raid weapon, but an efficient Slayer or Gauntlet path can reasonably pass it.",
+          "completion": {"type": "ITEM_ANY", "label": "Zombie axe", "source": "ANY", "itemIds": [28810]},
+          "wikiPage": "Zombie axe",
+          "tags": ["gear", "optional", "melee", "bridge"],
+          "optional": true,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.mid.barrows-tank",
+          "type": "EQUIP",
+          "title": "Barrows tank body and legs",
+          "category": "Mid game",
+          "instruction": "Target useful tank pieces rather than treating completion of every Barrows set as mandatory.",
+          "reason": "Tank armour smooths Moons and other mid-game PvM, but specific drops can take hundreds of chests and should remain optional.",
+          "completion": {"type": "ALL", "label": "Barrows tank body and legs", "children": [
+            {"type": "ITEM_ANY", "label": "Melee Barrows body", "source": "ANY", "itemIds": [4720, 4728, 4749, 4757]},
+            {"type": "ITEM_ANY", "label": "Melee Barrows legs", "source": "ANY", "itemIds": [4722, 4730, 4751, 4759]}
+          ]},
+          "wikiPage": "Barrows equipment",
+          "tags": ["gear", "optional", "barrows", "bridge"],
+          "optional": true,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.mid.blood-moon",
+          "type": "EQUIP",
+          "title": "Blood Moon set",
+          "category": "Mid game",
+          "instruction": "Build the Blood Moon armour set when melee strength gear and its set effect support your plans.",
+          "reason": "Moons provides a strong supply-positive bridge, but efficient Bowfa-focused routes may skip finishing the set.",
+          "completion": {"type": "ALL", "label": "Blood Moon armour", "children": [
+            {"type": "ITEM_ANY", "label": "Blood Moon helm", "source": "ANY", "itemIds": [29028]},
+            {"type": "ITEM_ANY", "label": "Blood Moon chestplate", "source": "ANY", "itemIds": [29022]},
+            {"type": "ITEM_ANY", "label": "Blood Moon tassets", "source": "ANY", "itemIds": [29025]}
+          ]},
+          "wikiPage": "Blood moon armour",
+          "tags": ["gear", "optional", "moons", "melee"],
+          "optional": true,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.mid.eclipse-moon",
+          "type": "EQUIP",
+          "title": "Eclipse Moon set",
+          "category": "Mid game",
+          "instruction": "Build the Eclipse Moon armour set when the hybrid ranged/melee niche fits your bossing plans.",
+          "reason": "It is a capable bridge for several bosses, without being a universal prerequisite for Bowfa or raids.",
+          "completion": {"type": "ALL", "label": "Eclipse Moon armour", "children": [
+            {"type": "ITEM_ANY", "label": "Eclipse Moon helm", "source": "ANY", "itemIds": [29010]},
+            {"type": "ITEM_ANY", "label": "Eclipse Moon chestplate", "source": "ANY", "itemIds": [29004]},
+            {"type": "ITEM_ANY", "label": "Eclipse Moon tassets", "source": "ANY", "itemIds": [29007]}
+          ]},
+          "wikiPage": "Eclipse moon armour",
+          "tags": ["gear", "optional", "moons", "ranged"],
+          "optional": true,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.mid.blue-moon",
+          "type": "EQUIP",
+          "title": "Blue Moon set",
+          "category": "Mid game",
+          "instruction": "Build the Blue Moon armour set when a magic bridge is more useful than waiting for Ahrim, Virtus, or Ancestral pieces.",
+          "reason": "It is accessible and useful, but duplicate-protected Moons completion is still a chosen side path rather than a hard gate.",
+          "completion": {"type": "ALL", "label": "Blue Moon armour", "children": [
+            {"type": "ITEM_ANY", "label": "Blue Moon helm", "source": "ANY", "itemIds": [29019]},
+            {"type": "ITEM_ANY", "label": "Blue Moon chestplate", "source": "ANY", "itemIds": [29013]},
+            {"type": "ITEM_ANY", "label": "Blue Moon tassets", "source": "ANY", "itemIds": [29016]}
+          ]},
+          "wikiPage": "Blue moon armour",
+          "tags": ["gear", "optional", "moons", "magic"],
+          "optional": true,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.mid.twinflame",
+          "type": "EQUIP",
+          "title": "Twinflame staff from Royal Titans",
+          "category": "Mid game",
+          "instruction": "Pursue the Twinflame staff if Royal Titans and multi-target magic fit the current plan.",
+          "reason": "Royal Titans also offer valuable prayers, but those unlocks are not equipment and are intentionally left to the main progression route.",
+          "completion": {"type": "ITEM_ANY", "label": "Twinflame staff", "source": "ANY", "itemIds": [30634]},
+          "wikiPage": "Royal Titans",
+          "tags": ["gear", "optional", "magic", "boss"],
+          "optional": true,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.mid.bowfa",
+          "type": "EQUIP",
+          "title": "Bowfa and Crystal armour branch",
+          "category": "Mid game",
+          "instruction": "Complete a Bow of Faerdhinen setup when the Corrupted Gauntlet route matches your goals and tolerance for the grind.",
+          "reason": "Bowfa is a major account turning point and an efficient route backbone, but community consensus does not make an immediate rush mandatory for every player.",
+          "completion": {"type": "ALL", "label": "Bowfa setup", "children": [
+            {"type": "ITEM_ANY", "label": "Bow of Faerdhinen", "source": "ANY", "itemIds": [25865]},
+            {"type": "ITEM_ANY", "label": "Crystal body", "source": "ANY", "itemIds": [23975]},
+            {"type": "ITEM_ANY", "label": "Crystal legs", "source": "ANY", "itemIds": [23979]}
+          ]},
+          "wikiPage": "Bow of faerdhinen",
+          "tags": ["gear", "optional", "ranged", "gauntlet", "long-grind"],
+          "optional": true,
+          "importance": "MAJOR"
+        }
+      ]
+    },
+    {
+      "id": "gear.late",
+      "name": "Late game",
+      "steps": [
+        {
+          "id": "gear.late.assembler",
+          "type": "EQUIP",
+          "title": "Ava's assembler",
+          "category": "Late game",
+          "instruction": "Complete Dragon Slayer II and obtain Vorkath's head for Ava's assembler.",
+          "reason": "It is a deterministic ranged max-hit and accuracy upgrade after the quest and remains useful through endgame.",
+          "completion": {"type": "ITEM_ANY", "label": "Ava's assembler", "source": "ANY", "itemIds": [22109]},
+          "wikiPage": "Ava's assembler",
+          "tags": ["gear", "core", "ranged"],
+          "optional": false,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.late.blowpipe",
+          "type": "EQUIP",
+          "title": "Toxic blowpipe",
+          "category": "Late game",
+          "instruction": "Add a Toxic blowpipe for healing, special attacks, and short-range damage roles.",
+          "reason": "Bowfa does not remove the blowpipe's utility; the two weapons cover different encounters and phases.",
+          "completion": {"type": "ITEM_ANY", "label": "Toxic blowpipe", "source": "ANY", "itemIds": [12926]},
+          "wikiPage": "Toxic blowpipe",
+          "tags": ["gear", "core", "ranged", "zulrah"],
+          "optional": false,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.late.fang",
+          "type": "EQUIP",
+          "title": "Raid-tier melee weapon",
+          "category": "Late game",
+          "instruction": "Secure Osmumten's fang or another raid-tier general melee weapon.",
+          "reason": "High-accuracy melee opens tougher bosses and higher-invocation raids without requiring a megarare first.",
+          "completion": {"type": "ITEM_ANY", "label": "Raid-tier melee weapon", "source": "ANY", "itemIds": [26219, 22324, 25484, 22325]},
+          "wikiPage": "Osmumten's fang",
+          "tags": ["gear", "core", "melee", "raids"],
+          "optional": false,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.late.defence-reduction",
+          "type": "EQUIP",
+          "title": "Defence-reduction special weapon",
+          "category": "Late game",
+          "instruction": "Obtain a Dragon warhammer, Bandos godsword, or Elder maul for team and solo boss defence reduction.",
+          "reason": "One reliable defence-reduction option has more account value than insisting on one particular rare drop.",
+          "completion": {"type": "ITEM_ANY", "label": "Defence-reduction weapon", "source": "ANY", "itemIds": [13576, 11804, 21003]},
+          "wikiPage": "Defence reduction",
+          "tags": ["gear", "core", "special-attack", "raids"],
+          "optional": false,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.late.strength-armour",
+          "type": "EQUIP",
+          "title": "Late-game strength body and legs",
+          "category": "Late game",
+          "instruction": "Build a Bandos, Torva, or Oathplate-strength body-and-leg pairing.",
+          "reason": "This is the durable melee armour transition after torso and Moons; upgraded descendants count automatically.",
+          "completion": {"type": "ALL", "label": "Late strength armour", "children": [
+            {"type": "ITEM_ANY", "label": "Strength body", "source": "ANY", "itemIds": [11832, 26384, 30753, 30779]},
+            {"type": "ITEM_ANY", "label": "Strength legs", "source": "ANY", "itemIds": [11834, 26386, 30756, 30781]}
+          ]},
+          "wikiPage": "Bandos armour",
+          "tags": ["gear", "core", "melee", "armour"],
+          "optional": false,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.late.torture",
+          "type": "EQUIP",
+          "title": "Amulet of torture or rancour",
+          "category": "Late game",
+          "instruction": "Complete the dedicated melee necklace slot with Torture or its later replacement.",
+          "reason": "After a first flexible Zenyte, the melee necklace is a consistent upgrade for Slayer, bosses, and raids.",
+          "completion": {"type": "ITEM_ANY", "label": "Torture or rancour", "source": "ANY", "itemIds": [19553, 29801]},
+          "wikiPage": "Amulet of torture",
+          "tags": ["gear", "core", "melee", "jewellery"],
+          "optional": false,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.late.avernic",
+          "type": "EQUIP",
+          "title": "Avernic defender",
+          "category": "Late game",
+          "instruction": "Upgrade the Dragon defender once Theatre of Blood is a stable part of the account's PvM.",
+          "reason": "It is a permanent melee off-hand upgrade and a clean endpoint for the core equipment roadmap.",
+          "completion": {"type": "ITEM_ANY", "label": "Avernic defender", "source": "ANY", "itemIds": [22322]},
+          "wikiPage": "Avernic defender",
+          "tags": ["gear", "core", "melee", "raids"],
+          "optional": false,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.late.demonbane",
+          "type": "EQUIP",
+          "title": "Tormented Demons weapon branch",
+          "category": "Late game",
+          "instruction": "Choose Emberlight, Scorching bow, Purging staff, or Burning claws according to the content that benefits first.",
+          "reason": "These are powerful targeted upgrades, but their value depends on the bosses and styles the player wants to prioritize.",
+          "completion": {"type": "ITEM_ANY", "label": "Tormented Demons upgrade", "source": "ANY", "itemIds": [29589, 29591, 29594, 29577]},
+          "wikiPage": "Tormented Demon",
+          "tags": ["gear", "optional", "demonbane", "boss"],
+          "optional": true,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.late.zenyte-set",
+          "type": "EQUIP",
+          "title": "Complete Zenyte jewellery set",
+          "category": "Late game",
+          "instruction": "Finish Suffering, Anguish, Torture, and Tormented bracelet as the account's Crafting and Demonic Gorilla grind mature.",
+          "reason": "All four are valuable, but forcing one universal crafting order would ignore the player's current raid and boss priorities.",
+          "completion": {"type": "ALL", "label": "All Zenyte jewellery", "children": [
+            {"type": "ITEM_ANY", "label": "Ring of suffering", "source": "ANY", "itemIds": [19550]},
+            {"type": "ITEM_ANY", "label": "Necklace of anguish", "source": "ANY", "itemIds": [19547]},
+            {"type": "ITEM_ANY", "label": "Amulet of torture", "source": "ANY", "itemIds": [19553]},
+            {"type": "ITEM_ANY", "label": "Tormented bracelet", "source": "ANY", "itemIds": [19544]}
+          ]},
+          "wikiPage": "Zenyte jewellery",
+          "tags": ["gear", "optional", "jewellery"],
+          "optional": true,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.late.infernal",
+          "type": "EQUIP",
+          "title": "Infernal cape",
+          "category": "Late game",
+          "instruction": "Pursue the Inferno when execution skill, supplies, and ranged gear make the learning process worthwhile.",
+          "reason": "It is a major prestige and melee upgrade, but not a prerequisite for continuing raids or most account progression.",
+          "completion": {"type": "ITEM_ANY", "label": "Infernal cape", "source": "ANY", "itemIds": [21295]},
+          "wikiPage": "Inferno",
+          "tags": ["gear", "optional", "melee", "pvm"],
+          "optional": true,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.late.quiver",
+          "type": "EQUIP",
+          "title": "Dizana's quiver",
+          "category": "Late game",
+          "instruction": "Complete the Fortis Colosseum when the account and player are ready for the execution challenge.",
+          "reason": "The quiver is an exceptional ranged upgrade, but its challenge should not block unrelated gear branches.",
+          "completion": {"type": "ITEM_ANY", "label": "Dizana's quiver", "source": "ANY", "itemIds": [28951]},
+          "wikiPage": "Dizana's quiver",
+          "tags": ["gear", "optional", "ranged", "pvm"],
+          "optional": true,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.late.doom",
+          "type": "EQUIP",
+          "title": "Doom of Mokhaiotl upgrades",
+          "category": "Late game",
+          "instruction": "Add Eye of Ayak, Confliction gauntlets, or Avernic treads after the core style foundations are already strong.",
+          "reason": "These are powerful modern upgrades, but source consensus places them after broader weapons, jewellery, and prayer foundations.",
+          "completion": {"type": "ITEM_ANY", "label": "Doom upgrade", "source": "ANY", "itemIds": [31113, 31106, 31088]},
+          "wikiPage": "Doom of Mokhaiotl",
+          "tags": ["gear", "optional", "boss"],
+          "optional": true,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.late.oathplate",
+          "type": "EQUIP",
+          "title": "Oathplate armour set",
+          "category": "Late game",
+          "instruction": "Build Oathplate or Radiant Oathplate when Yama progression fits the account's preferred endgame path.",
+          "reason": "It is a powerful modern armour branch, not a universal reason to delay raids or other upgrades.",
+          "completion": {"type": "ALL", "label": "Oathplate set", "children": [
+            {"type": "ITEM_ANY", "label": "Oathplate helm", "source": "ANY", "itemIds": [30750, 30777]},
+            {"type": "ITEM_ANY", "label": "Oathplate chest", "source": "ANY", "itemIds": [30753, 30779]},
+            {"type": "ITEM_ANY", "label": "Oathplate legs", "source": "ANY", "itemIds": [30756, 30781]}
+          ]},
+          "wikiPage": "Oathplate armour",
+          "tags": ["gear", "optional", "yama", "armour"],
+          "optional": true,
+          "importance": "NORMAL"
+        },
+        {
+          "id": "gear.late.dt2-ring",
+          "type": "EQUIP",
+          "title": "Forgotten Four ring branch",
+          "category": "Late game",
+          "instruction": "Choose the DT2 ring whose style most improves current content rather than grinding all four immediately.",
+          "reason": "Ultor, Magus, Venator, and Bellator are long style-specific grinds with no single universal first choice.",
+          "completion": {"type": "ITEM_ANY", "label": "Any DT2 ring", "source": "ANY", "itemIds": [25485, 25486, 25487, 25488]},
+          "wikiPage": "Ancient rings",
+          "tags": ["gear", "optional", "jewellery", "boss"],
+          "optional": true,
+          "importance": "NORMAL"
+        }
+      ]
+    },
+    {
+      "id": "gear.endgame",
+      "name": "Endgame branches",
+      "steps": [
+        {
+          "id": "gear.endgame.masori",
+          "type": "EQUIP",
+          "title": "Fortified Masori set",
+          "category": "Endgame branches",
+          "instruction": "Complete fortified Masori as Tombs of Amascut and Armadyl components arrive naturally.",
+          "reason": "It is the endgame ranged-armour branch, but raid RNG should not define the only valid next goal.",
+          "completion": {"type": "ALL", "label": "Fortified Masori set", "children": [
+            {"type": "ITEM_ANY", "label": "Masori mask (f)", "source": "ANY", "itemIds": [27235]},
+            {"type": "ITEM_ANY", "label": "Masori body (f)", "source": "ANY", "itemIds": [27238]},
+            {"type": "ITEM_ANY", "label": "Masori chaps (f)", "source": "ANY", "itemIds": [27241]}
+          ]},
+          "wikiPage": "Masori armour",
+          "tags": ["gear", "optional", "ranged", "raids"],
+          "optional": true,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.endgame.ancestral",
+          "type": "EQUIP",
+          "title": "Ancestral armour set",
+          "category": "Endgame branches",
+          "instruction": "Complete Ancestral as Chambers of Xeric rewards arrive; use interim magic armour without treating it as failure.",
+          "reason": "Ancestral is an endgame magic target with substantial raid RNG, so it remains a tracked branch rather than a gate.",
+          "completion": {"type": "ALL", "label": "Ancestral set", "children": [
+            {"type": "ITEM_ANY", "label": "Ancestral hat", "source": "ANY", "itemIds": [21018]},
+            {"type": "ITEM_ANY", "label": "Ancestral robe top", "source": "ANY", "itemIds": [21021]},
+            {"type": "ITEM_ANY", "label": "Ancestral robe bottom", "source": "ANY", "itemIds": [21024]}
+          ]},
+          "wikiPage": "Ancestral robes",
+          "tags": ["gear", "optional", "magic", "raids"],
+          "optional": true,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.endgame.melee-armour",
+          "type": "EQUIP",
+          "title": "Endgame melee armour set",
+          "category": "Endgame branches",
+          "instruction": "Complete a Torva, Oathplate, or Radiant Oathplate three-piece endgame armour setup.",
+          "reason": "Nex and Yama provide alternative endgame armour paths; mixed equivalent slot upgrades are accepted.",
+          "completion": {"type": "ALL", "label": "Endgame melee armour", "children": [
+            {"type": "ITEM_ANY", "label": "Endgame melee helm", "source": "ANY", "itemIds": [26382, 30750, 30777]},
+            {"type": "ITEM_ANY", "label": "Endgame melee body", "source": "ANY", "itemIds": [26384, 30753, 30779]},
+            {"type": "ITEM_ANY", "label": "Endgame melee legs", "source": "ANY", "itemIds": [26386, 30756, 30781]}
+          ]},
+          "wikiPage": "Melee armour",
+          "tags": ["gear", "optional", "melee", "boss"],
+          "optional": true,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.endgame.twisted-bow",
+          "type": "EQUIP",
+          "title": "Twisted bow",
+          "category": "Endgame branches",
+          "instruction": "Treat the Twisted bow as a transformative raid reward, not as a prerequisite for enjoying endgame PvM.",
+          "reason": "It is a megarare endpoint whose timing is controlled by raid RNG rather than a sensible fixed checklist position.",
+          "completion": {"type": "ITEM_ANY", "label": "Twisted bow", "source": "ANY", "itemIds": [20997]},
+          "wikiPage": "Twisted bow",
+          "tags": ["gear", "optional", "ranged", "megarare"],
+          "optional": true,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.endgame.shadow",
+          "type": "EQUIP",
+          "title": "Tumeken's shadow",
+          "category": "Endgame branches",
+          "instruction": "Treat Tumeken's shadow as a transformative raid reward rather than a gate before other content.",
+          "reason": "Its acquisition is a long RNG branch, and the roadmap should keep useful non-megarare upgrades visible.",
+          "completion": {"type": "ITEM_ANY", "label": "Tumeken's shadow", "source": "ANY", "itemIds": [27275]},
+          "wikiPage": "Tumeken's shadow",
+          "tags": ["gear", "optional", "magic", "megarare"],
+          "optional": true,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.endgame.scythe",
+          "type": "EQUIP",
+          "title": "Scythe of vitur",
+          "category": "Endgame branches",
+          "instruction": "Treat the Scythe as the Theatre of Blood melee endpoint, not a universal prerequisite.",
+          "reason": "It is encounter-dependent, expensive to use, and governed by raid RNG despite its enormous ceiling.",
+          "completion": {"type": "ITEM_ANY", "label": "Scythe of vitur", "source": "ANY", "itemIds": [22325]},
+          "wikiPage": "Scythe of vitur",
+          "tags": ["gear", "optional", "melee", "megarare"],
+          "optional": true,
+          "importance": "MAJOR"
+        },
+        {
+          "id": "gear.endgame.soulflame",
+          "type": "EQUIP",
+          "title": "Soulflame horn",
+          "category": "Endgame branches",
+          "instruction": "Add the Soulflame horn when Yama and the encounters that reward its niche are already part of the account's plans.",
+          "reason": "It is a specialized endgame upgrade and should not reorder the broader core roadmap by itself.",
+          "completion": {"type": "ITEM_ANY", "label": "Soulflame horn", "source": "ANY", "itemIds": [30759]},
+          "wikiPage": "Soulflame horn",
+          "tags": ["gear", "optional", "yama"],
+          "optional": true,
+          "importance": "NORMAL"
+        }
+      ]
+    }
+  ],
+  "migrations": []
+}

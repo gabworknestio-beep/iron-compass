@@ -1,0 +1,729 @@
+{
+  "version": 3,
+  "auditedAt": "2026-08-26",
+  "upgrades": [
+    {
+      "id": "gear.early.melee-weapon",
+      "name": "Dragon scimitar",
+      "slot": "WEAPON",
+      "styles": ["MELEE"],
+      "tier": 1,
+      "routeStepIds": ["efficient-ironman.153.monkey-madness-i"],
+      "completion": {"type": "ITEM_ANY", "label": "Dragon scimitar or stronger melee weapon", "source": "ANY", "itemIds": [4587, 28810, 4151, 12006, 28997, 23995, 22324, 26219, 25484, 22325]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "QUEST_STATE", "label": "Monkey Madness I", "quest": "Monkey Madness I", "state": "FINISHED"},
+        {"type": "SKILL_AT_LEAST", "label": "Attack 60", "skill": "Attack", "level": 60}
+      ]},
+      "source": {"method": "Quest shop", "activity": "Monkey Madness I / Daga's shop", "region": "Ape Atoll"},
+      "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "LOW", "effort": "SHORT", "usefulness": 4,
+      "why": "A dependable, deterministic melee baseline that carries early questing and Slayer.",
+      "notes": "Zombie axe is a valid alternative bridge if Defender of Varrock is already convenient.",
+      "wikiPage": "Dragon scimitar", "tags": ["deterministic", "quest", "early"]
+    },
+    {
+      "id": "gear.early.defender",
+      "name": "Dragon defender",
+      "slot": "OFF_HAND",
+      "styles": ["MELEE"],
+      "tier": 1,
+      "completion": {"type": "ITEM_ANY", "label": "Dragon or Avernic defender", "source": "ANY", "itemIds": [12954, 22322]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "SKILL_AT_LEAST", "label": "Attack 60", "skill": "Attack", "level": 60},
+        {"type": "SKILL_AT_LEAST", "label": "Strength 60", "skill": "Strength", "level": 60}
+      ]},
+      "source": {"method": "Cyclopes", "activity": "Warriors' Guild", "region": "Burthorpe"},
+      "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "LOW", "effort": "MEDIUM", "usefulness": 5,
+      "why": "A lasting offensive off-hand and the direct base for Avernic defender.",
+      "wikiPage": "Dragon defender", "tags": ["melee", "off-hand", "persistent"]
+    },
+    {
+      "id": "gear.early.gloves",
+      "name": "Barrows gloves",
+      "slot": "HANDS",
+      "styles": ["MELEE", "RANGED", "MAGIC", "UTILITY"],
+      "tier": 1,
+      "routeStepIds": ["efficient-ironman.199.recipe-for-disaster-defeating-the-culinaromancer"],
+      "completion": {"type": "ITEM_ANY", "label": "Barrows gloves or later combat gloves", "source": "ANY", "itemIds": [7462, 22981, 19544, 26235, 31106]},
+      "requirements": {"type": "QUEST_STATE", "label": "Recipe for Disaster complete", "quest": "Recipe for Disaster - Culinaromancer", "state": "FINISHED"},
+      "source": {"method": "Quest shop", "activity": "Recipe for Disaster", "region": "Lumbridge"},
+      "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "MODERATE", "effort": "LONG", "usefulness": 5,
+      "why": "One quest-gated glove covers all combat styles and remains useful deep into progression.",
+      "wikiPage": "Barrows gloves", "tags": ["all-styles", "quest", "persistent"]
+    },
+    {
+      "id": "gear.early.helm",
+      "name": "Helm of Neitiznot",
+      "slot": "HEAD",
+      "styles": ["MELEE"],
+      "tier": 1,
+      "routeStepIds": ["efficient-ironman.135.the-fremennik-isles"],
+      "completion": {"type": "ITEM_ANY", "label": "Neitiznot-tier melee helm", "source": "ANY", "itemIds": [10828, 24271, 11864, 11865, 29028, 26382, 30750, 30777]},
+      "requirements": {"type": "QUEST_STATE", "label": "The Fremennik Isles", "quest": "The Fremennik Isles", "state": "FINISHED"},
+      "source": {"method": "Quest reward", "activity": "The Fremennik Isles", "region": "Fremennik"},
+      "role": "RECOMMENDED", "importance": "NORMAL", "difficulty": "LOW", "effort": "SHORT", "usefulness": 4,
+      "why": "A cheap, deterministic strength-focused helm with a long useful life.",
+      "wikiPage": "Helm of neitiznot", "tags": ["quest", "melee", "deterministic"]
+    },
+    {
+      "id": "gear.early.strength-body",
+      "name": "Fighter torso",
+      "slot": "BODY",
+      "styles": ["MELEE"],
+      "tier": 1,
+      "alternativeIds": ["gear.mid.blood-moon"],
+      "completion": {"type": "ITEM_ANY", "label": "Strength body", "source": "ANY", "itemIds": [10551, 29022, 11832, 26384, 30753, 30779]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "SKILL_AT_LEAST", "label": "Attack 40", "skill": "Attack", "level": 40},
+        {"type": "SKILL_AT_LEAST", "label": "Strength 40", "skill": "Strength", "level": 40}
+      ]},
+      "source": {"method": "Minigame reward", "activity": "Barbarian Assault", "region": "Kandarin"},
+      "role": "RECOMMENDED", "importance": "NORMAL", "difficulty": "MODERATE", "effort": "MEDIUM", "usefulness": 4,
+      "why": "Permanent melee strength without drop-table RNG; Blood Moon is a valid alternate route.",
+      "wikiPage": "Fighter torso", "tags": ["melee", "minigame", "alternative-friendly"]
+    },
+    {
+      "id": "gear.early.rune-crossbow",
+      "name": "Rune crossbow",
+      "slot": "WEAPON",
+      "styles": ["RANGED"],
+      "tier": 1,
+      "alternativeIds": ["gear.early.sunlight-crossbow", "gear.mid.eclipse-moon"],
+      "completion": {"type": "ITEM_ANY", "label": "Rune crossbow or stronger ranged weapon", "source": "ANY", "itemIds": [9185, 28869, 29000, 25865, 12926, 26374, 20997]},
+      "requirements": {"type": "SKILL_AT_LEAST", "label": "Ranged 61", "skill": "Ranged", "level": 61},
+      "source": {"method": "Drop or Smithing/Fletching", "activity": "Crazy archaeologist or self-production", "region": "Wilderness / global"},
+      "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "LOW", "effort": "SHORT", "usefulness": 4,
+      "why": "The earliest widely viable first-Fire-Cape weapon and a flexible enchanted-bolt platform.",
+      "wikiPage": "Rune crossbow", "tags": ["ranged", "bolts", "fire-cape"]
+    },
+    {
+      "id": "gear.early.sunlight-crossbow",
+      "name": "Hunters' sunlight crossbow",
+      "slot": "WEAPON",
+      "styles": ["RANGED", "SKILLING"],
+      "tier": 1,
+      "alternativeIds": ["gear.early.rune-crossbow", "gear.mid.eclipse-moon"],
+      "completion": {"type": "ITEM_ANY", "label": "Hunters' sunlight crossbow", "source": "ANY", "itemIds": [28869]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "SKILL_AT_LEAST", "label": "Hunter 72", "skill": "Hunter", "level": 72},
+        {"type": "SKILL_AT_LEAST", "label": "Fletching 74", "skill": "Fletching", "level": 74}
+      ]},
+      "source": {"method": "Self-production", "activity": "Sunlight antelopes and Fletching", "region": "Varlamore"},
+      "role": "ALTERNATIVE", "importance": "NORMAL", "difficulty": "LOW", "effort": "MEDIUM", "usefulness": 4,
+      "why": "A fast, sustainable pre-Bowfa ranged path that can outperform common early bows.",
+      "notes": "Moonlight bolts improve it further at 91 Hunter; this is an alternative, not a mandatory detour.",
+      "wikiPage": "Hunters' sunlight crossbow", "tags": ["ranged", "hunter", "varlamore", "bowfa-skip"]
+    },
+    {
+      "id": "gear.early.ava",
+      "name": "Ava's accumulator",
+      "slot": "CAPE",
+      "styles": ["RANGED", "UTILITY"],
+      "tier": 1,
+      "routeStepIds": ["efficient-ironman.103.animal-magnetism"],
+      "completion": {"type": "ITEM_ANY", "label": "Accumulator or assembler", "source": "ANY", "itemIds": [10499, 22109]},
+      "requirements": {"type": "QUEST_STATE", "label": "Animal Magnetism", "quest": "Animal Magnetism", "state": "FINISHED"},
+      "source": {"method": "Quest reward", "activity": "Animal Magnetism", "region": "Morytania"},
+      "role": "RECOMMENDED", "importance": "NORMAL", "difficulty": "LOW", "effort": "SHORT", "usefulness": 5,
+      "why": "Ammo conservation is a foundational Ironman utility upgrade.",
+      "wikiPage": "Ava's accumulator", "tags": ["ranged", "ammo", "quest"]
+    },
+    {
+      "id": "gear.early.magic-weapon",
+      "name": "Iban's staff (u)",
+      "slot": "WEAPON",
+      "styles": ["MAGIC"],
+      "tier": 1,
+      "routeStepIds": ["efficient-ironman.157.underground-pass"],
+      "completion": {"type": "ITEM_ANY", "label": "Iban's staff (u) or powered upgrade", "source": "ANY", "itemIds": [12658, 28585, 30634, 11907, 12899, 28988, 22323, 27275, 31113]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "QUEST_STATE", "label": "Underground Pass", "quest": "Underground Pass", "state": "FINISHED"},
+        {"type": "SKILL_AT_LEAST", "label": "Magic 50", "skill": "Magic", "level": 50}
+      ]},
+      "source": {"method": "Quest weapon upgrade", "activity": "Underground Pass", "region": "Kandarin"},
+      "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "MODERATE", "effort": "MEDIUM", "usefulness": 4,
+      "why": "A strong, accessible spell before powered staves become practical.",
+      "wikiPage": "Iban's staff (u)", "tags": ["magic", "quest", "barrows"]
+    },
+    {
+      "id": "gear.early.god-cape",
+      "name": "God cape",
+      "slot": "CAPE",
+      "styles": ["MAGIC"],
+      "tier": 1,
+      "completion": {"type": "ITEM_ANY", "label": "God cape", "source": "ANY", "itemIds": [2412, 2413, 2414, 21791, 21793, 21795]},
+      "requirements": {"type": "SKILL_AT_LEAST", "label": "Magic 60", "skill": "Magic", "level": 60},
+      "source": {"method": "Arena unlock", "activity": "Mage Arena I", "region": "Wilderness"},
+      "role": "RECOMMENDED", "importance": "NORMAL", "difficulty": "LOW", "effort": "SHORT", "usefulness": 3,
+      "why": "A quick deterministic magic cape upgrade; the imbued version remains the later target.",
+      "wikiPage": "Mage Arena I", "tags": ["magic", "wilderness", "deterministic"]
+    },
+    {
+      "id": "gear.early.fire-cape",
+      "name": "Fire cape",
+      "slot": "CAPE",
+      "styles": ["MELEE", "RANGED", "PRAYER"],
+      "tier": 2,
+      "previousIds": ["gear.early.rune-crossbow"],
+      "completion": {"type": "ITEM_ANY", "label": "Fire or Infernal cape", "source": "ANY", "itemIds": [6570, 21295]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "SKILL_AT_LEAST", "label": "Ranged 61", "skill": "Ranged", "level": 61},
+        {"type": "SKILL_AT_LEAST", "label": "Prayer 43", "skill": "Prayer", "level": 43},
+        {"type": "ITEM_ANY", "label": "Viable ranged weapon", "source": "ANY", "itemIds": [9185, 28869, 29000, 25865, 12926, 26374, 20997]}
+      ]},
+      "source": {"method": "PvM challenge", "activity": "TzHaar Fight Cave", "region": "Karamja"},
+      "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "HIGH", "effort": "MEDIUM", "usefulness": 5,
+      "why": "A permanent melee upgrade and a meaningful first PvM execution milestone.",
+      "wikiPage": "TzHaar Fight Cave/Strategies", "tags": ["pvm", "melee", "prayer", "supplies"],
+      "supplies": [
+        {"name": "Prayer restore", "requiredUnits": 40, "unitLabel": "doses", "estimated": true, "variants": [
+          {"itemId": 2434, "units": 4}, {"itemId": 139, "units": 3}, {"itemId": 141, "units": 2}, {"itemId": 143, "units": 1},
+          {"itemId": 3024, "units": 4}, {"itemId": 3026, "units": 3}, {"itemId": 3028, "units": 2}, {"itemId": 3030, "units": 1}
+        ]},
+        {"name": "Ranged boost", "requiredUnits": 8, "unitLabel": "doses", "estimated": true, "variants": [
+          {"itemId": 2444, "units": 4}, {"itemId": 169, "units": 3}, {"itemId": 171, "units": 2}, {"itemId": 173, "units": 1}
+        ]},
+        {"name": "Emergency food", "requiredUnits": 6, "unitLabel": "servings", "estimated": true, "variants": [
+          {"itemId": 385, "units": 1}, {"itemId": 391, "units": 1}, {"itemId": 3144, "units": 1}, {"itemId": 13441, "units": 1}
+        ]}
+      ]
+    },
+    {
+      "id": "gear.mid.slayer-helm",
+      "name": "Slayer helmet (i)",
+      "slot": "HEAD",
+      "styles": ["MELEE", "RANGED", "MAGIC"],
+      "tier": 2,
+      "completion": {"type": "ITEM_ANY", "label": "Black mask or Slayer helmet", "source": "ANY", "itemIds": [8921, 11784, 11864, 11865]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "SKILL_AT_LEAST", "label": "Slayer 58", "skill": "Slayer", "level": 58},
+        {"type": "SKILL_AT_LEAST", "label": "Crafting 55", "skill": "Crafting", "level": 55}
+      ]},
+      "source": {"method": "Slayer drop and points", "activity": "Cave horrors / Slayer unlock", "region": "Morytania"},
+      "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "LOW", "effort": "MEDIUM", "usefulness": 5,
+      "why": "Its on-task bonuses scale across all three styles and make Slayer a central gear engine.",
+      "wikiPage": "Slayer helmet (i)", "tags": ["slayer", "all-styles", "on-task"]
+    },
+    {
+      "id": "gear.mid.zombie-axe",
+      "name": "Zombie axe",
+      "slot": "WEAPON",
+      "styles": ["MELEE"],
+      "tier": 2,
+      "previousIds": ["gear.early.melee-weapon"],
+      "alternativeIds": ["gear.mid.whip"],
+      "routeStepIds": ["efficient-ironman.203.defender-of-varrock"],
+      "completion": {"type": "ITEM_ANY", "label": "Zombie axe", "source": "ANY", "itemIds": [28810]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "QUEST_STATE", "label": "Defender of Varrock", "quest": "Defender of Varrock", "state": "FINISHED"},
+        {"type": "SKILL_AT_LEAST", "label": "Attack 65", "skill": "Attack", "level": 65},
+        {"type": "SKILL_AT_LEAST", "label": "Smithing 70 to repair", "skill": "Smithing", "level": 70}
+      ]},
+      "source": {"method": "Drop and repair", "activity": "Armoured zombies", "region": "Varrock"},
+      "role": "ALTERNATIVE", "importance": "NORMAL", "difficulty": "LOW", "effort": "MEDIUM", "usefulness": 5,
+      "why": "A powerful Dragon-scimitar-to-whip bridge with useful slash and crush coverage.",
+      "wikiPage": "Zombie axe", "tags": ["melee", "bridge", "varrock"]
+    },
+    {
+      "id": "gear.mid.barrows-tank",
+      "name": "Barrows tank body and legs",
+      "slot": "MULTI_SLOT",
+      "styles": ["MELEE", "UTILITY"],
+      "tier": 2,
+      "alternativeIds": ["gear.mid.blood-moon"],
+      "completion": {"type": "ALL", "label": "Barrows tank body and legs", "children": [
+        {"type": "ITEM_ANY", "label": "Melee Barrows body", "source": "ANY", "itemIds": [4720, 4728, 4749, 4757]},
+        {"type": "ITEM_ANY", "label": "Melee Barrows legs", "source": "ANY", "itemIds": [4722, 4730, 4751, 4759]}
+      ]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "QUEST_STATE", "label": "Priest in Peril", "quest": "Priest in Peril", "state": "FINISHED"},
+        {"type": "SKILL_AT_LEAST", "label": "Defence 70", "skill": "Defence", "level": 70}
+      ]},
+      "source": {"method": "Boss chest", "activity": "Barrows", "region": "Morytania"},
+      "role": "ALTERNATIVE", "importance": "NORMAL", "difficulty": "LOW", "effort": "LONG", "usefulness": 3,
+      "why": "Tank pieces smooth Perilous Moons, but specific Barrows drops should not block the account.",
+      "wikiPage": "Barrows equipment", "tags": ["tank", "barrows", "rng", "moons"]
+    },
+    {
+      "id": "gear.mid.blood-moon",
+      "name": "Blood Moon set",
+      "slot": "MULTI_SLOT",
+      "styles": ["MELEE"],
+      "tier": 3,
+      "alternativeIds": ["gear.early.strength-body"],
+      "routeStepIds": ["efficient-ironman.188.perilous-moons"],
+      "completion": {"type": "ALL", "label": "Blood Moon armour", "children": [
+        {"type": "ITEM_ANY", "label": "Blood Moon helm", "source": "ANY", "itemIds": [29028]},
+        {"type": "ITEM_ANY", "label": "Blood Moon chestplate", "source": "ANY", "itemIds": [29022]},
+        {"type": "ITEM_ANY", "label": "Blood Moon tassets", "source": "ANY", "itemIds": [29025]}
+      ]},
+      "requirements": {"type": "QUEST_STATE", "label": "Perilous Moons", "quest": "Perilous Moons", "state": "FINISHED"},
+      "source": {"method": "Duplicate-protected boss chest", "activity": "Moons of Peril", "region": "Varlamore"},
+      "role": "ALTERNATIVE", "importance": "MAJOR", "difficulty": "MODERATE", "effort": "LONG", "usefulness": 5,
+      "why": "Bandos-level strength bonuses and strong Royal Titans synergy on a supply-positive midgame route.",
+      "notes": "The dungeon provides its own food and potions; high defence matters more than usual.",
+      "wikiPage": "Blood moon armour", "tags": ["moons", "melee", "varlamore", "titans"]
+    },
+    {
+      "id": "gear.mid.eclipse-moon",
+      "name": "Eclipse Moon set and atlatl",
+      "slot": "MULTI_SLOT",
+      "styles": ["RANGED", "MELEE"],
+      "tier": 3,
+      "alternativeIds": ["gear.mid.bowfa", "gear.early.sunlight-crossbow"],
+      "routeStepIds": ["efficient-ironman.188.perilous-moons"],
+      "completion": {"type": "ALL", "label": "Eclipse setup", "children": [
+        {"type": "ITEM_ANY", "label": "Eclipse atlatl", "source": "ANY", "itemIds": [29000]},
+        {"type": "ITEM_ANY", "label": "Eclipse Moon body", "source": "ANY", "itemIds": [29004]},
+        {"type": "ITEM_ANY", "label": "Eclipse Moon legs", "source": "ANY", "itemIds": [29007]}
+      ]},
+      "requirements": {"type": "QUEST_STATE", "label": "Perilous Moons", "quest": "Perilous Moons", "state": "FINISHED"},
+      "source": {"method": "Duplicate-protected boss chest", "activity": "Moons of Peril", "region": "Varlamore"},
+      "role": "ALTERNATIVE", "importance": "MAJOR", "difficulty": "MODERATE", "effort": "LONG", "usefulness": 5,
+      "why": "A credible Bowfa-skip bridge for Fight Caves, early raids, GWD and several bosses.",
+      "notes": "Atlatl damage scales with melee strength; darts are a real sustainability consideration.",
+      "wikiPage": "Eclipse moon armour", "tags": ["moons", "ranged", "hybrid", "bowfa-skip"]
+    },
+    {
+      "id": "gear.mid.blue-moon",
+      "name": "Blue Moon set",
+      "slot": "MULTI_SLOT",
+      "styles": ["MAGIC"],
+      "tier": 3,
+      "routeStepIds": ["efficient-ironman.188.perilous-moons"],
+      "completion": {"type": "ALL", "label": "Blue Moon armour", "children": [
+        {"type": "ITEM_ANY", "label": "Blue Moon helm", "source": "ANY", "itemIds": [29019]},
+        {"type": "ITEM_ANY", "label": "Blue Moon chestplate", "source": "ANY", "itemIds": [29013]},
+        {"type": "ITEM_ANY", "label": "Blue Moon tassets", "source": "ANY", "itemIds": [29016]}
+      ]},
+      "requirements": {"type": "QUEST_STATE", "label": "Perilous Moons", "quest": "Perilous Moons", "state": "FINISHED"},
+      "source": {"method": "Duplicate-protected boss chest", "activity": "Moons of Peril", "region": "Varlamore"},
+      "role": "ALTERNATIVE", "importance": "NORMAL", "difficulty": "MODERATE", "effort": "LONG", "usefulness": 4,
+      "why": "An accessible magic-armour bridge while Ahrim, Virtus and Ancestral remain RNG-gated.",
+      "wikiPage": "Blue moon armour", "tags": ["moons", "magic", "bridge"]
+    },
+    {
+      "id": "gear.mid.twinflame",
+      "name": "Twinflame staff",
+      "slot": "WEAPON",
+      "styles": ["MAGIC", "PRAYER"],
+      "tier": 3,
+      "alternativeIds": ["gear.mid.warped-sceptre", "gear.mid.trident"],
+      "completion": {"type": "ITEM_ANY", "label": "Twinflame staff", "source": "ANY", "itemIds": [30634]},
+      "requirements": {"type": "ALL", "label": "Comfortable Royal Titans baseline", "children": [
+        {"type": "SKILL_AT_LEAST", "label": "Attack 70", "skill": "Attack", "level": 70},
+        {"type": "SKILL_AT_LEAST", "label": "Strength 70", "skill": "Strength", "level": 70},
+        {"type": "SKILL_AT_LEAST", "label": "Defence 70", "skill": "Defence", "level": 70},
+        {"type": "SKILL_AT_LEAST", "label": "Ranged 70", "skill": "Ranged", "level": 70},
+        {"type": "SKILL_AT_LEAST", "label": "Magic 75", "skill": "Magic", "level": 75},
+        {"type": "SKILL_AT_LEAST", "label": "Prayer 43", "skill": "Prayer", "level": 43}
+      ]},
+      "source": {"method": "Boss components", "activity": "Royal Titans", "region": "Asgarnia"},
+      "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "MODERATE", "effort": "LONG", "usefulness": 5,
+      "why": "Royal Titans now link Moons-era gear to a strong standard-spellbook weapon and mid-tier prayers.",
+      "notes": "The bosses have no access requirement; the listed stats are a researched comfort baseline, not a hard game lock.",
+      "wikiPage": "Royal Titans/Strategies", "tags": ["magic", "royal-titans", "modern", "prayer"],
+      "supplies": [
+        {"name": "Prayer restore", "requiredUnits": 16, "unitLabel": "doses", "estimated": true, "variants": [
+          {"itemId": 2434, "units": 4}, {"itemId": 139, "units": 3}, {"itemId": 141, "units": 2}, {"itemId": 143, "units": 1},
+          {"itemId": 3024, "units": 4}, {"itemId": 3026, "units": 3}, {"itemId": 3028, "units": 2}, {"itemId": 3030, "units": 1}
+        ]},
+        {"name": "High-healing food", "requiredUnits": 12, "unitLabel": "servings", "estimated": true, "variants": [
+          {"itemId": 385, "units": 1}, {"itemId": 391, "units": 1}, {"itemId": 3144, "units": 1}, {"itemId": 13441, "units": 1}
+        ]}
+      ]
+    },
+    {
+      "id": "gear.mid.warped-sceptre",
+      "name": "Warped sceptre",
+      "slot": "WEAPON",
+      "styles": ["MAGIC"],
+      "tier": 2,
+      "previousIds": ["gear.early.magic-weapon"],
+      "alternativeIds": ["gear.mid.twinflame"],
+      "completion": {"type": "ITEM_ANY", "label": "Warped sceptre or later powered staff", "source": "ANY", "itemIds": [28585, 11907, 12899, 22323, 27275, 31113]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "QUEST_STATE", "label": "The Path of Glouphrie", "quest": "The Path of Glouphrie", "state": "FINISHED"},
+        {"type": "SKILL_AT_LEAST", "label": "Slayer 56", "skill": "Slayer", "level": 56},
+        {"type": "SKILL_AT_LEAST", "label": "Magic 62", "skill": "Magic", "level": 62}
+      ]},
+      "source": {"method": "Slayer drop", "activity": "Warped creatures", "region": "Kandarin"},
+      "role": "ALTERNATIVE", "importance": "NORMAL", "difficulty": "LOW", "effort": "MEDIUM", "usefulness": 4,
+      "why": "A lower-Slayer powered-staff bridge before trident; Twinflame is a separate standard-spellbook route.",
+      "wikiPage": "Warped sceptre", "tags": ["magic", "slayer", "powered-staff"]
+    },
+    {
+      "id": "gear.mid.whip",
+      "name": "Abyssal whip",
+      "slot": "WEAPON",
+      "styles": ["MELEE"],
+      "tier": 3,
+      "previousIds": ["gear.early.melee-weapon"],
+      "alternativeIds": ["gear.mid.zombie-axe"],
+      "completion": {"type": "ITEM_ANY", "label": "Whip or stronger melee weapon", "source": "ANY", "itemIds": [4151, 12006, 23995, 22324, 26219, 25484, 22325]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "SKILL_AT_LEAST", "label": "Slayer 85", "skill": "Slayer", "level": 85},
+        {"type": "SKILL_AT_LEAST", "label": "Attack 70", "skill": "Attack", "level": 70}
+      ]},
+      "source": {"method": "Slayer drop", "activity": "Abyssal demons", "region": "Global"},
+      "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "LOW", "effort": "VERY_LONG", "usefulness": 5,
+      "why": "A critical Slayer weapon upgrade, while Zombie axe and raid weapons remain legitimate bypasses.",
+      "wikiPage": "Abyssal whip", "tags": ["melee", "slayer", "persistent"]
+    },
+    {
+      "id": "gear.mid.trident",
+      "name": "Trident of the seas",
+      "slot": "WEAPON",
+      "styles": ["MAGIC"],
+      "tier": 3,
+      "previousIds": ["gear.mid.warped-sceptre"],
+      "alternativeIds": ["gear.mid.twinflame"],
+      "completion": {"type": "ITEM_ANY", "label": "Trident or stronger powered staff", "source": "ANY", "itemIds": [11907, 12899, 22323, 27275, 31113]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "SKILL_AT_LEAST", "label": "Slayer 87", "skill": "Slayer", "level": 87},
+        {"type": "SKILL_AT_LEAST", "label": "Magic 75", "skill": "Magic", "level": 75}
+      ]},
+      "source": {"method": "Slayer drop", "activity": "Cave krakens", "region": "Kandarin"},
+      "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "LOW", "effort": "VERY_LONG", "usefulness": 5,
+      "why": "The classic powered-staff transition for Zulrah, raids and broad PvM.",
+      "wikiPage": "Trident of the seas", "tags": ["magic", "slayer", "powered-staff"]
+    },
+    {
+      "id": "gear.mid.first-zenyte",
+      "name": "First Zenyte jewellery",
+      "slot": "MULTI_SLOT",
+      "styles": ["MELEE", "RANGED", "MAGIC", "UTILITY"],
+      "tier": 3,
+      "routeStepIds": ["efficient-ironman.221.monkey-madness-ii"],
+      "completion": {"type": "ITEM_ANY", "label": "Any Zenyte jewellery", "source": "ANY", "itemIds": [19550, 19547, 19553, 19544]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "QUEST_STATE", "label": "Monkey Madness II", "quest": "Monkey Madness II", "state": "FINISHED"},
+        {"type": "SKILL_AT_LEAST", "label": "Crafting 75", "skill": "Crafting", "level": 75}
+      ]},
+      "source": {"method": "Drop and Crafting", "activity": "Demonic gorillas", "region": "Gnome Stronghold"},
+      "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "MODERATE", "effort": "LONG", "usefulness": 5,
+      "why": "The first Zenyte should follow the player's current bossing style rather than a fixed universal order.",
+      "wikiPage": "Zenyte jewellery", "tags": ["jewellery", "crafting", "demonic-gorillas"]
+    },
+    {
+      "id": "gear.mid.bowfa",
+      "name": "Bowfa and Crystal armour",
+      "slot": "MULTI_SLOT",
+      "styles": ["RANGED"],
+      "tier": 4,
+      "alternativeIds": ["gear.mid.eclipse-moon", "gear.late.scorching-bow"],
+      "routeStepIds": ["efficient-ironman.227.song-of-the-elves"],
+      "completion": {"type": "ALL", "label": "Bowfa setup", "children": [
+        {"type": "ITEM_ANY", "label": "Bow of Faerdhinen", "source": "ANY", "itemIds": [25865]},
+        {"type": "ITEM_ANY", "label": "Crystal body", "source": "ANY", "itemIds": [23975]},
+        {"type": "ITEM_ANY", "label": "Crystal legs", "source": "ANY", "itemIds": [23979]}
+      ]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "QUEST_STATE", "label": "Song of the Elves", "quest": "Song of the Elves", "state": "FINISHED"},
+        {"type": "SKILL_AT_LEAST", "label": "Ranged 80", "skill": "Ranged", "level": 80},
+        {"type": "SKILL_AT_LEAST", "label": "Agility 70", "skill": "Agility", "level": 70}
+      ]},
+      "source": {"method": "Self-contained PvM grind", "activity": "Corrupted Gauntlet", "region": "Prifddinas"},
+      "role": "ALTERNATIVE", "importance": "MAJOR", "difficulty": "HIGH", "effort": "VERY_LONG", "usefulness": 5,
+      "why": "A major all-purpose ranged backbone, now presented as a high-value branch rather than a universal prison.",
+      "notes": "Atlatl, Scorching bow, Blowpipe, crossbows and modern magic routes can support a viable Bowfa skip.",
+      "wikiPage": "Bow of faerdhinen", "tags": ["ranged", "gauntlet", "long-grind", "branch"]
+    },
+    {
+      "id": "gear.late.assembler",
+      "name": "Ava's assembler",
+      "slot": "CAPE",
+      "styles": ["RANGED", "UTILITY"],
+      "tier": 4,
+      "previousIds": ["gear.early.ava"],
+      "completion": {"type": "ITEM_ANY", "label": "Ava's assembler", "source": "ANY", "itemIds": [22109]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "QUEST_STATE", "label": "Dragon Slayer II", "quest": "Dragon Slayer II", "state": "FINISHED"},
+        {"type": "SKILL_AT_LEAST", "label": "Ranged 70", "skill": "Ranged", "level": 70}
+      ]},
+      "source": {"method": "Boss drop upgrade", "activity": "Vorkath", "region": "Fremennik"},
+      "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "MODERATE", "effort": "MEDIUM", "usefulness": 5,
+      "why": "A reliable permanent ranged cape upgrade once Dragon Slayer II is complete.",
+      "wikiPage": "Ava's assembler", "tags": ["ranged", "vorkath", "quest"]
+    },
+    {
+      "id": "gear.late.blowpipe",
+      "name": "Toxic blowpipe",
+      "slot": "WEAPON",
+      "styles": ["RANGED"],
+      "tier": 4,
+      "alternativeIds": ["gear.late.scorching-bow", "gear.mid.bowfa"],
+      "completion": {"type": "ITEM_ANY", "label": "Toxic blowpipe", "source": "ANY", "itemIds": [12924, 12926]},
+      "requirements": {"type": "SKILL_AT_LEAST", "label": "Ranged 75", "skill": "Ranged", "level": 75},
+      "source": {"method": "Boss drop", "activity": "Zulrah", "region": "Tirannwn"},
+      "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "HIGH", "effort": "LONG", "usefulness": 5,
+      "why": "A high-DPS utility weapon that complements rather than simply replaces slower ranged options.",
+      "wikiPage": "Toxic blowpipe", "tags": ["ranged", "zulrah", "ammo-intensive"]
+    },
+    {
+      "id": "gear.late.scorching-bow",
+      "name": "Scorching bow",
+      "slot": "WEAPON",
+      "styles": ["RANGED"],
+      "tier": 4,
+      "alternativeIds": ["gear.mid.bowfa", "gear.late.blowpipe"],
+      "routeStepIds": ["efficient-ironman.226.while-guthix-sleeps"],
+      "completion": {"type": "ITEM_ANY", "label": "Scorching bow", "source": "ANY", "itemIds": [29591]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "QUEST_STATE", "label": "While Guthix Sleeps", "quest": "While Guthix Sleeps", "state": "FINISHED"},
+        {"type": "SKILL_AT_LEAST", "label": "Ranged 77", "skill": "Ranged", "level": 77}
+      ]},
+      "source": {"method": "Unique component", "activity": "Tormented demons", "region": "Guthixian Temple"},
+      "role": "ALTERNATIVE", "importance": "MAJOR", "difficulty": "HIGH", "effort": "LONG", "usefulness": 5,
+      "why": "A modern demonbane and Doom weapon that materially strengthens Bowfa-skip routes.",
+      "wikiPage": "Scorching bow", "tags": ["ranged", "demonbane", "bowfa-skip", "doom"]
+    },
+    {
+      "id": "gear.late.fang",
+      "name": "Osmumten's fang",
+      "slot": "WEAPON",
+      "styles": ["MELEE"],
+      "tier": 4,
+      "previousIds": ["gear.mid.whip"],
+      "routeStepIds": ["efficient-ironman.218.beneath-cursed-sands"],
+      "completion": {"type": "ITEM_ANY", "label": "Fang or later raid melee weapon", "source": "ANY", "itemIds": [26219, 22324, 25484, 22325]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "QUEST_STATE", "label": "Beneath Cursed Sands", "quest": "Beneath Cursed Sands", "state": "FINISHED"},
+        {"type": "SKILL_AT_LEAST", "label": "Attack 82", "skill": "Attack", "level": 82}
+      ]},
+      "source": {"method": "Raid reward", "activity": "Tombs of Amascut", "region": "Desert"},
+      "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "HIGH", "effort": "LONG", "usefulness": 5,
+      "why": "A broadly useful high-defence melee weapon from the most accessible first raid path.",
+      "wikiPage": "Osmumten's fang", "tags": ["melee", "raid", "toa"]
+    },
+    {
+      "id": "gear.late.demonbane",
+      "name": "Tormented synapse weapon",
+      "slot": "WEAPON",
+      "styles": ["MELEE", "RANGED", "MAGIC"],
+      "tier": 4,
+      "routeStepIds": ["efficient-ironman.226.while-guthix-sleeps"],
+      "completion": {"type": "ITEM_ANY", "label": "Any Tormented synapse weapon", "source": "ANY", "itemIds": [29589, 29591, 29594]},
+      "requirements": {"type": "QUEST_STATE", "label": "While Guthix Sleeps", "quest": "While Guthix Sleeps", "state": "FINISHED"},
+      "source": {"method": "Unique component", "activity": "Tormented demons", "region": "Guthixian Temple"},
+      "role": "ALTERNATIVE", "importance": "MAJOR", "difficulty": "HIGH", "effort": "LONG", "usefulness": 5,
+      "why": "Choose Emberlight, Scorching bow or Purging staff according to the account's next bosses.",
+      "wikiPage": "Tormented synapse", "tags": ["demonbane", "choice", "boss"]
+    },
+    {
+      "id": "gear.late.strength-armour",
+      "name": "Late strength body and legs",
+      "slot": "MULTI_SLOT",
+      "styles": ["MELEE"],
+      "tier": 4,
+      "previousIds": ["gear.early.strength-body"],
+      "alternativeIds": ["gear.mid.blood-moon"],
+      "completion": {"type": "ALL", "label": "Late strength armour", "children": [
+        {"type": "ITEM_ANY", "label": "Strength body", "source": "ANY", "itemIds": [11832, 26384, 30753, 30779]},
+        {"type": "ITEM_ANY", "label": "Strength legs", "source": "ANY", "itemIds": [11834, 26386, 30756, 30781]}
+      ]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "SKILL_AT_LEAST", "label": "Attack 75", "skill": "Attack", "level": 75},
+        {"type": "SKILL_AT_LEAST", "label": "Defence 70", "skill": "Defence", "level": 70}
+      ]},
+      "source": {"method": "Boss branch", "activity": "God Wars, Nex or Yama", "region": "Multiple"},
+      "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "HIGH", "effort": "VERY_LONG", "usefulness": 5,
+      "why": "The durable melee armour transition accepts Bandos, Torva or Oathplate routes.",
+      "wikiPage": "Melee armour", "tags": ["melee", "armour", "branch"]
+    },
+    {
+      "id": "gear.late.zenyte-set",
+      "name": "Complete Zenyte set",
+      "slot": "MULTI_SLOT",
+      "styles": ["MELEE", "RANGED", "MAGIC", "UTILITY"],
+      "tier": 4,
+      "prerequisiteIds": ["gear.mid.first-zenyte"],
+      "completion": {"type": "ALL", "label": "All Zenyte jewellery", "children": [
+        {"type": "ITEM_ANY", "label": "Ring of suffering", "source": "ANY", "itemIds": [19550]},
+        {"type": "ITEM_ANY", "label": "Necklace of anguish", "source": "ANY", "itemIds": [19547]},
+        {"type": "ITEM_ANY", "label": "Amulet of torture", "source": "ANY", "itemIds": [19553]},
+        {"type": "ITEM_ANY", "label": "Tormented bracelet", "source": "ANY", "itemIds": [19544, 31106]}
+      ]},
+      "requirements": {"type": "SKILL_AT_LEAST", "label": "Crafting 93", "skill": "Crafting", "level": 93},
+      "source": {"method": "Drop and Crafting", "activity": "Demonic gorillas", "region": "Gnome Stronghold"},
+      "role": "OPTIONAL", "importance": "NORMAL", "difficulty": "MODERATE", "effort": "VERY_LONG", "usefulness": 5,
+      "why": "All four are valuable, but the completion order should follow current raid and boss priorities.",
+      "wikiPage": "Zenyte jewellery", "tags": ["jewellery", "crafting", "completion"]
+    },
+    {
+      "id": "gear.late.avernic",
+      "name": "Avernic defender",
+      "slot": "OFF_HAND",
+      "styles": ["MELEE"],
+      "tier": 5,
+      "prerequisiteIds": ["gear.early.defender"],
+      "completion": {"type": "ITEM_ANY", "label": "Avernic defender", "source": "ANY", "itemIds": [22322]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "SKILL_AT_LEAST", "label": "Attack 70", "skill": "Attack", "level": 70},
+        {"type": "SKILL_AT_LEAST", "label": "Defence 70", "skill": "Defence", "level": 70}
+      ]},
+      "source": {"method": "Raid reward upgrade", "activity": "Theatre of Blood", "region": "Morytania"},
+      "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "EXPERT", "effort": "VERY_LONG", "usefulness": 4,
+      "why": "A lasting defender upgrade once Theatre of Blood fits the account's raid path.",
+      "wikiPage": "Avernic defender", "tags": ["melee", "tob", "raid"]
+    },
+    {
+      "id": "gear.late.doom",
+      "name": "Doom of Mokhaiotl upgrade",
+      "slot": "MULTI_SLOT",
+      "styles": ["MAGIC", "RANGED", "UTILITY"],
+      "tier": 5,
+      "prerequisiteIds": ["gear.late.scorching-bow"],
+      "routeStepIds": ["efficient-ironman.210.the-final-dawn"],
+      "completion": {"type": "ITEM_ANY", "label": "Eye, Confliction or Avernic treads", "source": "ANY", "itemIds": [31113, 31106, 31088]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "QUEST_STATE", "label": "The Final Dawn", "quest": "The Final Dawn", "state": "FINISHED"},
+        {"type": "SKILL_AT_LEAST", "label": "Ranged 90", "skill": "Ranged", "level": 90},
+        {"type": "SKILL_AT_LEAST", "label": "Prayer 74", "skill": "Prayer", "level": 74},
+        {"type": "SKILL_AT_LEAST", "label": "Agility 75", "skill": "Agility", "level": 75},
+        {"type": "ITEM_ANY", "label": "Scorching bow", "source": "ANY", "itemIds": [29591]}
+      ]},
+      "source": {"method": "Delve boss reward", "activity": "Doom of Mokhaiotl", "region": "Varlamore"},
+      "role": "LONG_TERM", "importance": "MAJOR", "difficulty": "EXPERT", "effort": "VERY_LONG", "usefulness": 5,
+      "why": "Eye of Ayak, Confliction gauntlets and Avernic treads are powerful modern goals after broad foundations.",
+      "notes": "The listed 90 Ranged, Rigour-level Prayer and Scorching bow reflect the current strategy recommendation, not bare access.",
+      "wikiPage": "Doom of Mokhaiotl/Strategies", "tags": ["doom", "varlamore", "expert", "long-term"],
+      "supplies": [
+        {"name": "Restore", "requiredUnits": 16, "unitLabel": "doses", "estimated": true, "variants": [
+          {"itemId": 3024, "units": 4}, {"itemId": 3026, "units": 3}, {"itemId": 3028, "units": 2}, {"itemId": 3030, "units": 1}
+        ]},
+        {"name": "High-healing food", "requiredUnits": 20, "unitLabel": "servings", "estimated": true, "variants": [
+          {"itemId": 385, "units": 1}, {"itemId": 391, "units": 1}, {"itemId": 3144, "units": 1}, {"itemId": 13441, "units": 1}
+        ]}
+      ]
+    },
+    {
+      "id": "gear.late.oathplate",
+      "name": "Oathplate armour set",
+      "slot": "MULTI_SLOT",
+      "styles": ["MELEE"],
+      "tier": 5,
+      "previousIds": ["gear.late.strength-armour"],
+      "completion": {"type": "ALL", "label": "Oathplate set", "children": [
+        {"type": "ITEM_ANY", "label": "Oathplate helm", "source": "ANY", "itemIds": [30750, 30777]},
+        {"type": "ITEM_ANY", "label": "Oathplate chest", "source": "ANY", "itemIds": [30753, 30779]},
+        {"type": "ITEM_ANY", "label": "Oathplate legs", "source": "ANY", "itemIds": [30756, 30781]}
+      ]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "QUEST_STATE", "label": "A Kingdom Divided", "quest": "A Kingdom Divided", "state": "FINISHED"},
+        {"type": "SKILL_AT_LEAST", "label": "Defence 78", "skill": "Defence", "level": 78}
+      ]},
+      "source": {"method": "Endgame boss reward", "activity": "Yama", "region": "Kourend"},
+      "role": "LONG_TERM", "importance": "MAJOR", "difficulty": "EXPERT", "effort": "VERY_LONG", "usefulness": 5,
+      "why": "A modern alternative endgame melee-armour branch; it should not delay raids by default.",
+      "wikiPage": "Oathplate armour", "tags": ["yama", "melee", "armour", "long-term"]
+    },
+    {
+      "id": "gear.endgame.infernal",
+      "name": "Infernal cape",
+      "slot": "CAPE",
+      "styles": ["MELEE", "PRAYER"],
+      "tier": 6,
+      "prerequisiteIds": ["gear.early.fire-cape"],
+      "completion": {"type": "ITEM_ANY", "label": "Infernal cape", "source": "ANY", "itemIds": [21295]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "SKILL_AT_LEAST", "label": "Ranged 90", "skill": "Ranged", "level": 90},
+        {"type": "SKILL_AT_LEAST", "label": "Prayer 74", "skill": "Prayer", "level": 74}
+      ]},
+      "source": {"method": "PvM challenge", "activity": "Inferno", "region": "Karamja"},
+      "role": "LONG_TERM", "importance": "MAJOR", "difficulty": "EXPERT", "effort": "VERY_LONG", "usefulness": 4,
+      "why": "A mastery target, never an early progression gate.",
+      "wikiPage": "Inferno", "tags": ["challenge", "melee", "long-term"]
+    },
+    {
+      "id": "gear.endgame.quiver",
+      "name": "Dizana's quiver",
+      "slot": "CAPE",
+      "styles": ["RANGED", "PRAYER"],
+      "tier": 6,
+      "completion": {"type": "ITEM_ANY", "label": "Dizana's quiver", "source": "ANY", "itemIds": [28951]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "SKILL_AT_LEAST", "label": "Ranged 90", "skill": "Ranged", "level": 90},
+        {"type": "SKILL_AT_LEAST", "label": "Prayer 74", "skill": "Prayer", "level": 74}
+      ]},
+      "source": {"method": "PvM challenge", "activity": "Fortis Colosseum", "region": "Varlamore"},
+      "role": "LONG_TERM", "importance": "MAJOR", "difficulty": "EXPERT", "effort": "VERY_LONG", "usefulness": 4,
+      "why": "An endgame ranged mastery target, not a prerequisite for ordinary raids.",
+      "wikiPage": "Dizana's quiver", "tags": ["challenge", "ranged", "varlamore"]
+    },
+    {
+      "id": "gear.endgame.masori",
+      "name": "Fortified Masori set",
+      "slot": "MULTI_SLOT",
+      "styles": ["RANGED"],
+      "tier": 6,
+      "completion": {"type": "ALL", "label": "Fortified Masori set", "children": [
+        {"type": "ITEM_ANY", "label": "Masori mask (f)", "source": "ANY", "itemIds": [27235]},
+        {"type": "ITEM_ANY", "label": "Masori body (f)", "source": "ANY", "itemIds": [27238]},
+        {"type": "ITEM_ANY", "label": "Masori chaps (f)", "source": "ANY", "itemIds": [27241]}
+      ]},
+      "source": {"method": "Raid rewards and Armadyl components", "activity": "Tombs of Amascut / God Wars", "region": "Multiple"},
+      "role": "LONG_TERM", "importance": "MAJOR", "difficulty": "EXPERT", "effort": "VERY_LONG", "usefulness": 5,
+      "why": "Endgame ranged armour remains visible without pretending raid RNG is the only valid next step.",
+      "wikiPage": "Masori armour", "tags": ["ranged", "raid", "armour"]
+    },
+    {
+      "id": "gear.endgame.ancestral",
+      "name": "Ancestral armour set",
+      "slot": "MULTI_SLOT",
+      "styles": ["MAGIC"],
+      "tier": 6,
+      "previousIds": ["gear.mid.blue-moon"],
+      "completion": {"type": "ALL", "label": "Ancestral set", "children": [
+        {"type": "ITEM_ANY", "label": "Ancestral hat", "source": "ANY", "itemIds": [21018]},
+        {"type": "ITEM_ANY", "label": "Ancestral robe top", "source": "ANY", "itemIds": [21021]},
+        {"type": "ITEM_ANY", "label": "Ancestral robe bottom", "source": "ANY", "itemIds": [21024]}
+      ]},
+      "source": {"method": "Raid reward", "activity": "Chambers of Xeric", "region": "Kourend"},
+      "role": "LONG_TERM", "importance": "MAJOR", "difficulty": "EXPERT", "effort": "VERY_LONG", "usefulness": 5,
+      "why": "Endgame magic armour with substantial raid RNG; Blue Moon and other interim armour remain valid.",
+      "wikiPage": "Ancestral robes", "tags": ["magic", "raid", "armour"]
+    },
+    {
+      "id": "gear.endgame.twisted-bow",
+      "name": "Twisted bow",
+      "slot": "WEAPON",
+      "styles": ["RANGED"],
+      "tier": 7,
+      "completion": {"type": "ITEM_ANY", "label": "Twisted bow", "source": "ANY", "itemIds": [20997]},
+      "requirements": {"type": "SKILL_AT_LEAST", "label": "Ranged 85", "skill": "Ranged", "level": 85},
+      "source": {"method": "Raid mega-rare", "activity": "Chambers of Xeric", "region": "Kourend"},
+      "role": "LONG_TERM", "importance": "MAJOR", "difficulty": "EXPERT", "effort": "VERY_LONG", "usefulness": 5,
+      "why": "A mega-rare destination, never a near-term blocker.",
+      "wikiPage": "Twisted bow", "tags": ["ranged", "megarare", "raid"]
+    },
+    {
+      "id": "gear.endgame.shadow",
+      "name": "Tumeken's shadow",
+      "slot": "WEAPON",
+      "styles": ["MAGIC"],
+      "tier": 7,
+      "completion": {"type": "ITEM_ANY", "label": "Tumeken's shadow", "source": "ANY", "itemIds": [27275]},
+      "requirements": {"type": "SKILL_AT_LEAST", "label": "Magic 85", "skill": "Magic", "level": 85},
+      "source": {"method": "Raid mega-rare", "activity": "Tombs of Amascut", "region": "Desert"},
+      "role": "LONG_TERM", "importance": "MAJOR", "difficulty": "EXPERT", "effort": "VERY_LONG", "usefulness": 5,
+      "why": "A mega-rare destination, not the answer to an unfinished midgame dependency.",
+      "wikiPage": "Tumeken's shadow", "tags": ["magic", "megarare", "raid"]
+    },
+    {
+      "id": "gear.endgame.scythe",
+      "name": "Scythe of vitur",
+      "slot": "WEAPON",
+      "styles": ["MELEE"],
+      "tier": 7,
+      "completion": {"type": "ITEM_ANY", "label": "Scythe of vitur", "source": "ANY", "itemIds": [22325]},
+      "requirements": {"type": "ALL", "children": [
+        {"type": "SKILL_AT_LEAST", "label": "Attack 85", "skill": "Attack", "level": 85},
+        {"type": "SKILL_AT_LEAST", "label": "Strength 85", "skill": "Strength", "level": 85}
+      ]},
+      "source": {"method": "Raid mega-rare", "activity": "Theatre of Blood", "region": "Morytania"},
+      "role": "LONG_TERM", "importance": "MAJOR", "difficulty": "EXPERT", "effort": "VERY_LONG", "usefulness": 5,
+      "why": "A mega-rare melee destination, never a default blocker for earlier gear.",
+      "wikiPage": "Scythe of vitur", "tags": ["melee", "megarare", "raid"]
+    }
+  ]
+}

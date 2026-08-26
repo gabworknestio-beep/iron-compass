@@ -1,0 +1,10 @@
+.gradle/
+.gradle-user-home/
+build/
+out/
+.idea/
+*.iml
+*.class
+*.log
+hs_err_pid*.log
+*.hprof

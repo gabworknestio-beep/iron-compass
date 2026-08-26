@@ -1,0 +1,81 @@
+package com.ironpath;
+
+import java.awt.image.BufferedImage;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Properties;
+import javax.imageio.ImageIO;
+import net.runelite.client.plugins.PluginDescriptor;
+import org.junit.Test;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+public final class PublicationReadinessTest
+{
+    @Test
+    public void pluginHubMetadataIsStandardAndMatchesDescriptor() throws Exception
+    {
+        Properties metadata = new Properties();
+        try (InputStream input = Files.newInputStream(Paths.get("runelite-plugin.properties")))
+        {
+            metadata.load(input);
+        }
+
+        assertEquals("IronPath", metadata.getProperty("displayName"));
+        assertEquals("com.ironpath.IronPathPlugin", metadata.getProperty("plugins"));
+        assertEquals("standard", metadata.getProperty("build"));
+        assertFalse("Public author metadata is required", blank(metadata.getProperty("author")));
+        assertFalse("Replace generic contributor metadata before publication",
+            metadata.getProperty("author").toLowerCase().contains("contributors"));
+        assertTrue("Description should be useful in Plugin Hub search",
+            metadata.getProperty("description", "").length() >= 40);
+        assertFalse("Plugin Hub versions are commit-pinned; keep the optional version field absent",
+            metadata.containsKey("version"));
+
+        PluginDescriptor descriptor = IronPathPlugin.class.getAnnotation(PluginDescriptor.class);
+        assertNotNull(descriptor);
+        assertEquals(metadata.getProperty("displayName"), descriptor.name());
+        assertEquals(metadata.getProperty("description"), descriptor.description());
+        assertArrayEquals(metadata.getProperty("tags").split(","), descriptor.tags());
+    }
+
+    @Test
+    public void publicIconMeetsPluginHubLimitsAndMatchesBundledResource() throws Exception
+    {
+        Path publicIcon = Paths.get("icon.png");
+        Path bundledIcon = Paths.get("src", "main", "resources", "icon.png");
+        BufferedImage image = ImageIO.read(publicIcon.toFile());
+
+        assertNotNull("Root icon must be a valid image", image);
+        assertTrue("Plugin Hub icon width must be at most 48 px", image.getWidth() <= 48);
+        assertTrue("Plugin Hub icon height must be at most 72 px", image.getHeight() <= 72);
+        assertTrue("Root and bundled icons must stay identical",
+            Arrays.equals(Files.readAllBytes(publicIcon), Files.readAllBytes(bundledIcon)));
+    }
+
+    @Test
+    public void publicReleaseDocumentationExists()
+    {
+        for (String file : Arrays.asList("README.md", "LICENSE", "CHANGELOG.md", "CONTRIBUTING.md",
+            "SECURITY.md", "THIRD_PARTY_NOTICES.md", "docs/PLUGIN_HUB_CHECKLIST.md",
+            "docs/PLUGIN_HUB_SUBMISSION.md"))
+        {
+            assertTrue("Missing public release document: " + file, Files.isRegularFile(Paths.get(file)));
+        }
+        assertFalse("Do not register a Plugin SPI service from an external plugin",
+            Files.exists(Paths.get("src", "main", "resources", "META-INF", "services",
+                "net.runelite.client.plugins.Plugin")));
+    }
+
+    private static boolean blank(String value)
+    {
+        return value == null || value.trim().isEmpty();
+    }
+}
