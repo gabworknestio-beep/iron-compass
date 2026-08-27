@@ -8,11 +8,13 @@ import com.ironpath.state.AccountState;
 import com.ironpath.state.BankSnapshot;
 import com.ironpath.state.QuestProgress;
 import java.util.Collections;
+import java.util.Map;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class GearRecommendationServiceTest
 {
@@ -55,6 +57,79 @@ public class GearRecommendationServiceTest
         GearProjection projection = service.evaluate(catalog(), state, preferences,
             new InMemoryManualOverrideStore());
         assertEquals("gear.early.sunlight-crossbow", projection.getRecommended().getUpgrade().getId());
+    }
+
+    @Test
+    public void unknownOwnershipIsUnconfirmedAndNeverAutoRecommended() throws Exception
+    {
+        InMemoryGearPreferenceStore preferences = new InMemoryGearPreferenceStore();
+        GearProjection projection = service.evaluate(catalog(), AccountState.builder()
+            .skill("Attack", 99).skill("Strength", 99).bank(BankSnapshot.unknown()).build(),
+            preferences, new InMemoryManualOverrideStore());
+
+        assertEquals(GearStatus.UNCONFIRMED, projection.find("gear.early.defender").getStatus());
+        assertNotEquals("gear.early.defender", projection.getRecommended() == null ? null
+            : projection.getRecommended().getUpgrade().getId());
+
+        preferences.setSelectedGoalId("gear.early.defender");
+        projection = service.evaluate(catalog(), AccountState.builder()
+            .skill("Attack", 99).skill("Strength", 99).bank(BankSnapshot.unknown()).build(),
+            preferences, new InMemoryManualOverrideStore());
+        assertEquals("gear.early.defender", projection.getSelected().getUpgrade().getId());
+    }
+
+    @Test
+    public void skippingSelectedGoalClearsItAndUnskipDoesNotRestoreIt() throws Exception
+    {
+        InMemoryGearPreferenceStore preferences = new InMemoryGearPreferenceStore();
+        preferences.setSelectedGoalId("gear.early.defender");
+        preferences.setSkipped("gear.early.defender", true);
+        assertNull(preferences.getSelectedGoalId());
+
+        preferences.setSkipped("gear.early.defender", false);
+        GearProjection projection = service.evaluate(catalog(), AccountState.builder()
+            .skill("Attack", 99).skill("Strength", 99).bank(BankSnapshot.observed(Collections.emptyMap())).build(),
+            preferences, new InMemoryManualOverrideStore());
+        assertNull(projection.getSelected());
+    }
+
+    @Test
+    public void observedOwnershipDistinguishesAbsentCarriedAndBankedItems() throws Exception
+    {
+        InMemoryGearPreferenceStore preferences = new InMemoryGearPreferenceStore();
+        InMemoryManualOverrideStore overrides = new InMemoryManualOverrideStore();
+        AccountState absent = AccountState.builder().skill("Attack", 65).skill("Strength", 65)
+            .bank(BankSnapshot.observed(Collections.emptyMap())).build();
+        assertEquals(GearStatus.RECOMMENDED,
+            service.evaluate(catalog(), absent, preferences, overrides).find("gear.early.defender").getStatus());
+        assertEquals(GearStatus.OWNED, service.evaluate(catalog(), AccountState.builder()
+            .inventoryItem(12954, 1).bank(BankSnapshot.unknown()).build(), preferences, overrides)
+            .find("gear.early.defender").getStatus());
+        assertEquals(GearStatus.OWNED, service.evaluate(catalog(), AccountState.builder()
+            .equipmentItem(12954, 1).bank(BankSnapshot.unknown()).build(), preferences, overrides)
+            .find("gear.early.defender").getStatus());
+        assertEquals(GearStatus.OWNED, service.evaluate(catalog(), AccountState.builder()
+            .bank(BankSnapshot.observed(Map.of(12954, 1))).build(), preferences, overrides)
+            .find("gear.early.defender").getStatus());
+    }
+
+    @Test
+    public void slayerHelmetGoalOnlyAcceptsImbuedHelmetIds() throws Exception
+    {
+        InMemoryGearPreferenceStore preferences = new InMemoryGearPreferenceStore();
+        InMemoryManualOverrideStore overrides = new InMemoryManualOverrideStore();
+        assertEquals(GearStatus.LOCKED, service.evaluate(catalog(), AccountState.builder()
+            .inventoryItem(8921, 1).bank(BankSnapshot.observed(Collections.emptyMap())).build(),
+            preferences, overrides).find("gear.mid.slayer-helm").getStatus());
+        assertEquals(GearStatus.LOCKED, service.evaluate(catalog(), AccountState.builder()
+            .inventoryItem(11864, 1).bank(BankSnapshot.observed(Collections.emptyMap())).build(),
+            preferences, overrides).find("gear.mid.slayer-helm").getStatus());
+        assertEquals(GearStatus.OWNED, service.evaluate(catalog(), AccountState.builder()
+            .inventoryItem(11865, 1).bank(BankSnapshot.observed(Collections.emptyMap())).build(),
+            preferences, overrides).find("gear.mid.slayer-helm").getStatus());
+        assertEquals(GearStatus.OWNED, service.evaluate(catalog(), AccountState.builder()
+            .inventoryItem(26675, 1).bank(BankSnapshot.observed(Collections.emptyMap())).build(),
+            preferences, overrides).find("gear.mid.slayer-helm").getStatus());
     }
 
     private static GearCatalog catalog() throws Exception

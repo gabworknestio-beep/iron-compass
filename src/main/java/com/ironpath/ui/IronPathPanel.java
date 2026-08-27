@@ -13,6 +13,16 @@ import com.ironpath.integration.ShortestPathBridge;
 import com.ironpath.integration.WikiBridge;
 import com.ironpath.persistence.ManualOverride;
 import com.ironpath.persistence.ManualOverrideStore;
+import com.ironpath.planner.GoalPlanProjection;
+import com.ironpath.planner.InMemoryPlannerPreferenceStore;
+import com.ironpath.planner.PlannedAction;
+import com.ironpath.planner.PlannerPreferenceStore;
+import com.ironpath.planner.Playstyle;
+import com.ironpath.planner.ProgressionCandidate;
+import com.ironpath.planner.RecommendationProjection;
+import com.ironpath.planner.ResourceReadiness;
+import com.ironpath.planner.SessionLength;
+import com.ironpath.planner.UnlockOpportunity;
 import com.ironpath.requirement.RequirementResult;
 import com.ironpath.requirement.TruthValue;
 import com.ironpath.route.PreparationEvaluation;
@@ -44,11 +54,15 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
 import javax.swing.JTextField;
@@ -72,21 +86,29 @@ public final class IronPathPanel extends PluginPanel
     private final QuestHelperBridge questHelperBridge;
     private final ManualOverrideStore persistence;
     private final GearPreferenceStore gearPreferences;
+    private final PlannerPreferenceStore plannerPreferences;
     private final Runnable reevaluate;
     private final CardLayout cards = new CardLayout();
     private final JPanel cardHost = new JPanel(cards);
+    private final JButton overviewNav = navigationButton("OVERVIEW", "Open the account overview");
+    private final JButton pathNav = navigationButton("PATH", "Browse the progression route");
+    private final JButton gearNav = navigationButton("GEAR", "Browse gear objectives");
     private final JPanel home = scrollableVerticalPanel();
     private final JPanel browserResults = scrollableVerticalPanel();
     private final GearPathPanel gearPanel;
     private final JTextField search = new JTextField();
-    private final JButton pathBack = smallButton("OVERVIEW");
+    private final JComboBox<GoalChoice> goalSelector = new JComboBox<>();
+    private final JButton pathBack = smallButton("BACK");
     private RouteProjection projection;
     private GearProjection gearProjection;
     private GoalResolution goalResolution;
     private SupplyForecast supplyForecast;
+    private GoalPlanProjection goalPlan;
+    private RecommendationProjection recommendations;
     private RouteJourney journey;
     private AccountState accountState = AccountState.loggedOut();
     private String routeDetailId;
+    private boolean updatingGoalSelector;
 
     public IronPathPanel(IronPathConfig config, WikiBridge wikiBridge, ShortestPathBridge shortestPathBridge,
                          QuestHelperBridge questHelperBridge, ManualOverrideStore persistence, Runnable reevaluate)
@@ -98,17 +120,29 @@ public final class IronPathPanel extends PluginPanel
         this.persistence = persistence;
         this.gearPreferences = persistence instanceof GearPreferenceStore
             ? (GearPreferenceStore) persistence : new InMemoryGearPreferenceStore();
+        this.plannerPreferences = persistence instanceof PlannerPreferenceStore
+            ? (PlannerPreferenceStore) persistence : new InMemoryPlannerPreferenceStore();
         this.reevaluate = reevaluate;
-        this.gearPanel = new GearPathPanel(wikiBridge, gearPreferences, persistence, reevaluate,
-            () -> cards.show(cardHost, HOME));
+        this.gearPanel = new GearPathPanel(wikiBridge, gearPreferences, persistence, reevaluate);
 
         setLayout(new BorderLayout());
         setBackground(UiTokens.BACKGROUND);
+        add(buildNavigation(), BorderLayout.NORTH);
         cardHost.setBackground(UiTokens.BACKGROUND);
         cardHost.add(buildHomeScroll(), HOME);
         cardHost.add(buildBrowser(), BROWSER);
         cardHost.add(gearPanel, GEAR);
         add(cardHost, BorderLayout.CENTER);
+        overviewNav.addActionListener(event -> showView(HOME));
+        pathNav.addActionListener(event -> showView(BROWSER));
+        gearNav.addActionListener(event -> showView(GEAR));
+        goalSelector.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        goalSelector.setAlignmentX(Component.LEFT_ALIGNMENT);
+        goalSelector.getAccessibleContext().setAccessibleName("Progression goal selector");
+        goalSelector.getAccessibleContext().setAccessibleDescription(
+            "Choose the long-term goal IronPath should plan toward");
+        goalSelector.addActionListener(event -> goalSelectionChanged());
+        showView(HOME);
         showIdle();
     }
 
@@ -126,10 +160,17 @@ public final class IronPathPanel extends PluginPanel
     public void update(AccountState state, RouteProjection newProjection, GearProjection newGearProjection,
                        GoalResolution newGoalResolution, SupplyForecast newSupplyForecast)
     {
+        update(state, newProjection, newGearProjection, newGoalResolution, newSupplyForecast, null, null);
+    }
+
+    public void update(AccountState state, RouteProjection newProjection, GearProjection newGearProjection,
+                       GoalResolution newGoalResolution, SupplyForecast newSupplyForecast,
+                       GoalPlanProjection newGoalPlan, RecommendationProjection newRecommendations)
+    {
         if (!SwingUtilities.isEventDispatchThread())
         {
             SwingUtilities.invokeLater(() -> update(state, newProjection, newGearProjection,
-                newGoalResolution, newSupplyForecast));
+                newGoalResolution, newSupplyForecast, newGoalPlan, newRecommendations));
             return;
         }
         accountState = state;
@@ -138,6 +179,9 @@ public final class IronPathPanel extends PluginPanel
         gearProjection = newGearProjection;
         goalResolution = newGoalResolution;
         supplyForecast = newSupplyForecast;
+        goalPlan = newGoalPlan;
+        recommendations = newRecommendations;
+        updateGoalSelector();
         rebuildHome();
         rebuildBrowser();
         gearPanel.update(accountState, gearProjection);
@@ -156,24 +200,36 @@ public final class IronPathPanel extends PluginPanel
         home.add(card(labelHtml("<b>Route data could not be loaded.</b><br><br>" + escape(message), UiTokens.DANGER)));
         home.revalidate();
         home.repaint();
-        cards.show(cardHost, HOME);
+        showView(HOME);
     }
 
     void showPathForTesting()
     {
-        cards.show(cardHost, BROWSER);
+        showView(BROWSER);
+    }
+
+    void showPathSearchForTesting(String query)
+    {
+        search.setText(query);
+        showView(BROWSER);
     }
 
     void showGearForTesting(String style)
     {
         gearPanel.selectStyleForTesting(style);
-        cards.show(cardHost, GEAR);
+        showView(GEAR);
+    }
+
+    void showGearSearchForTesting(String query)
+    {
+        gearPanel.setSearchForTesting(query);
+        showView(GEAR);
     }
 
     void showGearObjectiveForTesting(String objectiveId)
     {
         gearPanel.showObjective(objectiveId);
-        cards.show(cardHost, GEAR);
+        showView(GEAR);
     }
 
     private void rebuildHome()
@@ -202,8 +258,23 @@ public final class IronPathPanel extends PluginPanel
         home.add(buildPosition());
         home.add(gap(10));
 
+        if (goalPlan != null)
+        {
+            home.add(buildGoalPlanner());
+            home.add(gap(10));
+        }
+        if (recommendations != null && recommendations.getNewOpportunity() != null)
+        {
+            home.add(buildNewOpportunity(recommendations.getNewOpportunity()));
+            home.add(gap(10));
+        }
+
         GoalAction goalAction = goalResolution == null ? null : goalResolution.getNextAction();
-        if (goalAction != null && goalAction.getRouteStep() != null)
+        if (hasRecommendations())
+        {
+            addRecommendations();
+        }
+        else if (goalAction != null && goalAction.getRouteStep() != null)
         {
             home.add(buildGoalRouteStep(goalAction));
         }
@@ -220,7 +291,7 @@ public final class IronPathPanel extends PluginPanel
             home.add(buildCurrent(projection.getCurrent()));
         }
 
-        if (gearProjection != null && gearProjection.getRecommended() != null)
+        if (!hasRecommendations() && gearProjection != null && gearProjection.getRecommended() != null)
         {
             home.add(gap(10));
             home.add(buildNextGear(gearProjection.getRecommended()));
@@ -254,6 +325,207 @@ public final class IronPathPanel extends PluginPanel
         home.add(verticalGlue());
         home.revalidate();
         home.repaint();
+    }
+
+    private boolean hasRecommendations()
+    {
+        return recommendations != null && (recommendations.getRecommended() != null
+            || recommendations.getQuickWin() != null || recommendations.getLongTerm() != null);
+    }
+
+    private void addRecommendations()
+    {
+        if (recommendations.getRecommended() != null)
+        {
+            home.add(buildCandidate("RECOMMENDED", recommendations.getRecommended()));
+        }
+        if (recommendations.getQuickWin() != null)
+        {
+            if (recommendations.getRecommended() != null) home.add(gap(10));
+            home.add(buildCandidate("QUICK WIN", recommendations.getQuickWin()));
+        }
+        if (recommendations.getLongTerm() != null)
+        {
+            if (recommendations.getRecommended() != null || recommendations.getQuickWin() != null) home.add(gap(10));
+            home.add(buildCandidate("LONG-TERM", recommendations.getLongTerm()));
+        }
+    }
+
+    private JPanel buildGoalPlanner()
+    {
+        JPanel body = verticalPanel();
+        body.add(sectionLabel("I WANT TO WORK TOWARD…"));
+        body.add(gap(4));
+        body.add(goalSelector);
+        if (goalPlan.getUnavailableSelectedId() != null)
+        {
+            body.add(gap(6));
+            body.add(statusLine(TruthValue.UNKNOWN,
+                "The saved goal cannot be pursued by this version. Choose another goal or clear it."));
+        }
+        else if (goalPlan.hasSelectedGoal())
+        {
+            body.add(gap(8));
+            body.add(sectionLabel("YOUR GOAL"));
+            body.add(gap(3));
+            body.add(labelHtml("<b>" + escape(goalPlan.getTitle()) + "</b>", UiTokens.ACCENT));
+            body.add(labelHtml(escape(goalPlan.getDescription()), UiTokens.MUTED));
+            PlannedAction action = goalPlan.getNextAction();
+            if (action != null)
+            {
+                body.add(gap(8));
+                body.add(sectionLabel("NEXT STEP"));
+                body.add(gap(3));
+                body.add(labelHtml("<b>" + escape(action.getTitle()) + "</b>",
+                    action.getKind() == PlannedAction.Kind.COMPLETE ? UiTokens.SUCCESS : UiTokens.TEXT));
+                body.add(gap(7));
+                body.add(sectionLabel("WHY NOW?"));
+                body.add(gap(3));
+                body.add(labelHtml(escape(goalPlan.getWhyNow()), UiTokens.MUTED));
+            }
+            addGoalProgress(body);
+            if (goalPlan.getAfterThis() != null)
+            {
+                body.add(gap(7));
+                body.add(sectionLabel("AFTER THIS"));
+                body.add(gap(3));
+                body.add(labelHtml(escape(goalPlan.getAfterThis()), UiTokens.TEXT));
+            }
+            body.add(gap(7));
+            body.add(sectionLabel("WHAT THIS UNLOCKS"));
+            body.add(gap(3));
+            int shown = 0;
+            for (String unlock : goalPlan.getUnlocks())
+            {
+                body.add(labelHtml("○  " + escape(unlock), UiTokens.TEXT));
+                if (++shown == 3) break;
+            }
+            ResourceReadiness resources = goalPlan.getResourceReadiness();
+            if (resources != null)
+            {
+                body.add(gap(7));
+                body.add(sectionLabel("RESOURCE READINESS"));
+                body.add(gap(3));
+                body.add(statusLine(resources.getValue(), resources.getSummary()));
+            }
+        }
+        body.add(gap(8));
+        body.add(goalPlannerActions());
+        body.add(gap(3));
+        body.add(labelHtml(humanize(plannerPreferences.getPlaystyle().name()) + " · "
+            + plannerPreferences.getSessionLength().getLabel()
+            + (plannerPreferences.isAvoidWilderness() ? " · Avoid Wilderness" : ""), UiTokens.MUTED));
+        return card(body);
+    }
+
+    private void addGoalProgress(JPanel body)
+    {
+        if (goalPlan.getProgress().isEmpty()) return;
+        body.add(gap(7));
+        body.add(sectionLabel("PROGRESS"));
+        body.add(gap(3));
+        List<RequirementResult> ordered = new java.util.ArrayList<>(goalPlan.getProgress());
+        ordered.sort(java.util.Comparator.comparingInt(result -> result.getValue() == TruthValue.TRUE ? 1 : 0));
+        int shown = 0;
+        for (RequirementResult result : ordered)
+        {
+            body.add(statusLine(result.getValue(), result.getLabel() + detailSuffix(result)));
+            if (++shown == 4) break;
+        }
+        if (ordered.size() > shown)
+            body.add(labelHtml("+ " + (ordered.size() - shown) + " more requirement(s)", UiTokens.MUTED));
+    }
+
+    private JPanel goalPlannerActions()
+    {
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        row.setOpaque(false);
+        row.setAlignmentX(Component.LEFT_ALIGNMENT);
+        if (goalPlan.hasSelectedGoal() || goalPlan.getUnavailableSelectedId() != null)
+        {
+            JButton clear = smallButton("CLEAR");
+            clear.setToolTipText("Clear the selected progression goal");
+            clear.addActionListener(event ->
+            {
+                gearPreferences.setSelectedGoalId(null);
+                reevaluate.run();
+            });
+            row.add(clear);
+        }
+        if (goalPlan.hasSelectedGoal() && goalPlan.getWikiPage() != null)
+        {
+            JButton wiki = smallButton("WIKI");
+            wiki.addActionListener(event -> wikiBridge.open(goalPlan.getWikiPage()));
+            row.add(wiki);
+        }
+        JButton preferences = smallButton("PREFERENCES");
+        preferences.setToolTipText("Change playstyle, Wilderness, and session ranking preferences");
+        preferences.addActionListener(event -> showPlannerPreferences(preferences));
+        row.add(preferences);
+        return row;
+    }
+
+    private JPanel buildCandidate(String label, ProgressionCandidate candidate)
+    {
+        JPanel body = verticalPanel();
+        body.add(sectionLabel(label));
+        body.add(gap(4));
+        body.add(labelHtml("<b>" + escape(candidate.getTitle()) + "</b>", UiTokens.ACCENT));
+        body.add(labelHtml(humanize(candidate.getImpact()) + " · "
+            + humanize(candidate.getEffort().name()) + " effort", UiTokens.MUTED));
+        body.add(gap(5));
+        body.add(labelHtml(escape(candidate.getReason()), UiTokens.TEXT));
+        if (candidate.getUnlockSummary() != null && !candidate.getUnlockSummary().equals(candidate.getReason()))
+        {
+            body.add(gap(5));
+            body.add(labelHtml("Unlocks: " + escape(candidate.getUnlockSummary()), UiTokens.MUTED));
+        }
+        JButton open = candidateAction(candidate);
+        if (open != null)
+        {
+            body.add(gap(7));
+            body.add(open);
+        }
+        return card(body);
+    }
+
+    private JButton candidateAction(ProgressionCandidate candidate)
+    {
+        if (candidate.getRouteStep() != null)
+        {
+            JButton open = smallButton("VIEW IN PATH");
+            open.setAlignmentX(Component.LEFT_ALIGNMENT);
+            open.addActionListener(event ->
+            {
+                routeDetailId = candidate.getRouteStep().getStep().getId();
+                rebuildBrowser();
+                showView(BROWSER);
+            });
+            return open;
+        }
+        if (candidate.getGearStep() != null)
+        {
+            JButton open = smallButton("VIEW IN GEAR");
+            open.setAlignmentX(Component.LEFT_ALIGNMENT);
+            open.addActionListener(event ->
+            {
+                gearPanel.showObjective(candidate.getGearStep().getUpgrade().getId());
+                showView(GEAR);
+            });
+            return open;
+        }
+        return null;
+    }
+
+    private JPanel buildNewOpportunity(UnlockOpportunity opportunity)
+    {
+        JPanel body = verticalPanel();
+        body.add(sectionLabel("NEW OPPORTUNITY"));
+        body.add(gap(4));
+        body.add(labelHtml("<b>" + escape(opportunity.getTitle()) + "</b>", UiTokens.SUCCESS));
+        body.add(gap(3));
+        body.add(labelHtml(escape(opportunity.getExplanation()), UiTokens.TEXT));
+        return card(body);
     }
 
     private JPanel buildHeader()
@@ -341,7 +613,7 @@ public final class IronPathPanel extends PluginPanel
         gear.addActionListener(event ->
         {
             gearPanel.showObjective(resolution.getGoal().getUpgrade().getId());
-            cards.show(cardHost, GEAR);
+            showView(GEAR);
         });
         body.add(gear);
         return card(body);
@@ -421,7 +693,7 @@ public final class IronPathPanel extends PluginPanel
             {
                 gearPanel.showObjective(action.getGearStep().getUpgrade().getId());
             }
-            cards.show(cardHost, GEAR);
+            showView(GEAR);
         });
         body.add(gear);
         return card(body);
@@ -452,7 +724,7 @@ public final class IronPathPanel extends PluginPanel
         gear.addActionListener(event ->
         {
             gearPanel.showObjective(evaluation.getUpgrade().getId());
-            cards.show(cardHost, GEAR);
+            showView(GEAR);
         });
         actions.add(doNow);
         actions.add(gear);
@@ -505,6 +777,7 @@ public final class IronPathPanel extends PluginPanel
             {
                 if (evaluation.getUpgrade().getTier() <= recommendedTier
                     || evaluation.getStatus() == GearStatus.OWNED
+                    || evaluation.getStatus() == GearStatus.UNCONFIRMED
                     || evaluation.getStatus() == GearStatus.SKIPPED)
                 {
                     continue;
@@ -735,17 +1008,6 @@ public final class IronPathPanel extends PluginPanel
     {
         JPanel footer = verticalPanel();
         footer.setOpaque(false);
-        JPanel row = new JPanel(new GridLayout(1, 2, 5, 0));
-        row.setOpaque(false);
-        JButton browser = smallButton("PATH");
-        browser.addActionListener(event -> cards.show(cardHost, BROWSER));
-        JButton gear = smallButton("GEAR");
-        gear.addActionListener(event -> cards.show(cardHost, GEAR));
-        row.add(browser);
-        row.add(gear);
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, row.getPreferredSize().height));
-        footer.add(row);
-        footer.add(gap(5));
         JButton refresh = smallButton("RE-EVALUATE");
         refresh.addActionListener(event -> reevaluate.run());
         refresh.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -764,10 +1026,12 @@ public final class IronPathPanel extends PluginPanel
         top.setOpaque(false);
         pathBack.addActionListener(event ->
         {
-            if (routeDetailId == null) cards.show(cardHost, HOME);
-            else { routeDetailId = null; rebuildBrowser(); }
+            routeDetailId = null;
+            rebuildBrowser();
         });
         search.setToolTipText("Search route steps and quests");
+        search.getAccessibleContext().setAccessibleName("Search progression route");
+        search.getAccessibleContext().setAccessibleDescription("Filter route steps by title or category");
         search.getDocument().addDocumentListener(new DocumentListener()
         {
             @Override public void insertUpdate(DocumentEvent event) { rebuildBrowser(); }
@@ -775,11 +1039,16 @@ public final class IronPathPanel extends PluginPanel
             @Override public void changedUpdate(DocumentEvent event) { rebuildBrowser(); }
         });
         top.add(pathBack, BorderLayout.WEST);
-        top.add(search, BorderLayout.CENTER);
+        JPanel searchBox = verticalPanel();
+        searchBox.add(sectionLabel("SEARCH PATH"));
+        searchBox.add(gap(2));
+        searchBox.add(search);
+        top.add(searchBox, BorderLayout.CENTER);
         browser.add(top, BorderLayout.NORTH);
         JScrollPane scroll = new JScrollPane(browserResults);
         scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.setBorder(null);
+        scroll.getViewport().setBackground(UiTokens.BACKGROUND);
         scroll.getVerticalScrollBar().setUnitIncrement(16);
         browser.add(scroll, BorderLayout.CENTER);
         return browser;
@@ -809,7 +1078,7 @@ public final class IronPathPanel extends PluginPanel
             browserResults.revalidate();
             return;
         }
-        pathBack.setText(routeDetailId == null ? "OVERVIEW" : "BACK");
+        pathBack.setVisible(routeDetailId != null);
         if (routeDetailId != null)
         {
             StepEvaluation detail = findRouteStep(routeDetailId);
@@ -951,6 +1220,125 @@ public final class IronPathPanel extends PluginPanel
         home.repaint();
     }
 
+    private JPanel buildNavigation()
+    {
+        JPanel navigation = new JPanel(new GridLayout(1, 3, 4, 0));
+        navigation.setBackground(UiTokens.BACKGROUND);
+        navigation.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 1, 0, UiTokens.BORDER),
+            BorderFactory.createEmptyBorder(7, 7, 7, 7)));
+        navigation.add(overviewNav);
+        navigation.add(pathNav);
+        navigation.add(gearNav);
+        return navigation;
+    }
+
+    private void updateGoalSelector()
+    {
+        updatingGoalSelector = true;
+        goalSelector.removeAllItems();
+        goalSelector.addItem(new GoalChoice(null, "Choose a goal…"));
+        String selected = goalPlan == null ? null : goalPlan.getGoalId();
+        if (goalPlan != null && goalPlan.getCatalog() != null)
+        {
+            int selectedIndex = 0;
+            int index = 1;
+            if (goalPlan.getLegacyGearGoal() != null)
+            {
+                goalSelector.addItem(new GoalChoice(selected, goalPlan.getTitle() + " (Gear goal)"));
+                selectedIndex = index++;
+            }
+            for (com.ironpath.goal.GoalDefinition goal : goalPlan.getCatalog().getGoals())
+            {
+                goalSelector.addItem(new GoalChoice(goal.getId(), goal.getTitle()));
+                if (goal.getId().equals(selected)) selectedIndex = index;
+                index++;
+            }
+            goalSelector.setSelectedIndex(selectedIndex);
+        }
+        updatingGoalSelector = false;
+    }
+
+    private void goalSelectionChanged()
+    {
+        if (updatingGoalSelector) return;
+        GoalChoice choice = (GoalChoice) goalSelector.getSelectedItem();
+        gearPreferences.setSelectedGoalId(choice == null ? null : choice.id);
+        reevaluate.run();
+    }
+
+    private void showPlannerPreferences(Component anchor)
+    {
+        JPopupMenu menu = new JPopupMenu();
+        ButtonGroup styles = new ButtonGroup();
+        for (Playstyle style : Playstyle.values())
+        {
+            JRadioButtonMenuItem item = new JRadioButtonMenuItem(humanize(style.name()),
+                plannerPreferences.getPlaystyle() == style);
+            item.addActionListener(event ->
+            {
+                plannerPreferences.setPlaystyle(style);
+                reevaluate.run();
+            });
+            styles.add(item);
+            menu.add(item);
+        }
+        menu.addSeparator();
+        JCheckBoxMenuItem wilderness = new JCheckBoxMenuItem("Avoid Wilderness",
+            plannerPreferences.isAvoidWilderness());
+        wilderness.addActionListener(event ->
+        {
+            plannerPreferences.setAvoidWilderness(wilderness.isSelected());
+            reevaluate.run();
+        });
+        menu.add(wilderness);
+        menu.addSeparator();
+        ButtonGroup sessions = new ButtonGroup();
+        for (SessionLength session : SessionLength.values())
+        {
+            JRadioButtonMenuItem item = new JRadioButtonMenuItem("Session: " + session.getLabel(),
+                plannerPreferences.getSessionLength() == session);
+            item.addActionListener(event ->
+            {
+                plannerPreferences.setSessionLength(session);
+                reevaluate.run();
+            });
+            sessions.add(item);
+            menu.add(item);
+        }
+        menu.show(anchor, 0, anchor.getHeight());
+    }
+
+    private void showView(String view)
+    {
+        cards.show(cardHost, view);
+        updateNavigationState(overviewNav, HOME.equals(view));
+        updateNavigationState(pathNav, BROWSER.equals(view));
+        updateNavigationState(gearNav, GEAR.equals(view));
+    }
+
+    private static void updateNavigationState(JButton button, boolean selected)
+    {
+        button.setEnabled(!selected);
+        button.getAccessibleContext().setAccessibleDescription(selected
+            ? "Current IronPath view" : button.getToolTipText());
+    }
+
+    private static JButton navigationButton(String text, String description)
+    {
+        JButton button = smallButton(text);
+        button.setFocusable(true);
+        button.setFont(UiTokens.LABEL.deriveFont(8f));
+        button.setMargin(new java.awt.Insets(3, 0, 3, 0));
+        button.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(UiTokens.BORDER),
+            BorderFactory.createEmptyBorder(3, 0, 3, 0)));
+        button.setToolTipText(description);
+        button.getAccessibleContext().setAccessibleName(text + " view");
+        button.getAccessibleContext().setAccessibleDescription(description);
+        return button;
+    }
+
     private static JPanel notice(String text)
     {
         JPanel notice = card(labelHtml(escape(text), UiTokens.UNKNOWN));
@@ -998,7 +1386,8 @@ public final class IronPathPanel extends PluginPanel
 
     private static JLabel labelHtml(String body, Color color)
     {
-        JLabel label = new JLabel("<html><div style='width:140px'>" + body + "</div></html>");
+        JLabel label = new JLabel("<html><table width='155' cellspacing='0' cellpadding='0'><tr><td>"
+            + body + "</td></tr></table></html>");
         label.setForeground(color);
         label.setFont(UiTokens.BODY);
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -1017,7 +1406,7 @@ public final class IronPathPanel extends PluginPanel
     private static JButton smallButton(String text)
     {
         JButton button = new JButton(text);
-        button.setFocusable(false);
+        button.setFocusable(true);
         button.setFont(UiTokens.LABEL);
         button.setMargin(new java.awt.Insets(4, 7, 4, 7));
         return button;
@@ -1141,6 +1530,24 @@ public final class IronPathPanel extends PluginPanel
         public boolean getScrollableTracksViewportHeight()
         {
             return false;
+        }
+    }
+
+    private static final class GoalChoice
+    {
+        private final String id;
+        private final String label;
+
+        private GoalChoice(String id, String label)
+        {
+            this.id = id;
+            this.label = label;
+        }
+
+        @Override
+        public String toString()
+        {
+            return label;
         }
     }
 }

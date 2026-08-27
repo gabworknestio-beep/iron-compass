@@ -78,9 +78,11 @@ Combinators:
 Leaf types:
 
 - `SKILL_AT_LEAST`: `skill`, `level` (1–99);
+- `SKILL_SUM_AT_LEAST`: non-empty `skills` and a positive aggregate `level`; used when access depends on a sum such as Attack + Strength 130;
 - `QUEST_STATE`: exact current RuneLite `quest`, `state` (`NOT_STARTED`, `IN_PROGRESS`, `FINISHED`);
 - `ITEM_PRESENT` / `ITEM_QUANTITY`: positive `itemId`, positive `quantity`, and `source` (`INVENTORY`, `EQUIPMENT`, `CARRIED`, `BANK`, or `ANY`);
 - `ITEM_ANY`: non-empty positive `itemIds`, positive `quantity`, and a normal item `source`; succeeds when any listed equivalent is present;
+- `ITEM_ANY_EXACT`: the same fields as `ITEM_ANY`, but compares raw RuneLite item IDs without `ItemVariationMapping`; use only when canonicalization would merge semantically different states;
 - `EQUIPMENT_CONTAINS`: positive `itemId` and quantity;
 - `BANK_KNOWN_ITEM_QUANTITY`: positive item ID and quantity; unknown until bank observation;
 - `VARBIT_EQUALS`, `VARBIT_AT_LEAST`, `VARP_EQUALS`, `VARP_AT_LEAST`: integer `id` and `value`;
@@ -88,7 +90,9 @@ Leaf types:
 - `ACCOUNT_TYPE`: `accountTypes` matching the domain enum;
 - `MANUAL_ONLY`: explicit player confirmation.
 
-For `ANY` item source, carried quantity can prove presence immediately. If carried quantity is insufficient and the bank has not been observed, the answer is `UNKNOWN`, never “missing.” Once observed, carried and bank quantities are summed. RuneLite item-variation mapping normalizes charged, degraded, and ornament variants. Use `ITEM_ANY` only for authored functional equivalents or real upgrade descendants; do not use it to hide materially different gear behind a vague family.
+For `ANY` item source, carried quantity can prove presence immediately. If carried quantity is insufficient and the bank has not been observed, the answer is `UNKNOWN`, never “missing.” Once observed, carried and bank quantities are summed. RuneLite item-variation mapping normalizes charged, degraded, and ornament variants. Use `ITEM_ANY` only for authored functional equivalents or real upgrade descendants; do not use it to hide materially different gear behind a vague family. Use `ITEM_ANY_EXACT` narrowly—for example, the audited Slayer helmet (i) family—when RuneLite's canonical mapping would otherwise make an unimbued item satisfy an imbued goal.
+
+The Warriors' Guild gate is represented as `ANY(SKILL_SUM_AT_LEAST(Attack, Strength, 130), SKILL_AT_LEAST(Attack, 99), SKILL_AT_LEAST(Strength, 99))`. Keep alternative access rules explicit instead of approximating each skill as 65.
 
 ## Preparation and nearby work
 

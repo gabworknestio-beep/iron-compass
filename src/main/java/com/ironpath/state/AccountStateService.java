@@ -96,6 +96,11 @@ public final class AccountStateService
         quests.clear();
     }
 
+    BankSnapshot bankSnapshot()
+    {
+        return bank;
+    }
+
     private static void addItems(AccountState.Builder builder, ItemContainer container, boolean equipment)
     {
         if (container == null)

@@ -18,7 +18,12 @@ public final class GoalDependencyResolver
     public GoalResolution resolve(GearProjection gear, RouteProjection route)
     {
         GearEvaluation selected = gear == null ? null : gear.getSelected();
-        if (selected == null)
+        return resolve(selected, gear, route);
+    }
+
+    public GoalResolution resolve(GearEvaluation selected, GearProjection gear, RouteProjection route)
+    {
+        if (selected == null || selected.getStatus() == GearStatus.SKIPPED)
         {
             return null;
         }

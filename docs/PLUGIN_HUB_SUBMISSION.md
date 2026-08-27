@@ -1,36 +1,36 @@
 # Publishing IronPath to the RuneLite Plugin Hub
 
-This is the maintainer handoff for the first public release. RuneLite must review and merge the Plugin Hub manifest before IronPath appears in the client.
+IronPath is already published. This is the maintainer handoff for later updates: RuneLite must review and merge each new commit-pinned manifest change before normal clients receive it.
 
-## 1. Finish the repository release
+## 1. Finish an IronPath update
 
-1. Confirm that the public author name `Gab` in `runelite-plugin.properties` and `LICENSE` is still the identity you want reviewers and users to see.
-2. Create a public GitHub repository containing this project. Do not commit `.gradle/`, `.gradle-user-home/`, `build/`, IDE files, logs, or packaged JARs.
+1. Confirm that the public author name `Gaby100amis` in `runelite-plugin.properties` and `LICENSE` is still the identity you want reviewers and users to see.
+2. Do not commit `.gradle/`, `.gradle-user-home/`, `build/`, IDE files, logs, or packaged JARs.
 3. Keep the default branch stable and make sure the GitHub Actions build passes on Java 11.
 4. Complete the live-game items in [PLUGIN_HUB_CHECKLIST.md](PLUGIN_HUB_CHECKLIST.md).
 5. From a clean checkout, run `./gradlew clean test build` (or `gradlew.bat` on Windows).
-6. Commit the exact reviewed source. Optionally tag the first accepted candidate `v1.0.0`.
+6. Commit and push the exact reviewed source to `https://github.com/gabworknestio-beep/ironpath`.
 7. Copy the full 40-character commit SHA with `git rev-parse HEAD`.
 
 `runelite-plugin.properties` intentionally omits `version`: RuneLite documents it as optional, while the Plugin Hub manifest pins the exact source commit. Future releases update the manifest commit after review.
 
-## 2. Add the Plugin Hub manifest
+## 2. Update the existing Plugin Hub manifest
 
-Fork `runelite/plugin-hub`, create a branch, and add one extensionless file named `plugins/ironpath` with exactly:
+Sync your `runelite/plugin-hub` fork, create a branch, and edit the existing extensionless file `plugins/ironpath`. Its structure remains:
 
 ```properties
-repository=https://github.com/GITHUB_OWNER/GITHUB_REPOSITORY.git
+repository=https://github.com/gabworknestio-beep/ironpath.git
 commit=FULL_40_CHARACTER_COMMIT_SHA
-authors=PUBLIC_AUTHOR_NAME
+authors=Gaby100amis
 ```
 
-Use the final public values, no spaces around `=`, and a lowercase filename containing only letters, numbers, and dashes. The manifest author should match the public project identity.
+Normally change only `commit=`. Keep the repository and author lines stable unless those public values genuinely change. The commit must be the full 40-character hash, not GitHub's abbreviated display.
 
-## 3. Open the review pull request
+## 3. Open the update review pull request
 
-Open a pull request against `runelite/plugin-hub` titled `Add IronPath`. Link the repository README, summarize that the plugin is local-only and decision-support only, and mention the standard build, Java 11, absence of runtime dependencies, and optional integrations.
+Open one pull request against `runelite/plugin-hub` describing the IronPath update. Link the changelog and summarize any new account state, UI, or integration behaviour reviewers should test. Do not reuse or reopen an already merged initial-addition pull request.
 
-RuneLite performs automated and human review for security, policy, and build compliance. Do not announce Plugin Hub availability until the manifest is merged and IronPath is visible in a normal RuneLite client.
+RuneLite performs automated and human review for security, policy, and build compliance. The installed version remains the prior pinned commit until the update manifest is merged.
 
 ## 4. Publish later updates
 

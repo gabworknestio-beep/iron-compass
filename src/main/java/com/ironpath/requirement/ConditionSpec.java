@@ -10,6 +10,7 @@ public final class ConditionSpec
     private List<ConditionSpec> children;
     private ConditionSpec child;
     private String skill;
+    private List<String> skills;
     private int level;
     private String quest;
     private String state;
@@ -30,6 +31,7 @@ public final class ConditionSpec
     public List<ConditionSpec> getChildren() { return children == null ? Collections.emptyList() : children; }
     public ConditionSpec getChild() { return child; }
     public String getSkill() { return skill; }
+    public List<String> getSkills() { return skills == null ? Collections.emptyList() : skills; }
     public int getLevel() { return level; }
     public String getQuest() { return quest; }
     public String getState() { return state; }

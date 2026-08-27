@@ -5,6 +5,7 @@ import com.ironpath.gear.GearCatalog;
 import com.ironpath.gear.GearLoader;
 import com.ironpath.gear.GearProjection;
 import com.ironpath.gear.GearRecommendationService;
+import com.ironpath.gear.GearStatus;
 import com.ironpath.gear.InMemoryGearPreferenceStore;
 import com.ironpath.persistence.InMemoryManualOverrideStore;
 import com.ironpath.persistence.ManualOverride;
@@ -52,8 +53,17 @@ public class SyntheticAccountProfilesTest
 
             assertNotNull("Profile " + (char) ('A' + profile) + " needs a next action", routeProjection.getCurrent());
             assertNotNull("Profile " + (char) ('A' + profile) + " needs a chapter", journey.getCurrent());
-            assertNotNull("Profile " + (char) ('A' + profile) + " needs a gear direction",
-                gearProjection.getRecommended());
+            if (profile == 0)
+            {
+                assertTrue("Unscanned profile A must expose unconfirmed ownership",
+                    gearProjection.getEvaluations().stream()
+                        .anyMatch(evaluation -> evaluation.getStatus() == GearStatus.UNCONFIRMED));
+            }
+            else
+            {
+                assertNotNull("Profile " + (char) ('A' + profile) + " needs a gear direction",
+                    gearProjection.getRecommended());
+            }
             assertTrue(journey.getCurrent().getTotalCount() > 0);
         }
     }

@@ -1,6 +1,6 @@
 {
-  "version": 3,
-  "auditedAt": "2026-08-26",
+  "version": 4,
+  "auditedAt": "2026-08-27",
   "upgrades": [
     {
       "id": "gear.early.melee-weapon",
@@ -27,9 +27,10 @@
       "styles": ["MELEE"],
       "tier": 1,
       "completion": {"type": "ITEM_ANY", "label": "Dragon or Avernic defender", "source": "ANY", "itemIds": [12954, 22322]},
-      "requirements": {"type": "ALL", "children": [
-        {"type": "SKILL_AT_LEAST", "label": "Attack 60", "skill": "Attack", "level": 60},
-        {"type": "SKILL_AT_LEAST", "label": "Strength 60", "skill": "Strength", "level": 60}
+      "requirements": {"type": "ANY", "label": "Warriors' Guild entry", "children": [
+        {"type": "SKILL_SUM_AT_LEAST", "label": "Attack + Strength 130", "skills": ["Attack", "Strength"], "level": 130},
+        {"type": "SKILL_AT_LEAST", "label": "Attack 99", "skill": "Attack", "level": 99},
+        {"type": "SKILL_AT_LEAST", "label": "Strength 99", "skill": "Strength", "level": 99}
       ]},
       "source": {"method": "Cyclopes", "activity": "Warriors' Guild", "region": "Burthorpe"},
       "role": "RECOMMENDED", "importance": "MAJOR", "difficulty": "LOW", "effort": "MEDIUM", "usefulness": 5,
@@ -193,7 +194,7 @@
       "slot": "HEAD",
       "styles": ["MELEE", "RANGED", "MAGIC"],
       "tier": 2,
-      "completion": {"type": "ITEM_ANY", "label": "Black mask or Slayer helmet", "source": "ANY", "itemIds": [8921, 11784, 11864, 11865]},
+      "completion": {"type": "ITEM_ANY_EXACT", "label": "Slayer helmet (i), including imbued recolours", "source": "ANY", "itemIds": [11865, 19641, 19645, 19649, 21266, 21890, 23075, 24444, 25177, 25179, 25181, 25183, 25185, 25187, 25189, 25191, 25900, 25902, 25906, 25908, 25912, 25914, 26674, 26675, 26676, 26677, 26678, 26679, 26680, 26681, 26682, 26683, 26684, 29818, 29820, 29822, 33068, 33070, 33072, 33439, 33441, 33443, 33445, 33447, 33449]},
       "requirements": {"type": "ALL", "children": [
         {"type": "SKILL_AT_LEAST", "label": "Slayer 58", "skill": "Slayer", "level": 58},
         {"type": "SKILL_AT_LEAST", "label": "Crafting 55", "skill": "Crafting", "level": 55}

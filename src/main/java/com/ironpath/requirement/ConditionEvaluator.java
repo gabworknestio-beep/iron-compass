@@ -15,6 +15,17 @@ import net.runelite.client.game.ItemVariationMapping;
 
 public final class ConditionEvaluator
 {
+    private static final Set<String> SUPPORTED_TYPES = Set.of(
+        "ALL", "ANY", "NOT", "SKILL_AT_LEAST", "SKILL_SUM_AT_LEAST", "QUEST_STATE", "ITEM_PRESENT",
+        "ITEM_QUANTITY", "ITEM_ANY", "ITEM_ANY_EXACT", "EQUIPMENT_CONTAINS", "BANK_KNOWN_ITEM_QUANTITY",
+        "VARBIT_EQUALS", "VARBIT_AT_LEAST", "VARP_EQUALS", "VARP_AT_LEAST", "LOCATION_REACHED",
+        "ACCOUNT_TYPE", "MANUAL_ONLY");
+
+    public static boolean supports(String type)
+    {
+        return SUPPORTED_TYPES.contains(upper(type));
+    }
+
     public RequirementResult evaluate(ConditionSpec condition, AccountState state)
     {
         if (condition == null)
@@ -37,6 +48,15 @@ public final class ConditionEvaluator
                 return result(actualLevel >= condition.getLevel() ? TruthValue.TRUE : TruthValue.FALSE,
                     label(condition, condition.getSkill() + " " + condition.getLevel()),
                     actualLevel + " / " + condition.getLevel());
+            case "SKILL_SUM_AT_LEAST":
+                int actualSum = 0;
+                for (String skill : condition.getSkills())
+                {
+                    actualSum += state.skillLevel(skill);
+                }
+                return result(actualSum >= condition.getLevel() ? TruthValue.TRUE : TruthValue.FALSE,
+                    label(condition, String.join(" + ", condition.getSkills()) + " " + condition.getLevel()),
+                    actualSum + " / " + condition.getLevel());
             case "QUEST_STATE":
                 QuestProgress actualQuest = state.questState(condition.getQuest());
                 QuestProgress expectedQuest = parseQuestState(condition.getState());
@@ -48,7 +68,9 @@ public final class ConditionEvaluator
             case "ITEM_QUANTITY":
                 return evaluateItem(condition, state, false);
             case "ITEM_ANY":
-                return evaluateAnyItem(condition, state);
+                return evaluateAnyItem(condition, state, true);
+            case "ITEM_ANY_EXACT":
+                return evaluateAnyItem(condition, state, false);
             case "EQUIPMENT_CONTAINS":
                 return evaluateEquipment(condition, state);
             case "BANK_KNOWN_ITEM_QUANTITY":
@@ -185,7 +207,7 @@ public final class ConditionEvaluator
         }
     }
 
-    private RequirementResult evaluateAnyItem(ConditionSpec condition, AccountState state)
+    private RequirementResult evaluateAnyItem(ConditionSpec condition, AccountState state, boolean canonicalize)
     {
         String source = upper(condition.getSource());
         int carried = 0;
@@ -193,25 +215,25 @@ public final class ConditionEvaluator
         Set<Integer> canonicalIds = new HashSet<>();
         for (int configuredId : condition.getItemIds())
         {
-            canonicalIds.add(ItemVariationMapping.map(configuredId));
+            canonicalIds.add(canonicalize ? ItemVariationMapping.map(configuredId) : configuredId);
         }
         for (int itemId : canonicalIds)
         {
             if ("INVENTORY".equals(source))
             {
-                carried += state.inventoryQuantity(itemId);
+                carried += canonicalize ? state.inventoryQuantity(itemId) : state.exactInventoryQuantity(itemId);
             }
             else if ("EQUIPMENT".equals(source))
             {
-                carried += state.equipmentQuantity(itemId);
+                carried += canonicalize ? state.equipmentQuantity(itemId) : state.exactEquipmentQuantity(itemId);
             }
             else if ("CARRIED".equals(source) || "ANY".equals(source))
             {
-                carried += state.carriedQuantity(itemId);
+                carried += canonicalize ? state.carriedQuantity(itemId) : state.exactCarriedQuantity(itemId);
             }
             if (("ANY".equals(source) || "BANK".equals(source)) && state.getBank().isObserved())
             {
-                banked += state.getBank().quantity(itemId);
+                banked += canonicalize ? state.getBank().quantity(itemId) : state.getBank().exactQuantity(itemId);
             }
         }
         int actual = "BANK".equals(source) ? banked : carried + ("ANY".equals(source) ? banked : 0);

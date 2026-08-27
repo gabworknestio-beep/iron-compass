@@ -40,13 +40,12 @@ import javax.swing.event.DocumentListener;
 public final class GearPathPanel extends JPanel
 {
     private static final String[] STYLE_FILTERS = {"ALL", "MELEE", "RANGED", "MAGIC", "PRAYER", "UTILITY", "SKILLING"};
-    private static final String[] STATUS_FILTERS = {"ALL", "RECOMMENDED", "AVAILABLE", "LOCKED", "OWNED", "OPTIONAL", "SKIPPED"};
+    private static final String[] STATUS_FILTERS = {"ALL", "RECOMMENDED", "AVAILABLE", "UNCONFIRMED", "LOCKED", "OWNED", "OPTIONAL", "SKIPPED"};
 
     private final WikiBridge wiki;
     private final GearPreferenceStore preferences;
     private final ManualOverrideStore overrides;
     private final Runnable reevaluate;
-    private final Runnable showHome;
     private final JPanel content = verticalPanel();
     private final JTextField search = new JTextField();
     private final JComboBox<String> styleFilter = new JComboBox<>(STYLE_FILTERS);
@@ -57,13 +56,12 @@ public final class GearPathPanel extends JPanel
     private boolean updatingFilters;
 
     public GearPathPanel(WikiBridge wiki, GearPreferenceStore preferences, ManualOverrideStore overrides,
-                         Runnable reevaluate, Runnable showHome)
+                         Runnable reevaluate)
     {
         this.wiki = wiki;
         this.preferences = preferences;
         this.overrides = overrides;
         this.reevaluate = reevaluate;
-        this.showHome = showHome;
         setLayout(new BorderLayout());
         setBackground(UiTokens.BACKGROUND);
         JScrollPane scroll = new JScrollPane(content);
@@ -74,6 +72,10 @@ public final class GearPathPanel extends JPanel
         add(scroll, BorderLayout.CENTER);
 
         search.setToolTipText("Search gear, source, tags, or region");
+        search.getAccessibleContext().setAccessibleName("Search gear objectives");
+        search.getAccessibleContext().setAccessibleDescription("Filter gear by name, source, tag, or region");
+        styleFilter.getAccessibleContext().setAccessibleName("Gear combat style filter");
+        statusFilter.getAccessibleContext().setAccessibleName("Gear status filter");
         search.getDocument().addDocumentListener(new DocumentListener()
         {
             @Override public void insertUpdate(DocumentEvent event) { rebuild(); }
@@ -104,6 +106,11 @@ public final class GearPathPanel extends JPanel
     void selectStyleForTesting(String style)
     {
         styleFilter.setSelectedItem(style);
+    }
+
+    void setSearchForTesting(String query)
+    {
+        search.setText(query);
     }
 
     private void filterChanged(boolean style)
@@ -151,12 +158,9 @@ public final class GearPathPanel extends JPanel
         JPanel row = new JPanel(new BorderLayout(6, 0));
         row.setOpaque(false);
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JButton back = smallButton(detailId == null ? "OVERVIEW" : "BACK");
-        back.addActionListener(event ->
-        {
-            if (detailId == null) showHome.run();
-            else { detailId = null; rebuild(); }
-        });
+        JButton back = smallButton("BACK");
+        back.setVisible(detailId != null);
+        back.addActionListener(event -> { detailId = null; rebuild(); });
         JLabel title = new JLabel("GEAR PATH");
         title.setForeground(UiTokens.ACCENT);
         title.setFont(UiTokens.TITLE);
@@ -206,6 +210,8 @@ public final class GearPathPanel extends JPanel
         JPanel body = verticalPanel();
         body.add(sectionLabel("FILTERS"));
         body.add(gap(4));
+        body.add(sectionLabel("SEARCH GEAR"));
+        body.add(gap(2));
         search.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
         body.add(search);
         body.add(gap(5));
@@ -538,6 +544,8 @@ public final class GearPathPanel extends JPanel
     {
         if (evaluation.getStatus() == GearStatus.OWNED)
             return "Already owned; follow the unlock chain below for the next upgrade.";
+        if (evaluation.getStatus() == GearStatus.UNCONFIRMED)
+            return "Ownership is unconfirmed because the bank has not been scanned. You may still select this goal manually, but IronPath will not recommend it automatically.";
         if (evaluation.getStatus() == GearStatus.LOCKED || evaluation.getReadiness() == TruthValue.FALSE)
         {
             if (!evaluation.getMissingReasons().isEmpty())
@@ -583,7 +591,8 @@ public final class GearPathPanel extends JPanel
 
     private static JLabel labelHtml(String body, Color color)
     {
-        JLabel label = new JLabel("<html><div style='width:145px'>" + body + "</div></html>");
+        JLabel label = new JLabel("<html><table width='155' cellspacing='0' cellpadding='0'><tr><td>"
+            + body + "</td></tr></table></html>");
         label.setForeground(color);
         label.setFont(UiTokens.BODY);
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -600,7 +609,7 @@ public final class GearPathPanel extends JPanel
     private static JButton smallButton(String text)
     {
         JButton button = new JButton(text);
-        button.setFocusable(false);
+        button.setFocusable(true);
         button.setFont(UiTokens.LABEL);
         button.setMargin(new java.awt.Insets(4, 7, 4, 7));
         return button;
@@ -629,6 +638,7 @@ public final class GearPathPanel extends JPanel
             case OWNED: return "✓";
             case RECOMMENDED: return "→";
             case LOCKED: return "×";
+            case UNCONFIRMED: return "?";
             case OPTIONAL: return "◇";
             case SKIPPED: return "−";
             default: return "○";
@@ -642,6 +652,7 @@ public final class GearPathPanel extends JPanel
             case OWNED: return UiTokens.SUCCESS;
             case RECOMMENDED: return UiTokens.ACCENT;
             case LOCKED: return UiTokens.DANGER;
+            case UNCONFIRMED: return UiTokens.UNKNOWN;
             case OPTIONAL: return UiTokens.UNKNOWN;
             case SKIPPED: return UiTokens.MUTED;
             default: return UiTokens.TEXT;

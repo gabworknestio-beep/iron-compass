@@ -5,6 +5,7 @@ import com.ironpath.gear.GearCatalog;
 import com.ironpath.gear.GearLoader;
 import com.ironpath.gear.GearProjection;
 import com.ironpath.gear.GearRecommendationService;
+import com.ironpath.gear.GearStatus;
 import com.ironpath.gear.InMemoryGearPreferenceStore;
 import com.ironpath.persistence.InMemoryManualOverrideStore;
 import com.ironpath.requirement.ConditionEvaluator;
@@ -18,6 +19,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class SupplyForecastServiceTest
 {
@@ -40,6 +42,13 @@ public class SupplyForecastServiceTest
         SupplyLine line = new SupplyForecastService().evaluate(projection().getRecommended(),
             AccountState.builder().build()).getLines().get(0);
         assertEquals(TruthValue.UNKNOWN, line.getStatus());
+    }
+
+    @Test
+    public void skippedGoalNeverProducesSupplyForecast() throws Exception
+    {
+        assertNull(new SupplyForecastService().evaluate(
+            projection().getRecommended().withStatus(GearStatus.SKIPPED), AccountState.builder().build()));
     }
 
     private static GearProjection projection() throws Exception

@@ -10,11 +10,22 @@ import com.ironpath.gear.GearRecommendationService;
 import com.ironpath.gear.GearValidationException;
 import com.ironpath.gear.GearValidator;
 import com.ironpath.goal.GoalDependencyResolver;
+import com.ironpath.goal.GoalCatalog;
+import com.ironpath.goal.GoalLoadException;
+import com.ironpath.goal.GoalLoader;
 import com.ironpath.goal.GoalResolution;
+import com.ironpath.goal.GoalValidationException;
+import com.ironpath.goal.GoalValidator;
 import com.ironpath.integration.QuestHelperBridge;
 import com.ironpath.integration.ShortestPathBridge;
 import com.ironpath.integration.WikiBridge;
 import com.ironpath.persistence.IronPathPersistence;
+import com.ironpath.planner.GoalPlanProjection;
+import com.ironpath.planner.GoalPlannerService;
+import com.ironpath.planner.ProgressionRecommendationService;
+import com.ironpath.planner.RecommendationProjection;
+import com.ironpath.planner.UnlockOpportunity;
+import com.ironpath.planner.UnlockRadarService;
 import com.ironpath.requirement.ConditionEvaluator;
 import com.ironpath.route.Route;
 import com.ironpath.route.RouteEvaluator;
@@ -51,6 +62,7 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.events.PluginChanged;
 import net.runelite.client.events.ProfileChanged;
+import net.runelite.client.events.RuneScapeProfileChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
@@ -69,6 +81,7 @@ public final class IronPathPlugin extends Plugin
     private static final Logger log = LoggerFactory.getLogger(IronPathPlugin.class);
     private static final String ROUTE_RESOURCE = "/routes/efficient-ironman.json";
     private static final String GEAR_CATALOG_RESOURCE = "/gear/ironman-gear-2026.json";
+    private static final String GOAL_CATALOG_RESOURCE = "/goals/ironman-goals-2026.json";
     private static final int NO_CAPTURE_TICK = Integer.MIN_VALUE;
     private static final int CAPTURE_INTERVAL_TICKS = 2;
 
@@ -89,14 +102,21 @@ public final class IronPathPlugin extends Plugin
     private final GearRecommendationService gearEvaluator = new GearRecommendationService(conditionEvaluator);
     private final GoalDependencyResolver goalResolver = new GoalDependencyResolver();
     private final SupplyForecastService supplyEvaluator = new SupplyForecastService();
+    private final GoalPlannerService goalPlanner = new GoalPlannerService(conditionEvaluator, goalResolver,
+        supplyEvaluator);
+    private final ProgressionRecommendationService recommendationService = new ProgressionRecommendationService();
+    private final UnlockRadarService unlockRadar = new UnlockRadarService();
     private Route route;
     private GearCatalog gearCatalog;
+    private GoalCatalog goalCatalog;
     private RouteVariables routeVariables;
     private AccountState accountState = AccountState.loggedOut();
     private RouteProjection projection;
     private GearProjection gearProjection;
     private GoalResolution goalResolution;
     private SupplyForecast supplyForecast;
+    private GoalPlanProjection goalPlan;
+    private RecommendationProjection recommendations;
     private IronPathPanel panel;
     private NavigationButton navigationButton;
     private boolean dirty;
@@ -129,15 +149,18 @@ public final class IronPathPlugin extends Plugin
         {
             route = new RouteLoader(gson).loadResource(ROUTE_RESOURCE);
             gearCatalog = new GearLoader(gson).loadResource(GEAR_CATALOG_RESOURCE);
+            goalCatalog = new GoalLoader(gson).loadResource(GOAL_CATALOG_RESOURCE);
             Set<String> quests = Arrays.stream(Quest.values()).map(Quest::getName).collect(Collectors.toSet());
             new RouteValidator(quests).validate(route);
-            new GearValidator().validate(gearCatalog);
+            new GearValidator().validate(gearCatalog, route);
+            new GoalValidator(quests).validate(goalCatalog, gearCatalog, route);
             routeVariables = new RouteVariables(route);
             persistence.migrate(route);
             log.debug("Loaded IronPath route {} v{} and gear catalog v{}", route.getRouteId(), route.getVersion(),
                 gearCatalog.getVersion());
         }
-        catch (RouteLoadException | RouteValidationException | GearLoadException | GearValidationException ex)
+        catch (RouteLoadException | RouteValidationException | GearLoadException | GearValidationException
+            | GoalLoadException | GoalValidationException ex)
         {
             log.error("Unable to load IronPath route", ex);
             panel.showError(ex.getMessage());
@@ -161,10 +184,14 @@ public final class IronPathPlugin extends Plugin
         gearProjection = null;
         goalResolution = null;
         supplyForecast = null;
+        goalPlan = null;
+        recommendations = null;
         route = null;
         gearCatalog = null;
+        goalCatalog = null;
         routeVariables = null;
         accountStateService.clearSession();
+        unlockRadar.reset();
         shortestPathBridge.clear();
         if (navigationButton != null)
         {
@@ -191,10 +218,13 @@ public final class IronPathPlugin extends Plugin
             gearProjection = null;
             goalResolution = null;
             supplyForecast = null;
+            goalPlan = null;
+            recommendations = null;
             lastCurrentStepId = null;
+            unlockRadar.reset();
             if (panel != null)
             {
-                panel.update(accountState, null, (GearProjection) null, null, null);
+                panel.update(accountState, null, (GearProjection) null, null, null, null, null);
             }
         }
     }
@@ -255,13 +285,39 @@ public final class IronPathPlugin extends Plugin
     @Subscribe
     public void onProfileChanged(ProfileChanged event)
     {
+        resetCharacterContext();
+    }
+
+    @Subscribe
+    public void onRuneScapeProfileChanged(RuneScapeProfileChanged event)
+    {
+        resetCharacterContext();
+    }
+
+    private void resetCharacterContext()
+    {
         persistence.profileChanged();
+        accountStateService.clearSession();
+        accountState = AccountState.loggedOut();
+        projection = null;
+        gearProjection = null;
+        goalResolution = null;
+        supplyForecast = null;
+        goalPlan = null;
+        recommendations = null;
         lastCurrentStepId = null;
         questsDirty = true;
+        lastCaptureTick = NO_CAPTURE_TICK;
+        shortestPathBridge.clear();
+        unlockRadar.reset();
+        if (panel != null)
+        {
+            panel.update(accountState, null, (GearProjection) null, null, null, null, null);
+        }
         if (route != null)
         {
             persistence.migrate(route);
-            dirty = true;
+            requestImmediateReevaluation();
         }
     }
 
@@ -270,7 +326,8 @@ public final class IronPathPlugin extends Plugin
     {
         if (panel != null && projection != null)
         {
-            panel.update(accountState, projection, gearProjection, goalResolution, supplyForecast);
+            panel.update(accountState, projection, gearProjection, goalResolution, supplyForecast,
+                goalPlan, recommendations);
         }
     }
 
@@ -331,15 +388,24 @@ public final class IronPathPlugin extends Plugin
             config.preferSafeAlternatives(), 4, config.preparationLookahead());
         GearProjection nextGear = gearEvaluator.evaluate(gearCatalog, accountState, persistence, persistence);
         GoalResolution nextGoal = goalResolver.resolve(nextGear, next);
+        GoalPlanProjection nextPlan = goalPlanner.evaluate(goalCatalog, accountState, nextGear, next, persistence);
+        RecommendationProjection nextRecommendations = recommendationService.evaluate(next, nextGear, nextPlan,
+            accountState, persistence);
+        UnlockOpportunity opportunity = unlockRadar.evaluate(nextGear, nextPlan);
+        nextRecommendations = nextRecommendations.withNewOpportunity(opportunity);
         SupplyForecast nextSupplies = supplyEvaluator.evaluate(nextGear.getSelected() == null
             ? nextGear.getRecommended() : nextGear.getSelected(), accountState);
-        String nextId = nextGoal != null && nextGoal.getNextAction() != null
+        String nextId = nextPlan != null && nextPlan.getNextAction() != null
+            ? "planner:" + nextPlan.getNextAction().getTitle()
+            : nextGoal != null && nextGoal.getNextAction() != null
             ? "goal:" + nextGoal.getNextAction().getTitle()
             : next.getCurrent() == null ? null : next.getCurrent().getStep().getId();
         if (allowNotification && config.completionNotifications() && lastCurrentStepId != null
             && nextId != null && !lastCurrentStepId.equals(nextId))
         {
-            String nextTitle = nextGoal != null && nextGoal.getNextAction() != null
+            String nextTitle = nextPlan != null && nextPlan.getNextAction() != null
+                ? nextPlan.getNextAction().getTitle()
+                : nextGoal != null && nextGoal.getNextAction() != null
                 ? nextGoal.getNextAction().getTitle()
                 : next.getCurrent() == null ? "route complete" : next.getCurrent().getStep().getTitle();
             notifier.notify("IronPath advanced. Next: " + nextTitle);
@@ -348,10 +414,13 @@ public final class IronPathPlugin extends Plugin
         gearProjection = nextGear;
         goalResolution = nextGoal;
         supplyForecast = nextSupplies;
+        goalPlan = nextPlan;
+        recommendations = nextRecommendations;
         lastCurrentStepId = nextId;
         if (panel != null)
         {
-            panel.update(accountState, projection, gearProjection, goalResolution, supplyForecast);
+            panel.update(accountState, projection, gearProjection, goalResolution, supplyForecast,
+                goalPlan, recommendations);
         }
     }
 }

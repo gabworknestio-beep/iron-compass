@@ -78,6 +78,10 @@ public final class GearRecommendationService
             {
                 status = GearStatus.SKIPPED;
             }
+            else if (item.completion == TruthValue.UNKNOWN)
+            {
+                status = GearStatus.UNCONFIRMED;
+            }
             else if (readiness == TruthValue.FALSE)
             {
                 status = GearStatus.LOCKED;
@@ -109,7 +113,8 @@ public final class GearRecommendationService
         for (GearEvaluation evaluation : results)
         {
             if (evaluation.getStatus() == GearStatus.OWNED) owned++;
-            if (evaluation.getUpgrade().getId().equals(selectedId)) selected = evaluation;
+                if (evaluation.getUpgrade().getId().equals(selectedId)
+                    && evaluation.getStatus() != GearStatus.SKIPPED) selected = evaluation;
         }
         return new GearProjection(catalog, results, recommended, selected, owned);
     }

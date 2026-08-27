@@ -85,6 +85,42 @@ public class ConditionEvaluatorTest
         assertEquals(TruthValue.FALSE, evaluator.evaluate(gloryFamily, knownEmpty).getValue());
     }
 
+    @Test
+    public void skillSumSupportsWarriorsGuildEntryRule()
+    {
+        ConditionSpec entry = condition("{\"type\":\"ANY\",\"children\":["
+            + "{\"type\":\"SKILL_SUM_AT_LEAST\",\"skills\":[\"Attack\",\"Strength\"],\"level\":130},"
+            + "{\"type\":\"SKILL_AT_LEAST\",\"skill\":\"Attack\",\"level\":99},"
+            + "{\"type\":\"SKILL_AT_LEAST\",\"skill\":\"Strength\",\"level\":99}]}");
+
+        assertEquals(TruthValue.TRUE, evaluator.evaluate(entry,
+            AccountState.builder().skill("Attack", 65).skill("Strength", 65).build()).getValue());
+        assertEquals(TruthValue.TRUE, evaluator.evaluate(entry,
+            AccountState.builder().skill("Attack", 70).skill("Strength", 60).build()).getValue());
+        assertEquals(TruthValue.TRUE, evaluator.evaluate(entry,
+            AccountState.builder().skill("Attack", 99).skill("Strength", 1).build()).getValue());
+        assertEquals(TruthValue.TRUE, evaluator.evaluate(entry,
+            AccountState.builder().skill("Attack", 1).skill("Strength", 99).build()).getValue());
+        assertEquals(TruthValue.FALSE, evaluator.evaluate(entry,
+            AccountState.builder().skill("Attack", 60).skill("Strength", 60).build()).getValue());
+    }
+
+    @Test
+    public void exactItemFamilyDoesNotCollapseImbuedAndUnimbuedSlayerHelmets()
+    {
+        ConditionSpec imbued = condition("{\"type\":\"ITEM_ANY_EXACT\",\"source\":\"ANY\","
+            + "\"itemIds\":[11865,19641,25177,26674]}");
+
+        assertEquals(TruthValue.FALSE, evaluator.evaluate(imbued,
+            AccountState.builder().inventoryItem(11864, 1).bank(BankSnapshot.observed(Map.of())).build()).getValue());
+        assertEquals(TruthValue.FALSE, evaluator.evaluate(imbued,
+            AccountState.builder().inventoryItem(8921, 1).bank(BankSnapshot.observed(Map.of())).build()).getValue());
+        assertEquals(TruthValue.TRUE, evaluator.evaluate(imbued,
+            AccountState.builder().equipmentItem(11865, 1).build()).getValue());
+        assertEquals(TruthValue.TRUE, evaluator.evaluate(imbued,
+            AccountState.builder().bank(BankSnapshot.observed(Map.of(19641, 1))).build()).getValue());
+    }
+
     private ConditionSpec condition(String json)
     {
         return gson.fromJson(json, ConditionSpec.class);

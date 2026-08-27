@@ -17,7 +17,15 @@ public final class InMemoryGearPreferenceStore implements GearPreferenceStore
     @Override public String getSelectedGoalId() { return selected; }
     @Override public void setSelectedGoalId(String goalId) { selected = goalId; }
     @Override public boolean isSkipped(String goalId) { return skipped.contains(goalId); }
-    @Override public void setSkipped(String goalId, boolean value) { if (value) skipped.add(goalId); else skipped.remove(goalId); }
+    @Override public void setSkipped(String goalId, boolean value)
+    {
+        if (value)
+        {
+            skipped.add(goalId);
+            if (goalId != null && goalId.equals(selected)) selected = null;
+        }
+        else skipped.remove(goalId);
+    }
     @Override public boolean isMarkedOptional(String goalId) { return optional.contains(goalId); }
     @Override public void setMarkedOptional(String goalId, boolean value) { if (value) optional.add(goalId); else optional.remove(goalId); }
     @Override public String getChosenAlternative(String goalId) { return alternatives.get(goalId); }

@@ -1,6 +1,7 @@
 package com.ironpath.supply;
 
 import com.ironpath.gear.GearEvaluation;
+import com.ironpath.gear.GearStatus;
 import com.ironpath.gear.SupplySpec;
 import com.ironpath.gear.SupplyVariant;
 import com.ironpath.requirement.TruthValue;
@@ -12,7 +13,7 @@ public final class SupplyForecastService
 {
     public SupplyForecast evaluate(GearEvaluation goal, AccountState state)
     {
-        if (goal == null)
+        if (goal == null || goal.getStatus() == GearStatus.SKIPPED)
         {
             return null;
         }

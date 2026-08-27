@@ -14,7 +14,7 @@ public class GearCatalogValidationTest
         GearCatalog catalog = new GearLoader(new Gson()).loadResource("/gear/ironman-gear-2026.json");
         new GearValidator().validate(catalog);
         assertEquals(40, catalog.getUpgrades().size());
-        assertEquals("2026-08-26", catalog.getAuditedAt());
+        assertEquals("2026-08-27", catalog.getAuditedAt());
     }
 
     @Test(expected = GearValidationException.class)
@@ -58,6 +58,22 @@ public class GearCatalogValidationTest
         GearCatalog catalog = load("{\"version\":1,\"upgrades\":["
             + valid("a", 1, "\"previousIds\":[\"b\"]") + ","
             + valid("b", 2, "\"previousIds\":[\"a\"]") + "]}");
+        new GearValidator().validate(catalog);
+    }
+
+    @Test(expected = GearValidationException.class)
+    public void invalidConditionTypesAreRejected() throws Exception
+    {
+        GearCatalog catalog = load("{\"version\":1,\"upgrades\":[{\"id\":\"gear.valid\","
+            + "\"name\":\"Valid\",\"styles\":[\"MELEE\"],\"tier\":1,"
+            + "\"completion\":{\"type\":\"UNKNOWN_FUTURE_TYPE\"}}]}");
+        new GearValidator().validate(catalog);
+    }
+
+    @Test(expected = GearValidationException.class)
+    public void persistenceSeparatorsAreRejectedInIds() throws Exception
+    {
+        GearCatalog catalog = load("{\"version\":1,\"upgrades\":[" + valid("gear:bad", 1, "") + "]}");
         new GearValidator().validate(catalog);
     }
 

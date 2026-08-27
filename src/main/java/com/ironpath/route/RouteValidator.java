@@ -14,9 +14,9 @@ import java.util.Set;
 public final class RouteValidator
 {
     private static final Set<String> CONDITION_TYPES = Set.of(
-        "ALL", "ANY", "NOT", "SKILL_AT_LEAST", "QUEST_STATE", "ITEM_PRESENT", "ITEM_QUANTITY",
+        "ALL", "ANY", "NOT", "SKILL_AT_LEAST", "SKILL_SUM_AT_LEAST", "QUEST_STATE", "ITEM_PRESENT", "ITEM_QUANTITY",
         "EQUIPMENT_CONTAINS", "BANK_KNOWN_ITEM_QUANTITY", "VARBIT_EQUALS", "VARBIT_AT_LEAST",
-        "VARP_EQUALS", "VARP_AT_LEAST", "LOCATION_REACHED", "ACCOUNT_TYPE", "MANUAL_ONLY", "ITEM_ANY");
+        "VARP_EQUALS", "VARP_AT_LEAST", "LOCATION_REACHED", "ACCOUNT_TYPE", "MANUAL_ONLY", "ITEM_ANY", "ITEM_ANY_EXACT");
     private static final Set<String> ITEM_SOURCES = Set.of("INVENTORY", "EQUIPMENT", "CARRIED", "BANK", "ANY");
     private static final Set<String> QUEST_STATES = Set.of("NOT_STARTED", "IN_PROGRESS", "FINISHED");
     private static final Set<String> IMPORTANCE_LEVELS = Set.of("NORMAL", "MAJOR");
@@ -206,6 +206,12 @@ public final class RouteValidator
         {
             errors.add("invalid skill requirement at " + path);
         }
+        if ("SKILL_SUM_AT_LEAST".equals(type)
+            && (condition.getSkills().size() < 2 || condition.getSkills().stream().anyMatch(RouteValidator::blank)
+                || condition.getLevel() < 1 || condition.getLevel() > condition.getSkills().size() * 99))
+        {
+            errors.add("invalid skill-sum requirement at " + path);
+        }
         if ("QUEST_STATE".equals(type))
         {
             if (blank(condition.getQuest()))
@@ -228,7 +234,7 @@ public final class RouteValidator
         {
             errors.add("invalid item requirement at " + path);
         }
-        if ("ITEM_ANY".equals(type)
+        if (("ITEM_ANY".equals(type) || "ITEM_ANY_EXACT".equals(type))
             && (condition.getItemIds().isEmpty() || condition.getItemIds().stream().anyMatch(id -> id == null || id <= 0)
                 || condition.getQuantity() < 1 || !ITEM_SOURCES.contains(upper(condition.getSource()))))
         {

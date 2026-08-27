@@ -32,10 +32,41 @@ import javax.swing.JTextField;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class IronPathPanelRenderTest
 {
+    @Test
+    public void persistentNavigationIsKeyboardAndScreenReaderIdentifiable() throws Exception
+    {
+        SwingUtilities.invokeAndWait(() ->
+        {
+            IronPathPanel panel = new IronPathPanel(new IronPathConfig() { }, new WikiBridge(), null,
+                new QuestHelperBridge(), new InMemoryManualOverrideStore(), () -> { });
+            JButton overview = findButton(panel, "OVERVIEW");
+            JButton path = findButton(panel, "PATH");
+            JButton gear = findButton(panel, "GEAR");
+
+            assertNotNull(overview);
+            assertNotNull(path);
+            assertNotNull(gear);
+            assertTrue(overview.isFocusable());
+            assertTrue(path.isFocusable());
+            assertTrue(gear.isFocusable());
+            assertEquals("OVERVIEW view", overview.getAccessibleContext().getAccessibleName());
+            assertEquals("PATH view", path.getAccessibleContext().getAccessibleName());
+            assertEquals("GEAR view", gear.getAccessibleContext().getAccessibleName());
+            assertFalse("Selected view is identified without relying on colour", overview.isEnabled());
+
+            path.doClick();
+            assertFalse("Path becomes the selected persistent view", path.isEnabled());
+            assertTrue(overview.isEnabled());
+            assertTrue(gear.isEnabled());
+        });
+    }
+
     @Test
     public void normalSidebarWidthRendersWithoutException() throws Exception
     {

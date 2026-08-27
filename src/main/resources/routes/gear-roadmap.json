@@ -189,7 +189,7 @@
           "category": "Mid game",
           "instruction": "Build and imbue a Slayer helmet as the Black mask progression becomes available.",
           "reason": "Its on-task bonuses scale across melee, ranged, and magic and make Slayer a central equipment engine.",
-          "completion": {"type": "ITEM_ANY", "label": "Black mask or Slayer helmet", "source": "ANY", "itemIds": [8921, 11784, 11864, 11865]},
+          "completion": {"type": "ITEM_ANY_EXACT", "label": "Slayer helmet (i), including imbued recolours", "source": "ANY", "itemIds": [11865, 19641, 19645, 19649, 21266, 21890, 23075, 24444, 25177, 25179, 25181, 25183, 25185, 25187, 25189, 25191, 25900, 25902, 25906, 25908, 25912, 25914, 26674, 26675, 26676, 26677, 26678, 26679, 26680, 26681, 26682, 26683, 26684, 29818, 29820, 29822, 33068, 33070, 33072, 33439, 33441, 33443, 33445, 33447, 33449]},
           "wikiPage": "Slayer helmet (i)",
           "tags": ["gear", "core", "slayer"],
           "optional": false,

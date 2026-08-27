@@ -2,15 +2,19 @@ package com.ironpath.persistence;
 
 import com.ironpath.route.Route;
 import com.ironpath.gear.GearPreferenceStore;
+import com.ironpath.planner.PlannerPreferenceStore;
+import com.ironpath.planner.Playstyle;
+import com.ironpath.planner.SessionLength;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import javax.inject.Inject;
 import net.runelite.client.config.ConfigManager;
 
-public final class IronPathPersistence implements ManualOverrideStore, GearPreferenceStore
+public final class IronPathPersistence implements ManualOverrideStore, GearPreferenceStore, PlannerPreferenceStore
 {
     static final String CONFIG_GROUP = "ironpath-progress";
     static final String OVERRIDES_KEY = "manualOverrides";
@@ -21,8 +25,11 @@ public final class IronPathPersistence implements ManualOverrideStore, GearPrefe
     static final String ALTERNATIVE_GEAR_KEY = "gearAlternatives";
     static final String GEAR_STYLE_FILTER_KEY = "gearStyleFilter";
     static final String GEAR_STATUS_FILTER_KEY = "gearStatusFilter";
+    static final String PLAYSTYLE_KEY = "playstyle";
+    static final String AVOID_WILDERNESS_KEY = "avoidWilderness";
+    static final String SESSION_LENGTH_KEY = "sessionLength";
 
-    private final ConfigManager configManager;
+    private final ProfileConfigAccess config;
     private Map<String, ManualOverride> overrides;
     private String selectedGearGoal;
     private Set<String> skippedGear;
@@ -30,11 +37,38 @@ public final class IronPathPersistence implements ManualOverrideStore, GearPrefe
     private Map<String, String> gearAlternatives;
     private String gearStyleFilter;
     private String gearStatusFilter;
+    private Playstyle playstyle;
+    private Boolean avoidWilderness;
+    private SessionLength sessionLength;
 
     @Inject
     public IronPathPersistence(ConfigManager configManager)
     {
-        this.configManager = configManager;
+        this(new ProfileConfigAccess()
+        {
+            @Override
+            public String get(String group, String key)
+            {
+                return configManager.getRSProfileConfiguration(group, key);
+            }
+
+            @Override
+            public <T> T get(String group, String key, java.lang.reflect.Type type)
+            {
+                return configManager.getRSProfileConfiguration(group, key, type);
+            }
+
+            @Override
+            public void set(String group, String key, Object value)
+            {
+                configManager.setRSProfileConfiguration(group, key, value);
+            }
+        });
+    }
+
+    IronPathPersistence(ProfileConfigAccess config)
+    {
+        this.config = config;
     }
 
     @Override
@@ -97,10 +131,10 @@ public final class IronPathPersistence implements ManualOverrideStore, GearPrefe
                 changed = true;
             }
         }
-        Integer storedVersion = configManager.getRSProfileConfiguration(CONFIG_GROUP, ROUTE_VERSION_KEY, Integer.class);
+        Integer storedVersion = config.get(CONFIG_GROUP, ROUTE_VERSION_KEY, Integer.class);
         if (storedVersion == null || storedVersion != route.getVersion() || changed)
         {
-            configManager.setRSProfileConfiguration(CONFIG_GROUP, ROUTE_VERSION_KEY, route.getVersion());
+            config.set(CONFIG_GROUP, ROUTE_VERSION_KEY, route.getVersion());
             save();
         }
     }
@@ -114,6 +148,9 @@ public final class IronPathPersistence implements ManualOverrideStore, GearPrefe
         gearAlternatives = null;
         gearStyleFilter = null;
         gearStatusFilter = null;
+        playstyle = null;
+        avoidWilderness = null;
+        sessionLength = null;
     }
 
     @Override
@@ -142,7 +179,18 @@ public final class IronPathPersistence implements ManualOverrideStore, GearPrefe
     public void setSkipped(String goalId, boolean skipped)
     {
         loadGearPreferences();
-        if (skipped) skippedGear.add(goalId); else skippedGear.remove(goalId);
+        if (skipped)
+        {
+            skippedGear.add(goalId);
+            if (goalId != null && goalId.equals(selectedGearGoal))
+            {
+                selectedGearGoal = "";
+            }
+        }
+        else
+        {
+            skippedGear.remove(goalId);
+        }
         saveGearPreferences();
     }
 
@@ -220,6 +268,51 @@ public final class IronPathPersistence implements ManualOverrideStore, GearPrefe
         saveGearPreferences();
     }
 
+    @Override
+    public Playstyle getPlaystyle()
+    {
+        loadPlannerPreferences();
+        return playstyle;
+    }
+
+    @Override
+    public void setPlaystyle(Playstyle value)
+    {
+        loadPlannerPreferences();
+        playstyle = value == null ? Playstyle.BALANCED : value;
+        config.set(CONFIG_GROUP, PLAYSTYLE_KEY, playstyle.name());
+    }
+
+    @Override
+    public boolean isAvoidWilderness()
+    {
+        loadPlannerPreferences();
+        return avoidWilderness;
+    }
+
+    @Override
+    public void setAvoidWilderness(boolean value)
+    {
+        loadPlannerPreferences();
+        avoidWilderness = value;
+        config.set(CONFIG_GROUP, AVOID_WILDERNESS_KEY, Boolean.toString(value));
+    }
+
+    @Override
+    public SessionLength getSessionLength()
+    {
+        loadPlannerPreferences();
+        return sessionLength;
+    }
+
+    @Override
+    public void setSessionLength(SessionLength value)
+    {
+        loadPlannerPreferences();
+        sessionLength = value == null ? SessionLength.ANY : value;
+        config.set(CONFIG_GROUP, SESSION_LENGTH_KEY, sessionLength.name());
+    }
+
     private void load()
     {
         if (overrides != null)
@@ -227,7 +320,7 @@ public final class IronPathPersistence implements ManualOverrideStore, GearPrefe
             return;
         }
         overrides = new LinkedHashMap<>();
-        String encoded = configManager.getRSProfileConfiguration(CONFIG_GROUP, OVERRIDES_KEY);
+        String encoded = config.get(CONFIG_GROUP, OVERRIDES_KEY);
         if (encoded == null || encoded.trim().isEmpty())
         {
             return;
@@ -261,7 +354,7 @@ public final class IronPathPersistence implements ManualOverrideStore, GearPrefe
             }
             encoded.append(entry.getKey()).append(':').append(entry.getValue().name());
         }
-        configManager.setRSProfileConfiguration(CONFIG_GROUP, OVERRIDES_KEY, encoded.toString());
+        config.set(CONFIG_GROUP, OVERRIDES_KEY, encoded.toString());
     }
 
     private void loadGearPreferences()
@@ -280,23 +373,34 @@ public final class IronPathPersistence implements ManualOverrideStore, GearPrefe
 
     private void saveGearPreferences()
     {
-        configManager.setRSProfileConfiguration(CONFIG_GROUP, SELECTED_GEAR_GOAL_KEY, selectedGearGoal);
-        configManager.setRSProfileConfiguration(CONFIG_GROUP, SKIPPED_GEAR_KEY, String.join(";", skippedGear));
-        configManager.setRSProfileConfiguration(CONFIG_GROUP, OPTIONAL_GEAR_KEY, String.join(";", optionalGear));
+        config.set(CONFIG_GROUP, SELECTED_GEAR_GOAL_KEY, selectedGearGoal);
+        config.set(CONFIG_GROUP, SKIPPED_GEAR_KEY, String.join(";", skippedGear));
+        config.set(CONFIG_GROUP, OPTIONAL_GEAR_KEY, String.join(";", optionalGear));
         StringBuilder encoded = new StringBuilder();
         for (Map.Entry<String, String> entry : gearAlternatives.entrySet())
         {
             if (encoded.length() > 0) encoded.append(';');
             encoded.append(entry.getKey()).append(':').append(entry.getValue());
         }
-        configManager.setRSProfileConfiguration(CONFIG_GROUP, ALTERNATIVE_GEAR_KEY, encoded.toString());
-        configManager.setRSProfileConfiguration(CONFIG_GROUP, GEAR_STYLE_FILTER_KEY, gearStyleFilter);
-        configManager.setRSProfileConfiguration(CONFIG_GROUP, GEAR_STATUS_FILTER_KEY, gearStatusFilter);
+        config.set(CONFIG_GROUP, ALTERNATIVE_GEAR_KEY, encoded.toString());
+        config.set(CONFIG_GROUP, GEAR_STYLE_FILTER_KEY, gearStyleFilter);
+        config.set(CONFIG_GROUP, GEAR_STATUS_FILTER_KEY, gearStatusFilter);
+    }
+
+    private void loadPlannerPreferences()
+    {
+        if (playstyle != null)
+        {
+            return;
+        }
+        playstyle = enumValue(Playstyle.class, value(PLAYSTYLE_KEY, "BALANCED"), Playstyle.BALANCED);
+        avoidWilderness = Boolean.parseBoolean(value(AVOID_WILDERNESS_KEY, "false"));
+        sessionLength = enumValue(SessionLength.class, value(SESSION_LENGTH_KEY, "ANY"), SessionLength.ANY);
     }
 
     private String value(String key, String fallback)
     {
-        String stored = configManager.getRSProfileConfiguration(CONFIG_GROUP, key);
+        String stored = config.get(CONFIG_GROUP, key);
         return stored == null ? fallback : stored;
     }
 
@@ -329,5 +433,17 @@ public final class IronPathPersistence implements ManualOverrideStore, GearPrefe
     private static String defaultFilter(String value)
     {
         return value == null || value.trim().isEmpty() ? "ALL" : value;
+    }
+
+    private static <T extends Enum<T>> T enumValue(Class<T> type, String value, T fallback)
+    {
+        try
+        {
+            return Enum.valueOf(type, value == null ? "" : value.trim().toUpperCase(Locale.ENGLISH));
+        }
+        catch (IllegalArgumentException ex)
+        {
+            return fallback;
+        }
     }
 }

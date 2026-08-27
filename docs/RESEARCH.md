@@ -207,3 +207,26 @@ Rechecked on **2026-08-26**:
 - https://github.com/runelite/runelite/wiki/Rejected-or-Rolled-Back-Features
 
 The implementation remains Java 11, latest.release, build=standard, classpath-resource based, and dependency-free beyond RuneLite. It does not manipulate client windows, automate input, add high-end boss assistance, expose player data over HTTP, use reflection/JNI/processes, or download runtime code/data. The dynamic engine is local planning UI, not a gameplay-action or encounter-helper system.
+
+## Goal Planner and semantic-reliability audit
+
+Rechecked on **2026-08-27**:
+
+- RuneLite `ConfigManager`: https://github.com/runelite/runelite/blob/master/runelite-client/src/main/java/net/runelite/client/config/ConfigManager.java
+- RuneLite `ItemVariationMapping`: https://github.com/runelite/runelite/blob/master/runelite-client/src/main/java/net/runelite/client/game/ItemVariationMapping.java
+- Warriors' Guild: https://oldschool.runescape.wiki/w/Warriors%27_Guild
+- Slayer helmet (i): https://oldschool.runescape.wiki/w/Slayer_helmet_%28i%29
+- Quest requirements by quest: https://oldschool.runescape.wiki/w/Quests/Requirements_by_quest
+- Tombs of Amascut: https://oldschool.runescape.wiki/w/Tombs_of_Amascut
+- Royal Titans: https://oldschool.runescape.wiki/w/Royal_Titans
+- Perilous Moons dungeon: https://oldschool.runescape.wiki/w/Perilous_Moons_%28dungeon%29
+- Quest Helper repository/README: https://github.com/Zoinkwiz/quest-helper
+
+Implemented conclusions:
+
+1. **Profiles are hard session boundaries.** RuneLite exposes both `ProfileChanged` and `RuneScapeProfileChanged`; `ConfigManager` posts the RuneScape-profile event when its RS-profile key changes. IronPath handles both through one idempotent reset path and immediately removes old account, bank, route, Gear, Goal, supply, recommendation, and notification projections.
+2. **Unknown is not availability.** A goal that could be in an unopened bank is `UNCONFIRMED`. Only carried/equipped evidence, an observed current-profile bank, or an explicit manual ownership choice can prove possession.
+3. **Warriors' Guild uses the real alternative gate.** Entry is Attack + Strength at least 130, or level 99 in either skill. The condition is represented as an explicit `ANY`, not the inaccurate 65/65 approximation.
+4. **Slayer helmet (i) needs raw identity.** RuneLite variation mapping intentionally groups imbued and unimbued/cosmetic forms under a canonical family. IronPath therefore uses `ITEM_ANY_EXACT` with the audited current imbued-helmet IDs for this objective, excluding Black mask and unimbued Slayer helmets.
+5. **Curated Goal facts reuse existing engines.** Gear-linked goals reference their Gear ID instead of copying readiness/completion. Song of the Elves retains its current level-70 skill and prerequisite-quest boundaries; Bowfa depends on that Goal. Perilous Moons, Royal Titans, and Tombs of Amascut use conservative access statements grounded in the linked Wiki pages.
+6. **Quest Helper remains an honest handoff.** Its current public README still describes choosing helpers from the Quest Helper sidebar. IronPath keeps the existing partial integration and does not claim an inbound launch API that is not a stable released contract.

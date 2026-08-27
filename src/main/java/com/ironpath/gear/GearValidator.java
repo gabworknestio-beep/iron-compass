@@ -1,14 +1,27 @@
 package com.ironpath.gear;
 
+import com.ironpath.requirement.ConditionEvaluator;
+import com.ironpath.requirement.ConditionSpec;
+import com.ironpath.route.Route;
+import com.ironpath.route.RouteSection;
+import com.ironpath.route.RouteStep;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 /** Validates both reference integrity and progression-graph semantics. */
 public final class GearValidator
 {
+    private static final Pattern STABLE_ID = Pattern.compile("[a-z0-9][a-z0-9._-]{2,95}");
+
     public void validate(GearCatalog catalog) throws GearValidationException
+    {
+        validate(catalog, null);
+    }
+
+    public void validate(GearCatalog catalog, Route route) throws GearValidationException
     {
         if (catalog.getVersion() < 1 || catalog.getUpgrades().isEmpty())
         {
@@ -17,7 +30,8 @@ public final class GearValidator
         Set<String> ids = new HashSet<>();
         for (GearUpgrade upgrade : catalog.getUpgrades())
         {
-            if (blank(upgrade.getId()) || blank(upgrade.getName()) || upgrade.getCompletion() == null
+            if (blank(upgrade.getId()) || !STABLE_ID.matcher(upgrade.getId()).matches()
+                || blank(upgrade.getName()) || upgrade.getCompletion() == null
                 || upgrade.getStyles().isEmpty() || upgrade.getTier() < 1)
             {
                 throw new GearValidationException("Gear upgrade is missing id, name, positive tier, style, or completion: "
@@ -27,7 +41,16 @@ public final class GearValidator
             {
                 throw new GearValidationException("Duplicate gear upgrade id: " + upgrade.getId());
             }
+            validateCondition(upgrade.getCompletion(), upgrade.getId() + ".completion");
+            validateCondition(upgrade.getRequirements(), upgrade.getId() + ".requirements");
+            if (!blank(upgrade.getWikiPage())
+                && (upgrade.getWikiPage().contains("\n") || upgrade.getWikiPage().contains("://")))
+            {
+                throw new GearValidationException("Malformed Gear Wiki page title: " + upgrade.getId());
+            }
         }
+
+        Set<String> routeIds = route == null ? null : routeIds(route);
 
         for (GearUpgrade upgrade : catalog.getUpgrades())
         {
@@ -35,6 +58,14 @@ public final class GearValidator
             validateReferences(upgrade, upgrade.getAlternativeIds(), ids, "alternative");
             validateReferences(upgrade, upgrade.getPrerequisiteIds(), ids, "prerequisite");
             validateDistinctRelations(upgrade);
+            if (routeIds != null)
+            {
+                for (String routeStepId : upgrade.getRouteStepIds())
+                {
+                    if (!routeIds.contains(routeStepId))
+                        throw new GearValidationException(upgrade.getId() + " has unknown route step " + routeStepId);
+                }
+            }
             for (String previousId : upgrade.getPreviousIds())
             {
                 GearUpgrade previous = catalog.find(previousId);
@@ -145,6 +176,39 @@ public final class GearValidator
             if (target.equals(id) || reachable(catalog, catalog.find(id), target, visited)) return true;
         }
         return false;
+    }
+
+    private static void validateCondition(ConditionSpec condition, String path) throws GearValidationException
+    {
+        if (condition == null) return;
+        if (!ConditionEvaluator.supports(condition.getType()))
+            throw new GearValidationException("Invalid Gear condition type at " + path + ": " + condition.getType());
+        String type = condition.getType().toUpperCase(java.util.Locale.ENGLISH);
+        if (("ALL".equals(type) || "ANY".equals(type)) && condition.getChildren().isEmpty())
+            throw new GearValidationException(type + " requires children at " + path);
+        if ("NOT".equals(type) && condition.getChild() == null)
+            throw new GearValidationException("NOT requires child at " + path);
+        if ("SKILL_AT_LEAST".equals(type)
+            && (blank(condition.getSkill()) || condition.getLevel() < 1 || condition.getLevel() > 99))
+            throw new GearValidationException("Invalid Gear skill condition at " + path);
+        if ("SKILL_SUM_AT_LEAST".equals(type)
+            && (condition.getSkills().size() < 2 || condition.getLevel() < 1))
+            throw new GearValidationException("Invalid Gear skill-sum condition at " + path);
+        if (("ITEM_ANY".equals(type) || "ITEM_ANY_EXACT".equals(type))
+            && (condition.getItemIds().isEmpty()
+                || condition.getItemIds().stream().anyMatch(id -> id == null || id <= 0)))
+            throw new GearValidationException("Invalid Gear item family at " + path);
+        for (int i = 0; i < condition.getChildren().size(); i++)
+            validateCondition(condition.getChildren().get(i), path + ".children[" + i + "]");
+        validateCondition(condition.getChild(), path + ".child");
+    }
+
+    private static Set<String> routeIds(Route route)
+    {
+        Set<String> ids = new HashSet<>();
+        for (RouteSection section : route.getSections())
+            for (RouteStep step : section.getSteps()) ids.add(step.getId());
+        return ids;
     }
 
     private static boolean blank(String value)

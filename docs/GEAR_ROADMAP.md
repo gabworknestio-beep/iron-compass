@@ -1,6 +1,6 @@
 # Dynamic Gear Path
 
-Audited: **2026-08-26**.
+Audited: **2026-08-27**.
 
 IronPath's Gear view is an account-aware objective engine. It answers **“what is my next useful gear upgrade, why is it timely, and what unlocks it?”** while allowing the player to choose a different path.
 
@@ -19,13 +19,14 @@ The catalog deliberately stops at 40 integrated decisions instead of becoming a 
 ## States
 
 - **OWNED** — an accepted equivalent is carried, equipped, observed in the bank, or manually confirmed.
+- **UNCONFIRMED** — carried state does not prove ownership and the current character's bank has not yet been observed; manual ownership remains available.
 - **AVAILABLE** — direct requirements and gear prerequisites are met.
 - **LOCKED** — a quest, skill, item or prerequisite is missing; the detail view says which.
 - **RECOMMENDED** — the highest-scoring reachable objective after player choices.
 - **OPTIONAL** — optional, niche, long-term, or manually deprioritised.
 - **SKIPPED** — explicitly postponed by the player.
 
-An unopened bank produces unknown ownership, never a false “missing” claim. The bank card says **Bank not scanned yet** until it is observed during the current session.
+An unopened bank produces unconfirmed ownership, never a false “missing” or “available” claim. The bank card says **Bank not scanned yet** until it is observed during the current character session. Logout and both RuneLite profile-change events clear that observation immediately.
 
 ## Explainable scoring
 
@@ -67,7 +68,7 @@ The selected goal, skips, optional marks, chosen alternatives, style/status filt
 
 ## Detection and equivalent families
 
-Completion checks inventory, equipment, and the locally observed bank. RuneLite's `ItemVariationMapping` canonicalizes charged, degraded, imbued, poisoned and ornament variants. Authored `ITEM_ANY` families then accept functional descendants. Dragon defender is the prerequisite for Avernic defender; Avernic also satisfies the earlier Dragon-defender ownership family, but is never modelled as an alternative to its own base item.
+Completion checks inventory, equipment, and the locally observed bank. RuneLite's `ItemVariationMapping` canonicalizes charged, degraded, imbued, poisoned and ornament variants. Authored `ITEM_ANY` families then accept functional descendants. `ITEM_ANY_EXACT` deliberately bypasses canonicalization when collapsing variants would alter semantics. Slayer helmet (i) uses an audited exact-ID family so neither Black mask nor an unimbued Slayer helmet can satisfy it. Dragon defender is the prerequisite for Avernic defender; Avernic also satisfies the earlier Dragon-defender ownership family, but is never modelled as an alternative to its own base item.
 
 Catalog validation rejects missing, self, duplicate and conflicting references; prerequisite and previous-item cycles; reverse alternatives; and previous-tier regressions.
 
@@ -82,5 +83,7 @@ No threshold is invented for self-contained or highly variable content. Moons, f
 ## UI
 
 The sidebar keeps three destinations: **Overview**, **Path**, and **Gear**. Gear has explicitly labelled Style and Status filters and groups the journey by combat style and early/midgame/late tier. Rows open a compact detail drill-down; account refreshes preserve the currently open Path/Gear card.
+
+Skipping a Gear goal also clears it if selected. Dependency resolution and supply forecasting independently reject skipped goals; unskipping does not silently reselect one.
 
 IronPath remains planning-only. It does not calculate live DPS, automate actions, guide boss mechanics, read collection-log history, or manipulate RuneLite windows.

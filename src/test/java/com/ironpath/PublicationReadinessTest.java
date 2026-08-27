@@ -31,6 +31,7 @@ public final class PublicationReadinessTest
         assertEquals("IronPath", metadata.getProperty("displayName"));
         assertEquals("com.ironpath.IronPathPlugin", metadata.getProperty("plugins"));
         assertEquals("standard", metadata.getProperty("build"));
+        assertEquals("Gaby100amis", metadata.getProperty("author"));
         assertFalse("Public author metadata is required", blank(metadata.getProperty("author")));
         assertFalse("Replace generic contributor metadata before publication",
             metadata.getProperty("author").toLowerCase().contains("contributors"));
@@ -65,7 +66,7 @@ public final class PublicationReadinessTest
     {
         for (String file : Arrays.asList("README.md", "LICENSE", "CHANGELOG.md", "CONTRIBUTING.md",
             "SECURITY.md", "THIRD_PARTY_NOTICES.md", "docs/PLUGIN_HUB_CHECKLIST.md",
-            "docs/PLUGIN_HUB_SUBMISSION.md"))
+            "docs/PLUGIN_HUB_SUBMISSION.md", "docs/GOAL_PLANNER.md"))
         {
             assertTrue("Missing public release document: " + file, Files.isRegularFile(Paths.get(file)));
         }
