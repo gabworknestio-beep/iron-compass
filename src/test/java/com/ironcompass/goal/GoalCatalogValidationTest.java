@@ -19,11 +19,12 @@ public final class GoalCatalogValidationTest
     private final Gson gson = new Gson();
 
     @Test
-    public void bundledCatalogHasElevenRepresentativeValidatedGoals() throws Exception
+    public void bundledCatalogHasTwentySixRepresentativeValidatedGoals() throws Exception
     {
         GoalCatalog catalog = new GoalLoader(gson).loadResource("/goals/ironman-goals-2026.json");
         validate(catalog);
-        assertEquals(11, catalog.getGoals().size());
+        assertEquals(2, catalog.getVersion());
+        assertEquals(26, catalog.getGoals().size());
         assertEquals("2026-08-27", catalog.getAuditedAt());
     }
 

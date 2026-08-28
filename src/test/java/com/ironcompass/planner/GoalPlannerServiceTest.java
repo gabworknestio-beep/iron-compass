@@ -140,6 +140,42 @@ public final class GoalPlannerServiceTest
             assertTrue(!recommendations.getLongTerm().getId().equals(recommendations.getQuickWin().getId()));
     }
 
+    @Test
+    public void primaryAndSecondaryGoalsAreProjectedWithoutDuplicates() throws Exception
+    {
+        InMemoryGearPreferenceStore preferences = new InMemoryGearPreferenceStore();
+        preferences.setPrimaryGoalId("goal.quest.song-of-the-elves");
+        assertTrue(preferences.addSecondaryGoalId("goal.skill.herblore-70"));
+        assertTrue(!preferences.addSecondaryGoalId("goal.quest.song-of-the-elves"));
+        AccountState state = songState(QuestProgress.NOT_STARTED);
+        state = AccountState.builder().bank(BankSnapshot.observed(Collections.emptyMap()))
+            .quest("Song of the Elves", QuestProgress.NOT_STARTED)
+            .quest("Mourning's End Part II", QuestProgress.FINISHED)
+            .quest("Making History", QuestProgress.FINISHED)
+            .quest("Druidic Ritual", QuestProgress.FINISHED)
+            .skill("Agility", 70).skill("Construction", 70).skill("Farming", 70).skill("Herblore", 61)
+            .skill("Hunter", 70).skill("Mining", 70).skill("Smithing", 70).skill("Woodcutting", 70).build();
+
+        GoalPlanProjection plan = project(state, preferences);
+        assertEquals("Song of the Elves", plan.getTitle());
+        assertEquals(1, plan.getSecondaryGoals().size());
+        assertEquals("70 Herblore", plan.getSecondaryGoals().get(0).getTitle());
+        assertEquals("skill:herblore:70", plan.getNextAction().stableKey());
+        assertEquals(plan.getNextAction().stableKey(),
+            plan.getSecondaryGoals().get(0).getNextAction().stableKey());
+    }
+
+    @Test
+    public void skippedSecondaryGoalIsNotProjected() throws Exception
+    {
+        InMemoryGearPreferenceStore preferences = new InMemoryGearPreferenceStore();
+        preferences.setPrimaryGoalId("goal.quest.song-of-the-elves");
+        preferences.addSecondaryGoalId("goal.skill.herblore-70");
+        preferences.setSkipped("goal.skill.herblore-70", true);
+
+        assertTrue(project(songState(QuestProgress.NOT_STARTED), preferences).getSecondaryGoals().isEmpty());
+    }
+
     private GoalPlanProjection project(AccountState state, InMemoryGearPreferenceStore preferences) throws Exception
     {
         Fixture fixture = fixture(state, preferences);

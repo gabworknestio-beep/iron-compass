@@ -8,7 +8,7 @@
 
 The unique `ironcompass` configuration group keeps Iron Compass fully separate from unrelated plugins. On first load, Iron Compass copies only its explicitly known former settings into the new namespace when the corresponding new value is absent; it never scans, deletes, or bulk-copies the former shared namespace.
 
-Iron Compass projects a canonical Efficient Ironman route, a dynamic gear catalog, and a curated Goal Planner against the character's actual skills, quest log, carried equipment, locally observed bank, account type, selected goal, playstyle, and manual choices. The overview follows one decision chain: **You are here → Do this now → Why this now → What this unlocks → What comes next**. Persistent **Overview**, **Path**, and **Gear** navigation provides detail without turning the sidebar into a giant checklist.
+Iron Compass projects a canonical Efficient Ironman route, a dynamic gear catalog, and a curated multi-goal planner against the character's actual skills, quest log, carried equipment, locally observed bank, account type, active goals, playstyle, session length, and manual choices. The overview follows one decision chain: **You are here → Next best move → Why this → How → What comes next**. Persistent **Overview**, **Path**, and **Gear** navigation provides detail without turning the sidebar into a giant checklist.
 
 The plugin is available from RuneLite's Plugin Hub. The Iron Compass name becomes live after this source update is commit-pinned, reviewed, and merged in the Plugin Hub. This repository contains the installed source and later update candidates; every update still requires that review.
 
@@ -25,8 +25,11 @@ The plugin is available from RuneLite's Plugin Hub. The Iron Compass name become
 - Opens contextual OSRS Wiki pages and can hand authored non-quest destinations to Shortest Path.
 - Recommends one explainable gear objective using access, usefulness, effort, difficulty, account state, and player preference rather than a fixed shopping list.
 - Lets the player select a gear goal; Iron Compass recursively walks its gear dependencies and returns the first unfinished canonical route step on the way to the linked milestone.
-- Adds a Goal Planner with 11 curated account objectives, deterministic nearest-requirement planning, dependency paths, resource readiness, and backwards-compatible support for any existing Gear goal.
-- Produces distinct **Recommended**, **Quick Win**, and **Long-Term** suggestions from one scoring service. Balanced, Efficient, PvM, and Skilling playstyles influence priority without changing factual requirements; session length filters Quick Wins only.
+- Adds a Goal Queue with one Primary and up to three Secondary Goals, profile-specific migration from the former single selected goal, and duplicate/skip protection.
+- Detects when one skill, quest, route step, or Gear action advances multiple active goals and shows deterministic reasons instead of an internal score.
+- Produces distinct **Recommended**, **Quick Win**, **Long-Term**, and opt-in **Useful Break** suggestions from a broader candidate pool. Balanced, Efficient, PvM, and Skilling playstyles influence priority without changing factual requirements.
+- Recommends a good-fit Ironman training method for important skill gates from bundled structured data. Unknown banks stay unknown; observed resources are described qualitatively and are never presented as an exact banked-XP calculation.
+- Provides a compact searchable Goal Picker with Suggested, Active, Completed, and category filters for 26 curated objectives.
 - Tracks `OWNED`, `UNCONFIRMED`, `AVAILABLE`, `LOCKED`, `RECOMMENDED`, `OPTIONAL`, and `SKIPPED` gear states with search and style/state filters. Unknown bank ownership is never promoted as availability.
 - Detects meaningful newly available route, gear, and selected-goal opportunities once per transition through a local Unlock Radar.
 - Counts reviewed encounter supplies from real carried items and the last bank observation, including exact potion doses, while labelling variable thresholds as estimates.
@@ -63,9 +66,11 @@ The engine does not claim one strict universal gear order. It synthesizes curren
 
 ## Goal Planner
 
-The bundled Goal Planner currently covers Dragon Defender, Barrows Gloves, Fire Cape, Fighter Torso, Zombie Axe, Perilous Moons, Royal Titans, Song of the Elves, Bowfa and Crystal Armour, Trident of the Seas, and Tombs of Amascut entry. Goal definitions use stable IDs, validated dependencies, route anchors, Gear references, effort/impact metadata, and concise unlock outcomes.
+The bundled Goal Planner contains **26 curated objectives**. It retains the original Gear and PvM milestones while adding account infrastructure (Fossil Island, Farming Guild, Kingdom, strong POH), skill milestones (43 Prayer, 70 Herblore, 87/93 Slayer), and high-value quest progression (Monkey Madness I/II, Desert Treasure I, Lunar Diplomacy, Dragon Slayer II, and While Guthix Sleeps). Goal definitions use stable IDs, validated dependencies, route anchors, Gear references, effort/impact metadata, and concise unlock outcomes.
 
-When a goal is selected, Iron Compass identifies the nearest provable missing requirement. For example, a Song of the Elves account at 69 Farming and 61 Herblore receives **Train Farming 69 → 70** first, then Herblore. A requirement whose bank evidence is unknown remains unconfirmed instead of becoming a recommendation. Existing Gear goals saved before this update continue to resolve through the same profile key.
+The queue deliberately stays small: one Primary Goal and no more than three Secondary Goals. Iron Compass identifies the nearest provable requirement for each, merges identical actions, and gives the Primary Goal enough weight that low-value synergy cannot displace a critical hard requirement. For example, **70 Herblore** can simultaneously advance Song of the Elves and a potion-readiness milestone. Existing single and Gear goals remain backward compatible.
+
+For supported skill gates, the bundled method planner suggests a **good fit for this account**, never an unjustified universal “best method.” It considers verified unlocks, Wilderness/Hardcore constraints, observed starting resources, active-goal synergy, playstyle, and qualitative session effort. Useful sources are shown when authored inputs are missing; an unopened bank always produces the explicit unconfirmed-bank message.
 
 See [docs/GOAL_PLANNER.md](docs/GOAL_PLANNER.md) for the data contract, preference semantics, and extension rules.
 
@@ -123,7 +128,7 @@ On Windows, use `gradlew.bat`. `runClient` is an alias for the developer-client 
 
 If Windows resolves `java` to an old JRE rather than a JDK, run `run-client.bat`. It locates a JDK 11+ and sets `JAVA_HOME` only for the developer-client process. To select one explicitly, set `IRONCOMPASS_JAVA_HOME` to its installation directory before running the launcher.
 
-The project intentionally uses only dependencies already supplied by RuneLite plus JUnit for tests. Main source compatibility is fixed at Java 11. Route, Gear, and Goal data load with `getResourceAsStream`, so they work from the Plugin Hub JAR rather than assuming resources are unpacked files. The automated suite includes 15 synthetic 242 px profile/view renders, full-projection and account-assembly performance guards, profile-isolation and lifecycle coverage, catalog validators, and publication checks for Plugin Hub metadata, icon limits, documentation, and descriptor consistency. GitHub Actions runs the complete Java 11 build for every push and pull request.
+The project intentionally uses only dependencies already supplied by RuneLite plus JUnit for tests. Main source compatibility is fixed at Java 11. Route, Gear, Goal, and Method data load once from classpath resources, so they work from the Plugin Hub JAR rather than assuming resources are unpacked files. The automated suite includes 21 synthetic 242 px profile/view renders, staged full-projection and account-assembly performance guards, profile-isolation and lifecycle coverage, catalog validators, and publication checks for Plugin Hub metadata, icon limits, documentation, and descriptor consistency. GitHub Actions runs the complete Java 11 build for every push and pull request.
 
 ## Release process
 
@@ -148,6 +153,7 @@ Read [docs/ROUTE_SCHEMA.md](docs/ROUTE_SCHEMA.md) before editing route data. In 
 - [docs/RESEARCH.md](docs/RESEARCH.md) records the current API, policy, route, integration, and competitive audit.
 - [docs/GOAL_PLANNER.md](docs/GOAL_PLANNER.md) defines the Goal Planner, recommendation, preference, resource, and Unlock Radar contracts.
 - [docs/PROGRESSION_UX_RESEARCH.md](docs/PROGRESSION_UX_RESEARCH.md) records the 2026 Wiki, guide, Plugin Hub, GitHub, and Reddit progression-UX comparison and the decisions applied here.
+- [docs/METHOD_PLANNER_RESEARCH.md](docs/METHOD_PLANNER_RESEARCH.md) records the audited skill-method and resource-planner boundaries used by the bundled JSON.
 - [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) distinguishes source facts and inspiration from redistributed code.
 - [docs/PLUGIN_HUB_CHECKLIST.md](docs/PLUGIN_HUB_CHECKLIST.md) records release-readiness checks and remaining human verification.
 - [docs/PLUGIN_HUB_SUBMISSION.md](docs/PLUGIN_HUB_SUBMISSION.md) gives the exact future-update manifest workflow.

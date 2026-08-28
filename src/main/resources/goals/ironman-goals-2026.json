@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "auditedAt": "2026-08-27",
   "goals": [
     {
@@ -151,6 +151,180 @@
       "unlocks": ["Tombs of Amascut", "Entry-mode raid learning", "Keris partisan and later raid rewards"],
       "wikiPage": "Tombs of Amascut",
       "tags": ["raid", "pvm", "quest"]
+    },
+    {
+      "id": "goal.unlock.fossil-island",
+      "title": "Fossil Island",
+      "description": "Complete Bone Voyage to open bird houses and several useful skilling systems.",
+      "category": "Account infrastructure",
+      "completion": {"type": "QUEST_STATE", "label": "Bone Voyage complete", "quest": "Bone Voyage", "state": "FINISHED"},
+      "requirements": {"type": "QUEST_STATE", "label": "Bone Voyage", "quest": "Bone Voyage", "state": "FINISHED"},
+      "routeAnchorId": "efficient-ironman.095.bone-voyage",
+      "impact": "MAJOR", "effort": "MEDIUM",
+      "unlocks": ["Bird house runs", "Ammonite crabs", "Fossil Island skilling systems"],
+      "wikiPage": "Fossil Island", "tags": ["infrastructure", "skilling", "hunter"]
+    },
+    {
+      "id": "goal.unlock.farming-guild",
+      "title": "Farming Guild",
+      "description": "Reach the first Farming Guild tier and begin contract-based seed progression.",
+      "category": "Account infrastructure",
+      "completion": {"type": "SKILL_AT_LEAST", "label": "Farming 45", "skill": "Farming", "level": 45},
+      "requirements": {"type": "SKILL_AT_LEAST", "label": "Farming 45", "skill": "Farming", "level": 45},
+      "impact": "HIGH", "effort": "MEDIUM",
+      "unlocks": ["Easy Farming Contracts", "Seed packs", "A sustainable Farming and Herblore loop"],
+      "wikiPage": "Farming Guild", "tags": ["infrastructure", "farming", "herblore", "skilling"]
+    },
+    {
+      "id": "goal.account.kingdom",
+      "title": "Kingdom of Miscellania",
+      "description": "Complete the Miscellania quest pair for a configurable passive resource system.",
+      "category": "Account infrastructure",
+      "completion": {"type": "QUEST_STATE", "label": "Royal Trouble complete", "quest": "Royal Trouble", "state": "FINISHED"},
+      "requirements": {"type": "QUEST_STATE", "label": "Royal Trouble", "quest": "Royal Trouble", "state": "FINISHED"},
+      "routeAnchorId": "efficient-ironman.171.royal-trouble",
+      "impact": "HIGH", "effort": "MEDIUM",
+      "unlocks": ["Improved Managing Miscellania output", "Passive herbs, logs, or other selected resources"],
+      "wikiPage": "Managing Miscellania", "tags": ["infrastructure", "resources", "quest"]
+    },
+    {
+      "id": "goal.account.strong-poh",
+      "title": "83 Construction / Strong POH",
+      "description": "Reach the widely useful Construction milestone that enables boosted high-level house upgrades.",
+      "category": "Account infrastructure",
+      "completion": {"type": "SKILL_AT_LEAST", "label": "Construction 83", "skill": "Construction", "level": 83},
+      "requirements": {"type": "SKILL_AT_LEAST", "label": "Construction 83", "skill": "Construction", "level": 83},
+      "impact": "MAJOR", "effort": "VERY_LONG",
+      "unlocks": ["High-level POH utility with appropriate boosts", "Faster transport and restoration options", "A durable PvM support hub"],
+      "wikiPage": "Player-owned house", "tags": ["infrastructure", "construction", "poh", "skilling"]
+    },
+    {
+      "id": "goal.skill.prayer-43",
+      "title": "43 Prayer",
+      "description": "Unlock all three overhead protection prayers for quests and combat progression.",
+      "category": "Skill milestone",
+      "completion": {"type": "SKILL_AT_LEAST", "label": "Prayer 43", "skill": "Prayer", "level": 43},
+      "requirements": {"type": "SKILL_AT_LEAST", "label": "Prayer 43", "skill": "Prayer", "level": 43},
+      "impact": "MAJOR", "effort": "MEDIUM",
+      "unlocks": ["Protect from Melee", "Core quest survivability", "Safer early bossing"],
+      "wikiPage": "Prayer", "tags": ["prayer", "combat", "pvm"]
+    },
+    {
+      "id": "goal.skill.herblore-70",
+      "title": "70 Herblore",
+      "description": "Build the Herblore level used by Song of the Elves and broader potion progression.",
+      "category": "Skill milestone",
+      "completion": {"type": "SKILL_AT_LEAST", "label": "Herblore 70", "skill": "Herblore", "level": 70},
+      "requirements": {"type": "SKILL_AT_LEAST", "label": "Herblore 70", "skill": "Herblore", "level": 70},
+      "impact": "HIGH", "effort": "LONG",
+      "unlocks": ["Song of the Elves skill requirement", "Broader potion access", "Improved PvM supply readiness"],
+      "wikiPage": "Ironman Guide/Herblore", "tags": ["herblore", "supplies", "skilling"]
+    },
+    {
+      "id": "goal.skill.slayer-87",
+      "title": "87 Slayer",
+      "description": "Reach cave krakens and the classic Trident progression point.",
+      "category": "Skill milestone",
+      "completion": {"type": "SKILL_AT_LEAST", "label": "Slayer 87", "skill": "Slayer", "level": 87},
+      "requirements": {"type": "SKILL_AT_LEAST", "label": "Slayer 87", "skill": "Slayer", "level": 87},
+      "impact": "MAJOR", "effort": "VERY_LONG",
+      "unlocks": ["Cave krakens", "Trident progression", "A major powered-magic milestone"],
+      "wikiPage": "Slayer/Level up table", "tags": ["slayer", "pvm", "magic"]
+    },
+    {
+      "id": "goal.skill.slayer-93",
+      "title": "93 Slayer",
+      "description": "Reach smoke devils and the Occult necklace progression point.",
+      "category": "Skill milestone",
+      "completion": {"type": "SKILL_AT_LEAST", "label": "Slayer 93", "skill": "Slayer", "level": 93},
+      "requirements": {"type": "SKILL_AT_LEAST", "label": "Slayer 93", "skill": "Slayer", "level": 93},
+      "dependencyIds": ["goal.skill.slayer-87"],
+      "impact": "MAJOR", "effort": "VERY_LONG",
+      "unlocks": ["Smoke devils", "Thermonuclear smoke devil", "Occult necklace progression"],
+      "wikiPage": "Slayer/Level up table", "tags": ["slayer", "pvm", "magic"]
+    },
+    {
+      "id": "goal.quest.monkey-madness-i",
+      "title": "Monkey Madness I",
+      "description": "Complete the early grandmaster quest and open the Dragon scimitar path.",
+      "category": "Quest progression",
+      "completion": {"type": "QUEST_STATE", "label": "Monkey Madness I complete", "quest": "Monkey Madness I", "state": "FINISHED"},
+      "requirements": {"type": "QUEST_STATE", "label": "Monkey Madness I", "quest": "Monkey Madness I", "state": "FINISHED"},
+      "routeAnchorId": "efficient-ironman.153.monkey-madness-i",
+      "impact": "MAJOR", "effort": "MEDIUM",
+      "unlocks": ["Dragon scimitar access", "Ape Atoll progression", "Later monkey questline"],
+      "wikiPage": "Monkey Madness I", "tags": ["quest", "melee", "combat"]
+    },
+    {
+      "id": "goal.quest.desert-treasure-i",
+      "title": "Desert Treasure I",
+      "description": "Complete Desert Treasure I and unlock the Ancient Magicks spellbook.",
+      "category": "Quest progression",
+      "completion": {"type": "QUEST_STATE", "label": "Desert Treasure I complete", "quest": "Desert Treasure I", "state": "FINISHED"},
+      "requirements": {"type": "QUEST_STATE", "label": "Desert Treasure I", "quest": "Desert Treasure I", "state": "FINISHED"},
+      "routeAnchorId": "efficient-ironman.172.desert-treasure-i",
+      "impact": "MAJOR", "effort": "LONG",
+      "unlocks": ["Ancient Magicks", "Burst and barrage progression", "Later grandmaster quest requirements"],
+      "wikiPage": "Desert Treasure I", "tags": ["quest", "magic", "slayer"]
+    },
+    {
+      "id": "goal.quest.lunar-diplomacy",
+      "title": "Lunar Diplomacy",
+      "description": "Unlock the Lunar spellbook and account systems such as Superglass Make progression.",
+      "category": "Quest progression",
+      "completion": {"type": "QUEST_STATE", "label": "Lunar Diplomacy complete", "quest": "Lunar Diplomacy", "state": "FINISHED"},
+      "requirements": {"type": "QUEST_STATE", "label": "Lunar Diplomacy", "quest": "Lunar Diplomacy", "state": "FINISHED"},
+      "routeAnchorId": "efficient-ironman.194.lunar-diplomacy",
+      "impact": "HIGH", "effort": "MEDIUM",
+      "unlocks": ["Lunar spellbook", "Superglass Make progression", "Useful skilling utility spells"],
+      "wikiPage": "Lunar Diplomacy", "tags": ["quest", "magic", "crafting", "skilling"]
+    },
+    {
+      "id": "goal.quest.monkey-madness-ii",
+      "title": "Monkey Madness II",
+      "description": "Complete the monkey questline grandmaster finale for major combat rewards.",
+      "category": "Quest progression",
+      "completion": {"type": "QUEST_STATE", "label": "Monkey Madness II complete", "quest": "Monkey Madness II", "state": "FINISHED"},
+      "requirements": {"type": "QUEST_STATE", "label": "Monkey Madness II", "quest": "Monkey Madness II", "state": "FINISHED"},
+      "dependencyIds": ["goal.quest.monkey-madness-i"],
+      "routeAnchorId": "efficient-ironman.221.monkey-madness-ii",
+      "impact": "MAJOR", "effort": "LONG",
+      "unlocks": ["Demonic gorillas", "Zenyte shard progression", "Royal seed pod"],
+      "wikiPage": "Monkey Madness II", "tags": ["quest", "pvm", "jewellery"]
+    },
+    {
+      "id": "goal.quest.dragon-slayer-ii",
+      "title": "Dragon Slayer II",
+      "description": "Complete the dragon questline grandmaster finale and open Vorkath progression.",
+      "category": "Quest progression",
+      "completion": {"type": "QUEST_STATE", "label": "Dragon Slayer II complete", "quest": "Dragon Slayer II", "state": "FINISHED"},
+      "requirements": {"type": "QUEST_STATE", "label": "Dragon Slayer II", "quest": "Dragon Slayer II", "state": "FINISHED"},
+      "routeAnchorId": "efficient-ironman.224.dragon-slayer-ii",
+      "impact": "MAJOR", "effort": "LONG",
+      "unlocks": ["Vorkath", "Myths' Guild", "Ava's assembler progression"],
+      "wikiPage": "Dragon Slayer II", "tags": ["quest", "pvm", "ranged"]
+    },
+    {
+      "id": "goal.quest.while-guthix-sleeps",
+      "title": "While Guthix Sleeps",
+      "description": "Complete the grandmaster quest for late-game combat and quest progression.",
+      "category": "Quest progression",
+      "completion": {"type": "QUEST_STATE", "label": "While Guthix Sleeps complete", "quest": "While Guthix Sleeps", "state": "FINISHED"},
+      "requirements": {"type": "QUEST_STATE", "label": "While Guthix Sleeps", "quest": "While Guthix Sleeps", "state": "FINISHED"},
+      "routeAnchorId": "efficient-ironman.226.while-guthix-sleeps",
+      "impact": "MAJOR", "effort": "LONG",
+      "unlocks": ["Tormented demon progression", "Late-game quest rewards", "Quest Cape progress"],
+      "wikiPage": "While Guthix Sleeps", "tags": ["quest", "pvm", "late-game"]
+    },
+    {
+      "id": "gear.mid.barrows-tank",
+      "title": "Barrows Tank Armour",
+      "description": "Build a practical Barrows body-and-legs defensive set for midgame PvM.",
+      "category": "PvM gear",
+      "gearId": "gear.mid.barrows-tank",
+      "impact": "HIGH", "effort": "LONG",
+      "unlocks": ["Durable melee defence", "A useful midgame bossing set", "God Wars preparation options"],
+      "wikiPage": "Barrows", "tags": ["pvm", "melee", "gear", "rng"]
     }
   ]
 }

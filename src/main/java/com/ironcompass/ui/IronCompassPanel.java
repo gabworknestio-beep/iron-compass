@@ -7,6 +7,7 @@ import com.ironcompass.gear.GearProjection;
 import com.ironcompass.gear.GearStatus;
 import com.ironcompass.gear.InMemoryGearPreferenceStore;
 import com.ironcompass.goal.GoalAction;
+import com.ironcompass.goal.GoalDefinition;
 import com.ironcompass.goal.GoalResolution;
 import com.ironcompass.integration.QuestHelperBridge;
 import com.ironcompass.integration.ShortestPathBridge;
@@ -41,6 +42,9 @@ import com.ironcompass.supply.SupplyForecast;
 import com.ironcompass.supply.SupplyLine;
 import com.ironcompass.training.SkillTrainingAdvisor;
 import com.ironcompass.training.TrainingAdvice;
+import com.ironcompass.training.IronmanMethodDefinition;
+import com.ironcompass.training.MethodRecommendation;
+import com.ironcompass.training.MethodResourceStatus;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -49,6 +53,8 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Locale;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -57,13 +63,16 @@ import javax.swing.JButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
+import javax.swing.DefaultListModel;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
 import javax.swing.Scrollable;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
@@ -76,6 +85,7 @@ public final class IronCompassPanel extends PluginPanel
 {
     private static final SkillTrainingAdvisor TRAINING_ADVISOR = new SkillTrainingAdvisor();
     private static final RouteJourneyService JOURNEY_SERVICE = new RouteJourneyService();
+    private static final GoalPickerModel GOAL_PICKER = new GoalPickerModel();
     private static final String HOME = "home";
     private static final String BROWSER = "browser";
     private static final String GEAR = "gear";
@@ -97,7 +107,7 @@ public final class IronCompassPanel extends PluginPanel
     private final JPanel browserResults = scrollableVerticalPanel();
     private final GearPathPanel gearPanel;
     private final JTextField search = new JTextField();
-    private final JComboBox<GoalChoice> goalSelector = new JComboBox<>();
+    private final JButton goalPickerButton = smallButton("CHOOSE GOALS");
     private final JButton pathBack = smallButton("BACK");
     private RouteProjection projection;
     private GearProjection gearProjection;
@@ -108,7 +118,7 @@ public final class IronCompassPanel extends PluginPanel
     private RouteJourney journey;
     private AccountState accountState = AccountState.loggedOut();
     private String routeDetailId;
-    private boolean updatingGoalSelector;
+    private boolean showUsefulBreaks;
 
     public IronCompassPanel(IronCompassConfig config, WikiBridge wikiBridge, ShortestPathBridge shortestPathBridge,
                          QuestHelperBridge questHelperBridge, ManualOverrideStore persistence, Runnable reevaluate)
@@ -136,12 +146,12 @@ public final class IronCompassPanel extends PluginPanel
         overviewNav.addActionListener(event -> showView(HOME));
         pathNav.addActionListener(event -> showView(BROWSER));
         gearNav.addActionListener(event -> showView(GEAR));
-        goalSelector.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
-        goalSelector.setAlignmentX(Component.LEFT_ALIGNMENT);
-        goalSelector.getAccessibleContext().setAccessibleName("Progression goal selector");
-        goalSelector.getAccessibleContext().setAccessibleDescription(
-            "Choose the long-term goal Iron Compass should plan toward");
-        goalSelector.addActionListener(event -> goalSelectionChanged());
+        goalPickerButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        goalPickerButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        goalPickerButton.getAccessibleContext().setAccessibleName("Open goal picker");
+        goalPickerButton.getAccessibleContext().setAccessibleDescription(
+            "Search and manage primary and secondary progression goals");
+        goalPickerButton.addActionListener(event -> showGoalPicker());
         showView(HOME);
         showIdle();
     }
@@ -181,7 +191,7 @@ public final class IronCompassPanel extends PluginPanel
         supplyForecast = newSupplyForecast;
         goalPlan = newGoalPlan;
         recommendations = newRecommendations;
-        updateGoalSelector();
+        updateGoalPickerButton();
         rebuildHome();
         rebuildBrowser();
         gearPanel.update(accountState, gearProjection);
@@ -230,6 +240,12 @@ public final class IronCompassPanel extends PluginPanel
     {
         gearPanel.showObjective(objectiveId);
         showView(GEAR);
+    }
+
+    void showUsefulBreaksForTesting()
+    {
+        showUsefulBreaks = true;
+        rebuildHome();
     }
 
     private void rebuildHome()
@@ -335,28 +351,67 @@ public final class IronCompassPanel extends PluginPanel
 
     private void addRecommendations()
     {
-        if (recommendations.getRecommended() != null)
+        boolean primaryAlreadyShown = recommendationMatchesPrimaryAction(recommendations.getRecommended());
+        if (recommendations.getRecommended() != null && !primaryAlreadyShown)
         {
             home.add(buildCandidate("RECOMMENDED", recommendations.getRecommended()));
         }
         if (recommendations.getQuickWin() != null)
         {
-            if (recommendations.getRecommended() != null) home.add(gap(10));
+            if (recommendations.getRecommended() != null && !primaryAlreadyShown) home.add(gap(10));
             home.add(buildCandidate("QUICK WIN", recommendations.getQuickWin()));
         }
         if (recommendations.getLongTerm() != null)
         {
-            if (recommendations.getRecommended() != null || recommendations.getQuickWin() != null) home.add(gap(10));
+            if ((recommendations.getRecommended() != null && !primaryAlreadyShown)
+                || recommendations.getQuickWin() != null) home.add(gap(10));
             home.add(buildCandidate("LONG-TERM", recommendations.getLongTerm()));
         }
+        if (!recommendations.getUsefulBreaks().isEmpty())
+        {
+            home.add(gap(8));
+            JButton alternatives = smallButton(showUsefulBreaks ? "HIDE OTHER PROGRESS" : "TAKE A USEFUL BREAK");
+            alternatives.setAlignmentX(Component.LEFT_ALIGNMENT);
+            alternatives.setToolTipText("Show other actions that still advance this account");
+            alternatives.addActionListener(event ->
+            {
+                showUsefulBreaks = !showUsefulBreaks;
+                rebuildHome();
+            });
+            home.add(alternatives);
+            if (showUsefulBreaks)
+            {
+                home.add(gap(7));
+                home.add(buildUsefulBreaks(recommendations.getUsefulBreaks()));
+            }
+        }
+    }
+
+    private boolean recommendationMatchesPrimaryAction(ProgressionCandidate candidate)
+    {
+        return candidate != null && goalPlan != null && goalPlan.getNextAction() != null
+            && candidate.getId().equals(goalPlan.getNextAction().stableKey());
     }
 
     private JPanel buildGoalPlanner()
     {
         JPanel body = verticalPanel();
-        body.add(sectionLabel("I WANT TO WORK TOWARD…"));
+        body.add(sectionLabel("ACTIVE GOALS"));
         body.add(gap(4));
-        body.add(goalSelector);
+        if (goalPlan.hasSelectedGoal())
+            body.add(labelHtml("<span style='color:#8f8f8f'>PRIMARY</span><br><b>" + escape(goalPlan.getTitle())
+                + "</b>", UiTokens.ACCENT));
+        else
+            body.add(labelHtml("No primary goal selected.", UiTokens.MUTED));
+        if (!goalPlan.getSecondaryGoals().isEmpty())
+        {
+            body.add(gap(5));
+            body.add(sectionLabel("SECONDARY"));
+            for (GoalPlanProjection secondary : goalPlan.getSecondaryGoals())
+                body.add(labelHtml("○  " + escape(secondary.getTitle()), UiTokens.TEXT));
+        }
+        body.add(gap(6));
+        body.add(goalPickerButton);
         if (goalPlan.getUnavailableSelectedId() != null)
         {
             body.add(gap(6));
@@ -365,23 +420,23 @@ public final class IronCompassPanel extends PluginPanel
         }
         else if (goalPlan.hasSelectedGoal())
         {
-            body.add(gap(8));
-            body.add(sectionLabel("YOUR GOAL"));
-            body.add(gap(3));
-            body.add(labelHtml("<b>" + escape(goalPlan.getTitle()) + "</b>", UiTokens.ACCENT));
-            body.add(labelHtml(escape(goalPlan.getDescription()), UiTokens.MUTED));
             PlannedAction action = goalPlan.getNextAction();
             if (action != null)
             {
                 body.add(gap(8));
-                body.add(sectionLabel("NEXT STEP"));
+                body.add(sectionLabel("NEXT BEST MOVE"));
                 body.add(gap(3));
                 body.add(labelHtml("<b>" + escape(action.getTitle()) + "</b>",
                     action.getKind() == PlannedAction.Kind.COMPLETE ? UiTokens.SUCCESS : UiTokens.TEXT));
                 body.add(gap(7));
-                body.add(sectionLabel("WHY NOW?"));
+                body.add(sectionLabel("WHY THIS?"));
                 body.add(gap(3));
-                body.add(labelHtml(escape(goalPlan.getWhyNow()), UiTokens.MUTED));
+                ProgressionCandidate ranked = recommendations == null ? null : recommendations.getRecommended();
+                if (recommendationMatchesPrimaryAction(ranked))
+                    for (String why : ranked.getWhyLines()) body.add(labelHtml("•  " + escape(why), UiTokens.MUTED));
+                else
+                    body.add(labelHtml(escape(goalPlan.getWhyNow()), UiTokens.MUTED));
+                addMethodRecommendation(body);
             }
             addGoalProgress(body);
             if (goalPlan.getAfterThis() != null)
@@ -398,8 +453,10 @@ public final class IronCompassPanel extends PluginPanel
             for (String unlock : goalPlan.getUnlocks())
             {
                 body.add(labelHtml("○  " + escape(unlock), UiTokens.TEXT));
-                if (++shown == 3) break;
+                if (++shown == 1) break;
             }
+            if (goalPlan.getUnlocks().size() > shown)
+                body.add(labelHtml("+ " + (goalPlan.getUnlocks().size() - shown) + " more unlock(s)", UiTokens.MUTED));
             ResourceReadiness resources = goalPlan.getResourceReadiness();
             if (resources != null)
             {
@@ -430,7 +487,7 @@ public final class IronCompassPanel extends PluginPanel
         for (RequirementResult result : ordered)
         {
             body.add(statusLine(result.getValue(), result.getLabel() + detailSuffix(result)));
-            if (++shown == 4) break;
+            if (++shown == 3) break;
         }
         if (ordered.size() > shown)
             body.add(labelHtml("+ " + (ordered.size() - shown) + " more requirement(s)", UiTokens.MUTED));
@@ -443,11 +500,11 @@ public final class IronCompassPanel extends PluginPanel
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         if (goalPlan.hasSelectedGoal() || goalPlan.getUnavailableSelectedId() != null)
         {
-            JButton clear = smallButton("CLEAR");
-            clear.setToolTipText("Clear the selected progression goal");
+            JButton clear = smallButton("CLEAR PRIMARY");
+            clear.setToolTipText("Clear the primary progression goal");
             clear.addActionListener(event ->
             {
-                gearPreferences.setSelectedGoalId(null);
+                gearPreferences.setPrimaryGoalId(null);
                 reevaluate.run();
             });
             row.add(clear);
@@ -474,10 +531,13 @@ public final class IronCompassPanel extends PluginPanel
         body.add(labelHtml(humanize(candidate.getImpact()) + " · "
             + humanize(candidate.getEffort().name()) + " effort", UiTokens.MUTED));
         body.add(gap(5));
-        body.add(labelHtml(escape(candidate.getReason()), UiTokens.TEXT));
-        if (candidate.getUnlockSummary() != null && !candidate.getUnlockSummary().equals(candidate.getReason()))
+        body.add(sectionLabel("WHY THIS?"));
+        body.add(gap(2));
+        for (String why : candidate.getWhyLines()) body.add(labelHtml("•  " + escape(why), UiTokens.TEXT));
+        if (candidate.getActiveGoalCount() > 1)
+            body.add(labelHtml("Goals: " + escape(String.join(", ", candidate.getAdvancedGoals())), UiTokens.MUTED));
+        else if (candidate.getUnlockSummary() != null && !candidate.getUnlockSummary().equals(candidate.getReason()))
         {
-            body.add(gap(5));
             body.add(labelHtml("Unlocks: " + escape(candidate.getUnlockSummary()), UiTokens.MUTED));
         }
         JButton open = candidateAction(candidate);
@@ -485,6 +545,60 @@ public final class IronCompassPanel extends PluginPanel
         {
             body.add(gap(7));
             body.add(open);
+        }
+        return card(body);
+    }
+
+    private void addMethodRecommendation(JPanel body)
+    {
+        MethodRecommendation recommendation = goalPlan.getMethodRecommendation();
+        if (recommendation == null || recommendation.getRecommended() == null) return;
+        IronmanMethodDefinition method = recommendation.getRecommended();
+        body.add(gap(8));
+        body.add(sectionLabel("GOOD FIT FOR THIS ACCOUNT"));
+        body.add(gap(3));
+        body.add(labelHtml("<b>" + escape(method.getTitle()) + "</b>", UiTokens.ACCENT));
+        body.add(labelHtml(escape(method.getDescription()), UiTokens.TEXT));
+        body.add(gap(3));
+        body.add(labelHtml(escape(recommendation.getReason()), UiTokens.MUTED));
+        MethodResourceStatus resource = recommendation.getResourceStatus();
+        if (resource != MethodResourceStatus.NOT_APPLICABLE)
+        {
+            TruthValue value = resource == MethodResourceStatus.SUFFICIENT ? TruthValue.TRUE
+                : resource == MethodResourceStatus.EMPTY ? TruthValue.FALSE : TruthValue.UNKNOWN;
+            body.add(gap(5));
+            body.add(sectionLabel("RESOURCE READINESS"));
+            body.add(statusLine(value, recommendation.getResourceSummary()));
+            if ((resource == MethodResourceStatus.EMPTY || resource == MethodResourceStatus.PARTIAL)
+                && !method.getAcquisitionSources().isEmpty())
+            {
+                body.add(gap(4));
+                body.add(sectionLabel("USEFUL SOURCES"));
+                int shown = 0;
+                for (String source : method.getAcquisitionSources())
+                {
+                    body.add(labelHtml("○  " + escape(source), UiTokens.TEXT));
+                    if (++shown == 3) break;
+                }
+            }
+        }
+        if (!recommendation.getAlternatives().isEmpty())
+            body.add(labelHtml("Alternative: " + escape(recommendation.getAlternatives().get(0).getTitle()),
+                UiTokens.MUTED));
+    }
+
+    private JPanel buildUsefulBreaks(List<ProgressionCandidate> alternatives)
+    {
+        JPanel body = verticalPanel();
+        body.add(sectionLabel("OTHER USEFUL PROGRESS"));
+        int shown = 0;
+        for (ProgressionCandidate candidate : alternatives)
+        {
+            if (shown++ > 0) body.add(gap(5));
+            body.add(labelHtml("<b>" + shown + ". " + escape(candidate.getTitle()) + "</b>", UiTokens.TEXT));
+            String why = candidate.getWhyLines().isEmpty() ? candidate.getReason() : candidate.getWhyLines().get(0);
+            body.add(labelHtml(escape(why), UiTokens.MUTED));
+            if (shown == 3) break;
         }
         return card(body);
     }
@@ -1233,37 +1347,70 @@ public final class IronCompassPanel extends PluginPanel
         return navigation;
     }
 
-    private void updateGoalSelector()
+    private void updateGoalPickerButton()
     {
-        updatingGoalSelector = true;
-        goalSelector.removeAllItems();
-        goalSelector.addItem(new GoalChoice(null, "Choose a goal…"));
-        String selected = goalPlan == null ? null : goalPlan.getGoalId();
-        if (goalPlan != null && goalPlan.getCatalog() != null)
-        {
-            int selectedIndex = 0;
-            int index = 1;
-            if (goalPlan.getLegacyGearGoal() != null)
-            {
-                goalSelector.addItem(new GoalChoice(selected, goalPlan.getTitle() + " (Gear goal)"));
-                selectedIndex = index++;
-            }
-            for (com.ironcompass.goal.GoalDefinition goal : goalPlan.getCatalog().getGoals())
-            {
-                goalSelector.addItem(new GoalChoice(goal.getId(), goal.getTitle()));
-                if (goal.getId().equals(selected)) selectedIndex = index;
-                index++;
-            }
-            goalSelector.setSelectedIndex(selectedIndex);
-        }
-        updatingGoalSelector = false;
+        int active = goalPlan == null ? 0 : goalPlan.getActiveGoals().size();
+        goalPickerButton.setText(active == 0 ? "CHOOSE GOALS" : "MANAGE GOALS  ·  " + active);
     }
 
-    private void goalSelectionChanged()
+    private void showGoalPicker()
     {
-        if (updatingGoalSelector) return;
-        GoalChoice choice = (GoalChoice) goalSelector.getSelectedItem();
-        gearPreferences.setSelectedGoalId(choice == null ? null : choice.id);
+        if (goalPlan == null || goalPlan.getCatalog() == null) return;
+        JTextField goalSearch = new JTextField();
+        JComboBox<String> category = new JComboBox<>(GOAL_PICKER.categories(goalPlan.getCatalog()).toArray(new String[0]));
+        JComboBox<String> role = new JComboBox<>(new String[]{"Set as primary", "Add as secondary", "Remove from active"});
+        DefaultListModel<GoalChoice> choices = new DefaultListModel<>();
+        JList<GoalChoice> list = new JList<>(choices);
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        list.setVisibleRowCount(10);
+        Runnable refresh = () ->
+        {
+            choices.clear();
+            Set<String> active = new HashSet<>();
+            for (GoalPlanProjection plan : goalPlan.getActiveGoals()) active.add(plan.getGoalId());
+            for (GoalDefinition goal : GOAL_PICKER.filter(goalPlan.getCatalog(), goalSearch.getText(),
+                (String) category.getSelectedItem(), active, accountState, gearProjection))
+            {
+                String marker = goal.getId().equals(gearPreferences.getPrimaryGoalId()) ? "PRIMARY  ·  "
+                    : gearPreferences.getSecondaryGoalIds().contains(goal.getId()) ? "SECONDARY  ·  " : "";
+                choices.addElement(new GoalChoice(goal.getId(), marker + goal.getTitle()));
+            }
+            if (!choices.isEmpty()) list.setSelectedIndex(0);
+        };
+        goalSearch.getDocument().addDocumentListener(new DocumentListener()
+        {
+            @Override public void insertUpdate(DocumentEvent event) { refresh.run(); }
+            @Override public void removeUpdate(DocumentEvent event) { refresh.run(); }
+            @Override public void changedUpdate(DocumentEvent event) { refresh.run(); }
+        });
+        category.addActionListener(event -> refresh.run());
+        refresh.run();
+        JPanel picker = new JPanel(new BorderLayout(5, 5));
+        JPanel filters = new JPanel(new GridLayout(0, 1, 3, 3));
+        filters.add(new JLabel("Search"));
+        filters.add(goalSearch);
+        filters.add(category);
+        filters.add(role);
+        picker.add(filters, BorderLayout.NORTH);
+        picker.add(new JScrollPane(list), BorderLayout.CENTER);
+        picker.setPreferredSize(new Dimension(330, 360));
+        int answer = JOptionPane.showConfirmDialog(this, picker, "Iron Compass Goal Picker",
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        GoalChoice selected = list.getSelectedValue();
+        if (answer != JOptionPane.OK_OPTION || selected == null) return;
+        String selectedRole = (String) role.getSelectedItem();
+        if ("Set as primary".equals(selectedRole)) gearPreferences.setPrimaryGoalId(selected.id);
+        else if ("Add as secondary".equals(selectedRole))
+        {
+            if (!gearPreferences.addSecondaryGoalId(selected.id))
+                JOptionPane.showMessageDialog(this, "Secondary goals are limited to three and cannot duplicate the primary goal.",
+                    "Goal queue", JOptionPane.INFORMATION_MESSAGE);
+        }
+        else
+        {
+            if (selected.id.equals(gearPreferences.getPrimaryGoalId())) gearPreferences.setPrimaryGoalId(null);
+            gearPreferences.removeSecondaryGoalId(selected.id);
+        }
         reevaluate.run();
     }
 

@@ -4,6 +4,28 @@ All notable Iron Compass changes are recorded here. The project follows semantic
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-08-28
+
+### Added
+
+- A profile-specific Goal Queue with one Primary Goal and up to three deduplicated Secondary Goals.
+- Goal Synergy detection that identifies one action advancing multiple active goals and explains the benefit without exposing an opaque score.
+- A structured, bundled Ironman Method catalog for important Herblore, Crafting, Smithing, Prayer, Hunter, Construction, Farming, Agility, Mining, Woodcutting, and Slayer gates.
+- Honest method-resource states for unknown, observed-empty, partial, and authored starting thresholds, plus useful acquisition sources without pretending to calculate exact banked XP.
+- A compact searchable Goal Picker with category, Suggested, Active, and Completed filters.
+- **Take a Useful Break**, offering distinct account-progress alternatives without making psychological claims about the player.
+
+### Changed
+
+- Recommendation V2 now compares active-goal requirements, upcoming route milestones, and all reachable Gear candidates; explicit primary-goal requirements outrank generic old route steps.
+- The Goal catalog grows from 11 to 26 curated objectives across infrastructure, quests, skill milestones, and PvM.
+- Session fit now evaluates the immediate skill gap and method effort rather than treating every long-term goal as one indivisible grind.
+- The 242 px Overview uses denser progressive disclosure and deterministic **Why this?** reasons.
+
+### Migration
+
+- Existing `selectedGearGoal` profile data is copied idempotently to `primaryGoal`; `secondaryGoals` starts empty and old data remains readable.
+
 ## [1.2.0] - 2026-08-28
 
 ### Changed

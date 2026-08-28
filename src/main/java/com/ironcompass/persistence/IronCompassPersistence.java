@@ -6,7 +6,9 @@ import com.ironcompass.planner.PlannerPreferenceStore;
 import com.ironcompass.planner.Playstyle;
 import com.ironcompass.planner.SessionLength;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -20,6 +22,10 @@ public final class IronCompassPersistence implements ManualOverrideStore, GearPr
     static final String OVERRIDES_KEY = "manualOverrides";
     static final String ROUTE_VERSION_KEY = "routeVersion";
     static final String SELECTED_GEAR_GOAL_KEY = "selectedGearGoal";
+    static final String PRIMARY_GOAL_KEY = "primaryGoal";
+    static final String SECONDARY_GOALS_KEY = "secondaryGoals";
+    static final String GOAL_QUEUE_MIGRATION_KEY = "goalQueueMigrationVersion";
+    static final String GOAL_QUEUE_MIGRATION_VERSION = "1";
     static final String SKIPPED_GEAR_KEY = "skippedGear";
     static final String OPTIONAL_GEAR_KEY = "optionalGear";
     static final String ALTERNATIVE_GEAR_KEY = "gearAlternatives";
@@ -32,6 +38,7 @@ public final class IronCompassPersistence implements ManualOverrideStore, GearPr
     private final ProfileConfigAccess config;
     private Map<String, ManualOverride> overrides;
     private String selectedGearGoal;
+    private Set<String> secondaryGoals;
     private Set<String> skippedGear;
     private Set<String> optionalGear;
     private Map<String, String> gearAlternatives;
@@ -143,6 +150,7 @@ public final class IronCompassPersistence implements ManualOverrideStore, GearPr
     {
         overrides = null;
         selectedGearGoal = null;
+        secondaryGoals = null;
         skippedGear = null;
         optionalGear = null;
         gearAlternatives = null;
@@ -156,16 +164,58 @@ public final class IronCompassPersistence implements ManualOverrideStore, GearPr
     @Override
     public String getSelectedGoalId()
     {
-        loadGearPreferences();
-        return selectedGearGoal == null || selectedGearGoal.isEmpty() ? null : selectedGearGoal;
+        return getPrimaryGoalId();
     }
 
     @Override
     public void setSelectedGoalId(String goalId)
     {
+        setPrimaryGoalId(goalId);
+    }
+
+    @Override
+    public String getPrimaryGoalId()
+    {
         loadGearPreferences();
-        selectedGearGoal = goalId == null ? "" : goalId;
+        return selectedGearGoal == null || selectedGearGoal.isEmpty() ? null : selectedGearGoal;
+    }
+
+    @Override
+    public void setPrimaryGoalId(String goalId)
+    {
+        loadGearPreferences();
+        selectedGearGoal = goalId == null ? "" : goalId.trim();
+        secondaryGoals.remove(selectedGearGoal);
         saveGearPreferences();
+    }
+
+    @Override
+    public List<String> getSecondaryGoalIds()
+    {
+        loadGearPreferences();
+        return Collections.unmodifiableList(new ArrayList<>(secondaryGoals));
+    }
+
+    @Override
+    public boolean addSecondaryGoalId(String goalId)
+    {
+        loadGearPreferences();
+        String normalized = goalId == null ? "" : goalId.trim();
+        if (normalized.isEmpty() || normalized.equals(selectedGearGoal)
+            || secondaryGoals.contains(normalized) || secondaryGoals.size() >= 3)
+        {
+            return false;
+        }
+        boolean changed = secondaryGoals.add(normalized);
+        if (changed) saveGearPreferences();
+        return changed;
+    }
+
+    @Override
+    public void removeSecondaryGoalId(String goalId)
+    {
+        loadGearPreferences();
+        if (secondaryGoals.remove(goalId)) saveGearPreferences();
     }
 
     @Override
@@ -186,6 +236,7 @@ public final class IronCompassPersistence implements ManualOverrideStore, GearPr
             {
                 selectedGearGoal = "";
             }
+            secondaryGoals.remove(goalId);
         }
         else
         {
@@ -260,6 +311,7 @@ public final class IronCompassPersistence implements ManualOverrideStore, GearPr
     {
         loadGearPreferences();
         selectedGearGoal = "";
+        secondaryGoals.clear();
         skippedGear.clear();
         optionalGear.clear();
         gearAlternatives.clear();
@@ -363,7 +415,23 @@ public final class IronCompassPersistence implements ManualOverrideStore, GearPr
         {
             return;
         }
-        selectedGearGoal = value(SELECTED_GEAR_GOAL_KEY, "");
+        String storedPrimary = config.get(CONFIG_GROUP, PRIMARY_GOAL_KEY);
+        String legacySelected = value(SELECTED_GEAR_GOAL_KEY, "");
+        selectedGearGoal = storedPrimary == null ? legacySelected : storedPrimary;
+        secondaryGoals = new LinkedHashSet<>(decodeSet(value(SECONDARY_GOALS_KEY, "")));
+        secondaryGoals.remove(selectedGearGoal);
+        while (secondaryGoals.size() > 3)
+        {
+            String last = null;
+            for (String value : secondaryGoals) last = value;
+            secondaryGoals.remove(last);
+        }
+        if (!GOAL_QUEUE_MIGRATION_VERSION.equals(value(GOAL_QUEUE_MIGRATION_KEY, "")))
+        {
+            config.set(CONFIG_GROUP, PRIMARY_GOAL_KEY, selectedGearGoal);
+            config.set(CONFIG_GROUP, SECONDARY_GOALS_KEY, String.join(";", secondaryGoals));
+            config.set(CONFIG_GROUP, GOAL_QUEUE_MIGRATION_KEY, GOAL_QUEUE_MIGRATION_VERSION);
+        }
         skippedGear = decodeSet(value(SKIPPED_GEAR_KEY, ""));
         optionalGear = decodeSet(value(OPTIONAL_GEAR_KEY, ""));
         gearAlternatives = decodeMap(value(ALTERNATIVE_GEAR_KEY, ""));
@@ -374,6 +442,9 @@ public final class IronCompassPersistence implements ManualOverrideStore, GearPr
     private void saveGearPreferences()
     {
         config.set(CONFIG_GROUP, SELECTED_GEAR_GOAL_KEY, selectedGearGoal);
+        config.set(CONFIG_GROUP, PRIMARY_GOAL_KEY, selectedGearGoal);
+        config.set(CONFIG_GROUP, SECONDARY_GOALS_KEY, String.join(";", secondaryGoals));
+        config.set(CONFIG_GROUP, GOAL_QUEUE_MIGRATION_KEY, GOAL_QUEUE_MIGRATION_VERSION);
         config.set(CONFIG_GROUP, SKIPPED_GEAR_KEY, String.join(";", skippedGear));
         config.set(CONFIG_GROUP, OPTIONAL_GEAR_KEY, String.join(";", optionalGear));
         StringBuilder encoded = new StringBuilder();
@@ -406,7 +477,7 @@ public final class IronCompassPersistence implements ManualOverrideStore, GearPr
 
     private static Set<String> decodeSet(String encoded)
     {
-        Set<String> values = new HashSet<>();
+        Set<String> values = new LinkedHashSet<>();
         if (encoded == null || encoded.trim().isEmpty()) return values;
         for (String value : encoded.split(";"))
         {

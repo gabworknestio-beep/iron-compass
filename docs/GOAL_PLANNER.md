@@ -1,26 +1,32 @@
-# Goal Planner V1
+# Goal Planner V2
 
-Audited: **2026-08-27**.
+Audited: **2026-08-28**.
 
-The Goal Planner turns a chosen Ironman objective into one deterministic next action. It does not replace the canonical Efficient Ironman route or the Gear graph: it references both through stable IDs and explains the shortest currently provable requirement boundary.
+The Goal Planner turns a deliberately small queue of Ironman objectives into one deterministic next action. It does not replace the canonical Efficient Ironman route or the Gear graph: it references both through stable IDs, detects shared requirements, and explains the strongest currently useful boundary.
 
 ## Player contract
 
 The Overview shows:
 
-- **Your goal** — the selected long-term outcome;
-- **Next step** — one concrete route, Gear, quest, skill, confirmation, or completion action;
-- **Why now?** — the requirement that makes this action the nearest useful boundary;
+- **Active Goals** — one Primary Goal and up to three Secondary Goals;
+- **Next best move** — one concrete route, Gear, quest, skill, confirmation, or completion action;
+- **Why this?** — deterministic reasons such as Primary Goal relevance, goal synergy, impact, or session fit;
+- **Good fit for this account** — a structured Ironman method when the action is a supported skill gate;
 - **Progress** — concise true, false, and unknown requirement evidence;
 - **After this** — the next known boundary without pretending to estimate completion time;
 - **What this unlocks** — authored outcomes;
-- **Resources** — readiness only when an existing Gear objective has reviewed supply data.
+- **Resources** — `UNKNOWN`, observed empty, partial, or an authored useful starting threshold, never invented banked XP;
+- **Take a Useful Break** — distinct optional actions that still advance an active goal, unlock, supply path, or canonical route.
 
 Unknown bank evidence remains `UNKNOWN`. It produces a confirmation action, never an ownership, availability, or recommendation claim. Completion takes precedence over inconsistent lower-level inputs so a completed quest does not display contradictory missing requirements.
 
-## Bundled catalog
+## Goal Queue and migration
 
-`src/main/resources/goals/ironman-goals-2026.json` is versioned and contains 11 curated goals: Dragon Defender, Barrows Gloves, Fire Cape, Fighter Torso, Zombie Axe, Perilous Moons, Royal Titans, Song of the Elves, Bowfa and Crystal Armour, Trident of the Seas, and Tombs of Amascut entry.
+The queue is stored in RuneLite's per-character RS-profile configuration as `primaryGoal` and ordered `secondaryGoals`. The old `selectedGearGoal` value is copied to `primaryGoal` exactly once when the new key is absent. Migration is idempotent, keeps the old key readable, and starts secondaries empty. Selecting the Primary Goal removes it from secondaries; duplicates are rejected; skipping a goal removes it from every active role; and profile switches clear the in-memory cache before another character is read.
+
+## Bundled Goal catalog
+
+`src/main/resources/goals/ironman-goals-2026.json` is versioned and contains 26 curated goals across Gear/PvM, account infrastructure, quest progression, and skill milestones. The searchable Goal Picker exposes Suggested, Active, Completed, and category filters instead of a 26-row permanent combo box. Suggested goals are never selected automatically.
 
 Each definition may contain:
 
@@ -36,17 +42,28 @@ Do not duplicate a Gear objective's completion/readiness conditions in Goal JSON
 
 Goal dependencies are walked before direct requirements. The planner chooses the closest missing skill requirement by numeric gap and uses stable catalog order as the final tie-break. Route anchors resolve through the canonical route projection; Gear anchors resolve through the existing recursive `GoalDependencyResolver`.
 
-Saved pre-update Gear goal IDs continue to work. Curated Gear goals deliberately reuse their existing Gear IDs, and a legacy selected Gear ID outside the 11-goal catalog is adapted rather than deleted. A saved ID absent from both catalogs fails safely and can be cleared in the UI.
+Saved pre-update Gear goal IDs continue to work. Curated Gear goals deliberately reuse their existing Gear IDs, and a legacy selected Gear ID outside the curated catalog is adapted rather than deleted. A saved ID absent from both catalogs fails safely and can be cleared in the UI.
 
-## Recommendations and preferences
+## Recommendation V2 and synergy
 
-`ProgressionRecommendationService` produces three deduplicated roles:
+`ProgressionRecommendationService` generates candidates from the Primary and Secondary Goal actions, the current and next ten canonical route boundaries, and every reachable Gear objective. Identical skill/target, route-step, and Gear actions share a stable action key. One merged candidate can therefore explain that it advances two or more active goals.
 
-- **Recommended** — best current route or reachable Gear action;
+Internal scores combine explicit Primary/Secondary relevance, hard requirements, impact, synergy, current effort, session fit, playstyle, risk, and canonical position. The numeric score never enters the UI. Primary hard requirements have a larger base weight than low-value secondary synergy, so a broadly useful action cannot casually displace the player's explicit critical boundary.
+
+The service produces four deduplicated roles:
+
+- **Recommended** — best immediate action from the broader pool;
 - **Quick Win** — a distinct short action that fits the selected session filter;
-- **Long-Term** — the selected Goal's next boundary.
+- **Long-Term** — the Primary Goal context or another distinct long boundary;
+- **Useful Break** — up to three different actions that still advance the account.
 
-Balanced, Efficient, PvM, and Skilling playstyles change ranking only. **Avoid Wilderness** penalizes Wilderness candidates but does not rewrite factual access or completion. Session length filters Quick Wins only and is not an ETA promise.
+Balanced, Efficient, PvM, and Skilling playstyles change ranking only. **Avoid Wilderness** excludes unsafe Method suggestions and strongly penalizes Wilderness candidates without rewriting factual access or completion. Hardcore accounts never receive a Wilderness Method recommendation. Session effort remains qualitative and is not an ETA promise.
+
+## Structured Method Planner
+
+`src/main/resources/methods/ironman-methods-2026.json` contains a focused set of important methods for goal skill gates. Definitions include stable ID, skill/range, verified requirements, risk, attention, qualitative effort/speed/resource efficiency, starting resource groups, useful outputs, acquisition sources, tags, playstyles, account types, related goals, and Wiki title.
+
+The Method Planner filters locked or account-incompatible methods, applies the Wilderness/Hardcore preference, evaluates observed carried/banked starting inputs, and returns one recommended good fit plus at most two alternatives. A sufficient state means only that an authored **starting threshold** is observed; it is explicitly not a target-level or banked-XP claim. When the bank is unknown, the exact unconfirmed-bank message takes precedence.
 
 All preferences use RuneLite's per-character RS-profile configuration. Logout and both profile-change events clear the in-memory cache before the next profile is read.
 

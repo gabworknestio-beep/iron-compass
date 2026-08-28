@@ -44,7 +44,23 @@ public final class GoalPlannerService
     public GoalPlanProjection evaluate(GoalCatalog catalog, AccountState state, GearProjection gear,
                                        RouteProjection route, GearPreferenceStore preferences)
     {
-        String selectedId = preferences.getSelectedGoalId();
+        String selectedId = preferences.getPrimaryGoalId();
+        GoalPlanProjection primary = evaluateSelected(catalog, state, gear, route, selectedId);
+        List<GoalPlanProjection> secondary = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        if (selectedId != null) seen.add(selectedId);
+        for (String secondaryId : preferences.getSecondaryGoalIds())
+        {
+            if (secondaryId == null || !seen.add(secondaryId) || preferences.isSkipped(secondaryId)) continue;
+            GoalPlanProjection plan = evaluateSelected(catalog, state, gear, route, secondaryId);
+            if (plan.hasSelectedGoal()) secondary.add(plan);
+        }
+        return primary.withSecondaryGoals(secondary);
+    }
+
+    private GoalPlanProjection evaluateSelected(GoalCatalog catalog, AccountState state, GearProjection gear,
+                                                RouteProjection route, String selectedId)
+    {
         if (selectedId == null)
         {
             return empty(catalog, null);
@@ -170,7 +186,8 @@ public final class GoalPlannerService
             return new PlannedAction(PlannedAction.Kind.REQUIREMENT,
                 "Train " + condition.getSkill() + " " + actual + " → " + condition.getLevel(),
                 condition.getSkill() + " is the closest unfinished skill requirement for " + goal.getTitle() + ".",
-                null, null);
+                null, null, condition.getSkill(), condition.getLevel(),
+                skillEffort(Math.max(0, condition.getLevel() - actual)));
         }
         if ("SKILL_SUM_AT_LEAST".equals(type))
         {
@@ -313,6 +330,14 @@ public final class GoalPlannerService
             }
         }
         return 500;
+    }
+
+    private static EffortClass skillEffort(int gap)
+    {
+        if (gap <= 2) return EffortClass.QUICK;
+        if (gap <= 5) return EffortClass.SHORT;
+        if (gap <= 12) return EffortClass.MEDIUM;
+        return EffortClass.LONG;
     }
 
     private static StepEvaluation findRouteStep(RouteProjection route, String id)

@@ -1,0 +1,227 @@
+{
+  "version": 1,
+  "auditedAt": "2026-08-28",
+  "methods": [
+    {
+      "id": "method.herblore.banked-potions", "skill": "Herblore", "minLevel": 3, "maxLevel": 99,
+      "title": "Process your banked herbs first",
+      "description": "Make useful potions from herbs and secondaries already held by the account before collecting more.",
+      "risk": "SAFE", "attention": "LOW", "sessionEffort": "SHORT", "speed": "FAST", "resourceEfficiency": "HIGH",
+      "resourceInputs": [{"label": "Clean or grimy herbs", "itemIds": [199,201,203,205,207,209,211,213,215,217,219,2485,3049,3051,249,251,253,255,257,259,261,263,265,267,269,2481,2998,3000], "minimumUsefulQuantity": 10}],
+      "usefulOutputs": ["Combat potions", "Prayer potions", "Herblore progress"],
+      "acquisitionSources": ["Herb runs", "Farming Contracts", "Slayer and PvM drops"],
+      "tags": ["herblore", "supplies"], "playstyles": ["BALANCED", "EFFICIENT", "PVM"],
+      "relatedGoals": ["goal.quest.song-of-the-elves", "goal.skill.herblore-70"], "wikiPage": "Ironman Guide/Herblore"
+    },
+    {
+      "id": "method.herblore.contracts-runs", "skill": "Herblore", "minLevel": 3, "maxLevel": 99,
+      "title": "Herb runs and Farming Contracts",
+      "description": "Build a sustainable seed-and-herb loop while also advancing Farming.",
+      "requirements": {"type": "SKILL_AT_LEAST", "label": "Farming 45", "skill": "Farming", "level": 45},
+      "risk": "SAFE", "attention": "LOW", "sessionEffort": "QUICK", "speed": "SLOW", "resourceEfficiency": "HIGH",
+      "usefulOutputs": ["Herbs", "Herb seeds", "Farming experience"],
+      "tags": ["herblore", "farming", "routine"], "playstyles": ["BALANCED", "SKILLING"],
+      "relatedGoals": ["goal.quest.song-of-the-elves", "goal.skill.herblore-70", "goal.unlock.farming-guild"], "wikiPage": "Ironman Guide/Herblore"
+    },
+    {
+      "id": "method.herblore.mixology", "skill": "Herblore", "minLevel": 60, "maxLevel": 99,
+      "title": "Mastering Mixology",
+      "description": "Use herbs efficiently through the Alchemical Society when its unlocks are available.",
+      "requirements": {"type": "ALL", "label": "Mixology access", "children": [
+        {"type": "SKILL_AT_LEAST", "label": "Herblore 60", "skill": "Herblore", "level": 60},
+        {"type": "QUEST_STATE", "label": "Children of the Sun", "quest": "Children of the Sun", "state": "FINISHED"}
+      ]},
+      "risk": "SAFE", "attention": "HIGH", "sessionEffort": "MEDIUM", "speed": "MODERATE", "resourceEfficiency": "HIGH",
+      "resourceInputs": [{"label": "Herbs or unfinished potions", "itemIds": [199,201,203,205,207,209,211,213,215,217,219,2485,3049,3051,249,251,253,255,257,259,261,263,265,267,269,2481,2998,3000], "minimumUsefulQuantity": 30}],
+      "usefulOutputs": ["Herblore experience per herb", "Mixology rewards"],
+      "tags": ["herblore", "varlamore", "resource-efficient"], "playstyles": ["EFFICIENT", "SKILLING"],
+      "relatedGoals": ["goal.quest.song-of-the-elves", "goal.skill.herblore-70"], "wikiPage": "Mastering Mixology"
+    },
+    {
+      "id": "method.crafting.gems-jewellery", "skill": "Crafting", "minLevel": 1, "maxLevel": 60,
+      "title": "Use quest rewards, gems, and jewellery",
+      "description": "Turn useful early materials into teleport jewellery and incremental Crafting progress.",
+      "risk": "SAFE", "attention": "LOW", "sessionEffort": "SHORT", "speed": "MODERATE", "resourceEfficiency": "HIGH",
+      "usefulOutputs": ["Teleport jewellery", "Quest progress"],
+      "tags": ["crafting", "infrastructure"], "playstyles": ["BALANCED", "SKILLING"],
+      "relatedGoals": ["goal.quest.lunar-diplomacy", "goal.account.strong-poh"], "wikiPage": "Ironman Guide/Crafting"
+    },
+    {
+      "id": "method.crafting.superglass", "skill": "Crafting", "minLevel": 61, "maxLevel": 99,
+      "title": "Giant seaweed, sandstone, and Superglass Make",
+      "description": "Collect giant seaweed and buckets of sand, then convert them with Superglass Make before glassblowing.",
+      "requirements": {"type": "ALL", "label": "Superglass setup", "children": [
+        {"type": "SKILL_AT_LEAST", "label": "Magic 77", "skill": "Magic", "level": 77},
+        {"type": "QUEST_STATE", "label": "Lunar Diplomacy", "quest": "Lunar Diplomacy", "state": "FINISHED"}
+      ]},
+      "risk": "SAFE", "attention": "MEDIUM", "sessionEffort": "MEDIUM", "speed": "FAST", "resourceEfficiency": "HIGH",
+      "resourceInputs": [
+        {"label": "Giant seaweed", "itemIds": [21504], "minimumUsefulQuantity": 3},
+        {"label": "Buckets of sand", "itemIds": [1783], "minimumUsefulQuantity": 18}
+      ],
+      "usefulOutputs": ["Molten glass", "Magic experience"],
+      "acquisitionSources": ["Giant seaweed runs on Fossil Island", "Sandstone at the Bandit Camp Quarry"],
+      "tags": ["crafting", "fossil-island", "supplies"], "playstyles": ["EFFICIENT", "SKILLING"],
+      "relatedGoals": ["goal.quest.lunar-diplomacy", "goal.quest.quest-cape"], "wikiPage": "Ironman Guide/Crafting"
+    },
+    {
+      "id": "method.smithing.giants-foundry", "skill": "Smithing", "minLevel": 15, "maxLevel": 99,
+      "title": "Giants' Foundry",
+      "description": "Process bars or suitable metal equipment into commissions with strong material efficiency.",
+      "requirements": {"type": "QUEST_STATE", "label": "Sleeping Giants", "quest": "Sleeping Giants", "state": "FINISHED"},
+      "risk": "SAFE", "attention": "MEDIUM", "sessionEffort": "MEDIUM", "speed": "MODERATE", "resourceEfficiency": "HIGH",
+      "resourceInputs": [{"label": "Metal bars", "itemIds": [2351,2353,2359,2361], "minimumUsefulQuantity": 14}],
+      "usefulOutputs": ["Coins", "Foundry reputation"],
+      "acquisitionSources": ["Bars from Slayer and PvM", "Ores processed at the Blast Furnace"],
+      "tags": ["smithing", "resource-efficient"], "playstyles": ["BALANCED", "SKILLING"],
+      "relatedGoals": ["goal.quest.song-of-the-elves"], "wikiPage": "Giants' Foundry"
+    },
+    {
+      "id": "method.smithing.blast-furnace", "skill": "Smithing", "minLevel": 40, "maxLevel": 99,
+      "title": "Blast Furnace when cash and ores justify it",
+      "description": "Use the Blast Furnace for a faster ore-processing route when the account can sustain its inputs.",
+      "risk": "SAFE", "attention": "HIGH", "sessionEffort": "MEDIUM", "speed": "FAST", "resourceEfficiency": "MODERATE",
+      "usefulOutputs": ["Metal bars", "Fast Smithing progress"],
+      "tags": ["smithing", "cash-dependent"], "playstyles": ["EFFICIENT"],
+      "relatedGoals": ["goal.quest.song-of-the-elves"], "wikiPage": "Blast Furnace/Strategies"
+    },
+    {
+      "id": "method.prayer.varlamore-shards", "skill": "Prayer", "minLevel": 30, "maxLevel": 99,
+      "title": "Blessed bone shards at the libation bowl",
+      "description": "Use the safe Varlamore offering route when blessed bone shards are available.",
+      "requirements": {"type": "QUEST_STATE", "label": "Children of the Sun", "quest": "Children of the Sun", "state": "FINISHED"},
+      "risk": "SAFE", "attention": "LOW", "sessionEffort": "SHORT", "speed": "MODERATE", "resourceEfficiency": "HIGH",
+      "resourceInputs": [{"label": "Blessed bone shards", "itemIds": [29381], "minimumUsefulQuantity": 100}],
+      "usefulOutputs": ["Safe Prayer progress"],
+      "acquisitionSources": ["Varlamore activities", "Bless and break stored bones"],
+      "tags": ["prayer", "varlamore", "hardcore-safe"], "playstyles": ["BALANCED", "SKILLING"],
+      "relatedGoals": ["goal.skill.prayer-43", "goal.skill.piety"], "wikiPage": "Blessed bone shards"
+    },
+    {
+      "id": "method.prayer.gilded-altar", "skill": "Prayer", "minLevel": 1, "maxLevel": 99,
+      "title": "Use a lit gilded altar",
+      "description": "Offer stored bones through a safe player-owned-house altar route.",
+      "risk": "SAFE", "attention": "LOW", "sessionEffort": "SHORT", "speed": "FAST", "resourceEfficiency": "MODERATE",
+      "resourceInputs": [{"label": "Useful bones", "itemIds": [526,532,534,536], "minimumUsefulQuantity": 10}],
+      "usefulOutputs": ["Prayer progress"],
+      "acquisitionSources": ["Stored bones", "Dragon and boss drops"],
+      "tags": ["prayer", "hardcore-safe"], "playstyles": ["BALANCED", "PVM"],
+      "relatedGoals": ["goal.skill.prayer-43", "goal.skill.piety"], "wikiPage": "Pay-to-play Prayer training"
+    },
+    {
+      "id": "method.prayer.chaos-altar", "skill": "Prayer", "minLevel": 1, "maxLevel": 99,
+      "title": "Chaos Altar",
+      "description": "Use the Wilderness altar for high bone efficiency only when Wilderness risk is acceptable.",
+      "risk": "WILDERNESS", "attention": "HIGH", "sessionEffort": "SHORT", "speed": "FAST", "resourceEfficiency": "HIGH",
+      "resourceInputs": [{"label": "Useful bones", "itemIds": [526,532,534,536], "minimumUsefulQuantity": 10}],
+      "usefulOutputs": ["Prayer progress"],
+      "acquisitionSources": ["Stored bones", "Dragon and boss drops"],
+      "tags": ["prayer", "wilderness"], "playstyles": ["EFFICIENT"],
+      "relatedGoals": ["goal.skill.prayer-43", "goal.skill.piety"], "wikiPage": "Chaos Temple (hut)"
+    },
+    {
+      "id": "method.hunter.birdhouses", "skill": "Hunter", "minLevel": 5, "maxLevel": 99,
+      "title": "Bird house runs",
+      "description": "Use short Fossil Island runs for Hunter progress, nests, and tree seeds.",
+      "requirements": {"type": "QUEST_STATE", "label": "Bone Voyage", "quest": "Bone Voyage", "state": "FINISHED"},
+      "risk": "SAFE", "attention": "LOW", "sessionEffort": "QUICK", "speed": "SLOW", "resourceEfficiency": "HIGH",
+      "usefulOutputs": ["Bird nests", "Tree seeds"],
+      "tags": ["hunter", "fossil-island", "routine", "herblore"], "playstyles": ["BALANCED", "SKILLING"],
+      "relatedGoals": ["goal.quest.song-of-the-elves", "goal.unlock.fossil-island"], "wikiPage": "Bird house trapping"
+    },
+    {
+      "id": "method.hunter.rumours", "skill": "Hunter", "minLevel": 46, "maxLevel": 99,
+      "title": "Hunters' Rumours",
+      "description": "Complete Hunter Guild rumours for active Hunter training and varied useful supplies.",
+      "requirements": {"type": "QUEST_STATE", "label": "Children of the Sun", "quest": "Children of the Sun", "state": "FINISHED"},
+      "risk": "SAFE", "attention": "MEDIUM", "sessionEffort": "MEDIUM", "speed": "MODERATE", "resourceEfficiency": "HIGH",
+      "usefulOutputs": ["Hunter supplies", "Prayer materials", "Bird nests"],
+      "tags": ["hunter", "varlamore", "supplies"], "playstyles": ["BALANCED", "SKILLING"],
+      "relatedGoals": ["goal.quest.song-of-the-elves"], "wikiPage": "Hunters' Rumours"
+    },
+    {
+      "id": "method.construction.mahomes", "skill": "Construction", "minLevel": 20, "maxLevel": 99,
+      "title": "Mahogany Homes with banked planks",
+      "description": "Convert stored planks through contracts for a resource-conscious Construction path.",
+      "risk": "SAFE", "attention": "MEDIUM", "sessionEffort": "MEDIUM", "speed": "MODERATE", "resourceEfficiency": "HIGH",
+      "resourceInputs": [{"label": "Construction planks", "itemIds": [960,8778,8780,8782], "minimumUsefulQuantity": 20}],
+      "usefulOutputs": ["Construction progress", "Mahogany Homes points"],
+      "acquisitionSources": ["Kingdom hardwood logs", "Teak or mahogany trees", "Planks from PvM"],
+      "tags": ["construction", "poh", "resource-efficient"], "playstyles": ["BALANCED", "SKILLING"],
+      "relatedGoals": ["goal.quest.song-of-the-elves", "goal.account.strong-poh"], "wikiPage": "Mahogany Homes"
+    },
+    {
+      "id": "method.farming.contracts-trees", "skill": "Farming", "minLevel": 45, "maxLevel": 99,
+      "title": "Farming Contracts plus tree runs",
+      "description": "Use contracts to sustain seeds and add tree runs when the bank supports them.",
+      "risk": "SAFE", "attention": "LOW", "sessionEffort": "QUICK", "speed": "MODERATE", "resourceEfficiency": "HIGH",
+      "usefulOutputs": ["Seeds", "Herblore supplies", "Farming progress"],
+      "tags": ["farming", "herblore", "routine"], "playstyles": ["BALANCED", "SKILLING"],
+      "relatedGoals": ["goal.quest.song-of-the-elves", "goal.unlock.farming-guild", "goal.skill.herblore-70"], "wikiPage": "Ironman Guide/Farming"
+    },
+    {
+      "id": "method.farming.tithe", "skill": "Farming", "minLevel": 34, "maxLevel": 99,
+      "title": "Tithe Farm for active progress",
+      "description": "Use Tithe Farm when the Farming level itself is the immediate bottleneck.",
+      "risk": "SAFE", "attention": "HIGH", "sessionEffort": "MEDIUM", "speed": "FAST", "resourceEfficiency": "HIGH",
+      "usefulOutputs": ["Farming progress", "Tithe Farm rewards"],
+      "tags": ["farming", "active-training"], "playstyles": ["EFFICIENT", "SKILLING"],
+      "relatedGoals": ["goal.quest.song-of-the-elves", "goal.unlock.farming-guild"], "wikiPage": "Tithe Farm"
+    },
+    {
+      "id": "method.agility.rooftops", "skill": "Agility", "minLevel": 10, "maxLevel": 99,
+      "title": "Best unlocked rooftop course",
+      "description": "Use the highest comfortable rooftop course when graceful marks and steady progress both matter.",
+      "risk": "SAFE", "attention": "MEDIUM", "sessionEffort": "MEDIUM", "speed": "MODERATE", "resourceEfficiency": "HIGH",
+      "usefulOutputs": ["Marks of grace", "Run-energy progression"],
+      "tags": ["agility", "movement"], "playstyles": ["BALANCED", "SKILLING"],
+      "relatedGoals": ["goal.quest.song-of-the-elves"], "wikiPage": "Rooftop Agility Courses"
+    },
+    {
+      "id": "method.mining.sandstone", "skill": "Mining", "minLevel": 35, "maxLevel": 99,
+      "title": "Sandstone when Crafting also needs supplies",
+      "description": "Mine sandstone at the Quarry when the action advances Mining while banking future glass supplies.",
+      "risk": "SAFE", "attention": "MEDIUM", "sessionEffort": "MEDIUM", "speed": "MODERATE", "resourceEfficiency": "HIGH",
+      "usefulOutputs": ["Buckets of sand", "Crafting supplies"],
+      "tags": ["mining", "crafting", "synergy"], "playstyles": ["BALANCED", "EFFICIENT"],
+      "relatedGoals": ["goal.quest.song-of-the-elves"], "wikiPage": "Sandstone"
+    },
+    {
+      "id": "method.mining.motherlode", "skill": "Mining", "minLevel": 30, "maxLevel": 99,
+      "title": "Motherlode Mine",
+      "description": "Use a lower-attention ore route when future Smithing inputs are useful.",
+      "risk": "SAFE", "attention": "LOW", "sessionEffort": "MEDIUM", "speed": "SLOW", "resourceEfficiency": "HIGH",
+      "usefulOutputs": ["Ores", "Prospector progression"],
+      "tags": ["mining", "smithing", "low-attention"], "playstyles": ["BALANCED", "SKILLING"],
+      "relatedGoals": ["goal.quest.song-of-the-elves"], "wikiPage": "Motherlode Mine"
+    },
+    {
+      "id": "method.woodcutting.sulliusceps", "skill": "Woodcutting", "minLevel": 65, "maxLevel": 99,
+      "title": "Sulliusceps",
+      "description": "Train Woodcutting on Fossil Island while gaining fossils that can support Prayer progress.",
+      "requirements": {"type": "QUEST_STATE", "label": "Bone Voyage", "quest": "Bone Voyage", "state": "FINISHED"},
+      "risk": "SAFE", "attention": "MEDIUM", "sessionEffort": "MEDIUM", "speed": "FAST", "resourceEfficiency": "HIGH",
+      "usefulOutputs": ["Fossils", "Mushrooms"],
+      "tags": ["woodcutting", "fossil-island", "prayer", "synergy"], "playstyles": ["BALANCED", "SKILLING"],
+      "relatedGoals": ["goal.quest.song-of-the-elves", "goal.unlock.fossil-island"], "wikiPage": "Sulliuscep"
+    },
+    {
+      "id": "method.woodcutting.teaks", "skill": "Woodcutting", "minLevel": 35, "maxLevel": 99,
+      "title": "Teaks for Construction supplies",
+      "description": "Cut teaks when both Woodcutting and the account's future plank supply matter.",
+      "risk": "SAFE", "attention": "MEDIUM", "sessionEffort": "MEDIUM", "speed": "FAST", "resourceEfficiency": "HIGH",
+      "usefulOutputs": ["Teak logs", "Construction supplies"],
+      "tags": ["woodcutting", "construction", "synergy"], "playstyles": ["BALANCED", "EFFICIENT"],
+      "relatedGoals": ["goal.quest.song-of-the-elves", "goal.account.strong-poh"], "wikiPage": "Teak"
+    },
+    {
+      "id": "method.slayer.tasks", "skill": "Slayer", "minLevel": 1, "maxLevel": 99,
+      "title": "Continue efficient Slayer tasks",
+      "description": "Train Slayer through useful tasks while collecting combat supplies and progressing toward the next equipment milestone.",
+      "risk": "SAFE", "attention": "MEDIUM", "sessionEffort": "MEDIUM", "speed": "MODERATE", "resourceEfficiency": "HIGH",
+      "usefulOutputs": ["Herbs and seeds", "Combat upgrades", "Coins"],
+      "tags": ["slayer", "pvm", "supplies"], "playstyles": ["BALANCED", "PVM"],
+      "relatedGoals": ["goal.skill.slayer-87", "goal.skill.slayer-93", "gear.mid.trident"], "wikiPage": "Ironman Guide/Slayer"
+    }
+  ]
+}

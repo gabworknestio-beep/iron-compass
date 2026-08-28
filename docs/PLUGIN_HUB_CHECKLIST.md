@@ -12,13 +12,13 @@ Status as of **2026-08-28**: the Iron Compass rename remains an update candidate
 - [x] No non-RuneLite runtime dependencies.
 - [x] No reflection, JNI/JNA, `Unsafe`, native memory, process execution, dynamic code loading, Java serialization, or runtime executable/source download.
 - [x] No automation, menu/input injection, player-action execution, combat prediction, or duplicate path overlay.
-- [x] Bundled route, dynamic 40-objective Gear catalog, and 11-goal catalog load via classpath streams and perform no runtime scrape/download.
+- [x] Bundled route, dynamic 40-objective Gear catalog, 26-goal catalog, and structured Method catalog load via classpath streams and perform no runtime scrape/download.
 - [x] Per-character progress uses RuneLite RS-profile configuration; settings use normal plugin configuration.
 - [x] Local-only player state with no analytics, telemetry, backend, or username collection.
 - [x] Optional integrations degrade safely. Quest Helper support is not falsely claimed.
 - [x] Automated domain, route/Gear/Goal validation, goal-resolution, dose-aware supply, training-advice, integration-contract, persistence/lifecycle, and Swing render tests.
 - [x] Gear graph validation rejects self/missing/duplicate/conflicting references, cycles, reverse alternatives, and tier regressions.
-- [x] Fifteen synthetic 242 px Overview/Path/Gear/Goal/search/bank/manual/detail captures pass visual smoke tests; full projection and account assembly have repeatable performance guards.
+- [x] Twenty-one synthetic 242 px Overview/Path/Gear/Goal/multi-goal/method/resource/session/search/bank/manual/detail captures pass visual smoke tests; full projection and account assembly have repeatable staged performance guards.
 - [x] Logout and both RuneLite profile-change events clear character/session projections, observed bank data, and notification state before another profile can render.
 - [x] Unknown bank ownership is `UNCONFIRMED`, skipped goals cannot drive dependencies/supplies, and exact imbued-item checks bypass variation collapse where required.
 - [x] Explainable local gear scoring never automates actions or supplies high-end encounter mechanics.

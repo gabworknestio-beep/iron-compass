@@ -15,6 +15,58 @@ import static org.junit.Assert.assertTrue;
 public final class IronCompassPersistenceTest
 {
     @Test
+    public void legacySelectedGoalMigratesToPrimaryOncePerProfile()
+    {
+        FakeProfileConfig config = new FakeProfileConfig();
+        config.set(IronCompassPersistence.CONFIG_GROUP, IronCompassPersistence.SELECTED_GEAR_GOAL_KEY,
+            "goal.legacy");
+        IronCompassPersistence persistence = new IronCompassPersistence(config);
+
+        assertEquals("goal.legacy", persistence.getPrimaryGoalId());
+        assertTrue(persistence.getSecondaryGoalIds().isEmpty());
+        assertEquals("goal.legacy", config.get(IronCompassPersistence.CONFIG_GROUP,
+            IronCompassPersistence.PRIMARY_GOAL_KEY));
+        assertEquals(IronCompassPersistence.GOAL_QUEUE_MIGRATION_VERSION,
+            config.get(IronCompassPersistence.CONFIG_GROUP, IronCompassPersistence.GOAL_QUEUE_MIGRATION_KEY));
+
+        config.set(IronCompassPersistence.CONFIG_GROUP, IronCompassPersistence.SELECTED_GEAR_GOAL_KEY,
+            "goal.changed-legacy");
+        persistence.profileChanged();
+        assertEquals("goal.legacy", persistence.getPrimaryGoalId());
+    }
+
+    @Test
+    public void queuePreventsDuplicatesAndCapsSecondaryGoalsAtThree()
+    {
+        IronCompassPersistence persistence = new IronCompassPersistence(new FakeProfileConfig());
+        persistence.setPrimaryGoalId("goal.primary");
+
+        assertFalse(persistence.addSecondaryGoalId("goal.primary"));
+        assertTrue(persistence.addSecondaryGoalId("goal.one"));
+        assertFalse(persistence.addSecondaryGoalId("goal.one"));
+        assertTrue(persistence.addSecondaryGoalId("goal.two"));
+        assertTrue(persistence.addSecondaryGoalId("goal.three"));
+        assertFalse(persistence.addSecondaryGoalId("goal.four"));
+        assertEquals(3, persistence.getSecondaryGoalIds().size());
+
+        persistence.setPrimaryGoalId("goal.two");
+        assertFalse(persistence.getSecondaryGoalIds().contains("goal.two"));
+    }
+
+    @Test
+    public void skippedGoalIsRemovedFromEveryActiveRole()
+    {
+        IronCompassPersistence persistence = new IronCompassPersistence(new FakeProfileConfig());
+        persistence.setPrimaryGoalId("goal.primary");
+        persistence.addSecondaryGoalId("goal.secondary");
+
+        persistence.setSkipped("goal.secondary", true);
+        assertFalse(persistence.getSecondaryGoalIds().contains("goal.secondary"));
+        persistence.setSkipped("goal.primary", true);
+        assertNull(persistence.getPrimaryGoalId());
+    }
+
+    @Test
     public void profileSwitchReloadsOnlyTheNewCharactersPreferences()
     {
         FakeProfileConfig config = new FakeProfileConfig();
@@ -22,6 +74,7 @@ public final class IronCompassPersistenceTest
 
         config.use("A");
         persistence.setSelectedGoalId("gear.a");
+        persistence.addSecondaryGoalId("goal.a-secondary");
         persistence.setSkipped("gear.skip-a", true);
         persistence.put("step.a", ManualOverride.FORCE_COMPLETE);
         persistence.setPlaystyle(Playstyle.PVM);
@@ -31,6 +84,7 @@ public final class IronCompassPersistenceTest
         config.use("B");
         persistence.profileChanged();
         assertNull(persistence.getSelectedGoalId());
+        assertTrue(persistence.getSecondaryGoalIds().isEmpty());
         assertFalse(persistence.isSkipped("gear.skip-a"));
         assertNull(persistence.get("step.a"));
         assertEquals(Playstyle.BALANCED, persistence.getPlaystyle());
@@ -41,6 +95,7 @@ public final class IronCompassPersistenceTest
         config.use("A");
         persistence.profileChanged();
         assertEquals("gear.a", persistence.getSelectedGoalId());
+        assertEquals(java.util.Collections.singletonList("goal.a-secondary"), persistence.getSecondaryGoalIds());
         assertTrue(persistence.isSkipped("gear.skip-a"));
         assertEquals(ManualOverride.FORCE_COMPLETE, persistence.get("step.a"));
         assertEquals(Playstyle.PVM, persistence.getPlaystyle());

@@ -40,6 +40,10 @@ import com.ironcompass.state.AccountState;
 import com.ironcompass.state.AccountStateService;
 import com.ironcompass.supply.SupplyForecast;
 import com.ironcompass.supply.SupplyForecastService;
+import com.ironcompass.training.IronmanMethodCatalog;
+import com.ironcompass.training.IronmanMethodLoader;
+import com.ironcompass.training.MethodLoadException;
+import com.ironcompass.training.MethodPlannerService;
 import com.ironcompass.ui.IronCompassPanel;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
@@ -74,7 +78,7 @@ import org.slf4j.LoggerFactory;
 
 @PluginDescriptor(
     name = "Iron Compass",
-    description = "Account-aware Ironman progression, gear goals, requirements, supplies, and one explainable next step.",
+    description = "Multi-goal Ironman progression, methods, gear, resources, and one explainable next move.",
     tags = {"ironman", "progression", "gear", "quest", "guide", "planning"}
 )
 public final class IronCompassPlugin extends Plugin
@@ -83,6 +87,7 @@ public final class IronCompassPlugin extends Plugin
     private static final String ROUTE_RESOURCE = "/routes/efficient-ironman.json";
     private static final String GEAR_CATALOG_RESOURCE = "/gear/ironman-gear-2026.json";
     private static final String GOAL_CATALOG_RESOURCE = "/goals/ironman-goals-2026.json";
+    private static final String METHOD_CATALOG_RESOURCE = "/methods/ironman-methods-2026.json";
     private static final int NO_CAPTURE_TICK = Integer.MIN_VALUE;
     private static final int CAPTURE_INTERVAL_TICKS = 2;
 
@@ -107,10 +112,12 @@ public final class IronCompassPlugin extends Plugin
     private final GoalPlannerService goalPlanner = new GoalPlannerService(conditionEvaluator, goalResolver,
         supplyEvaluator);
     private final ProgressionRecommendationService recommendationService = new ProgressionRecommendationService();
+    private final MethodPlannerService methodPlanner = new MethodPlannerService(conditionEvaluator);
     private final UnlockRadarService unlockRadar = new UnlockRadarService();
     private Route route;
     private GearCatalog gearCatalog;
     private GoalCatalog goalCatalog;
+    private IronmanMethodCatalog methodCatalog;
     private RouteVariables routeVariables;
     private AccountState accountState = AccountState.loggedOut();
     private RouteProjection projection;
@@ -154,17 +161,18 @@ public final class IronCompassPlugin extends Plugin
             route = new RouteLoader(gson).loadResource(ROUTE_RESOURCE);
             gearCatalog = new GearLoader(gson).loadResource(GEAR_CATALOG_RESOURCE);
             goalCatalog = new GoalLoader(gson).loadResource(GOAL_CATALOG_RESOURCE);
+            methodCatalog = new IronmanMethodLoader(gson).loadResource(METHOD_CATALOG_RESOURCE);
             Set<String> quests = Arrays.stream(Quest.values()).map(Quest::getName).collect(Collectors.toSet());
             new RouteValidator(quests).validate(route);
             new GearValidator().validate(gearCatalog, route);
             new GoalValidator(quests).validate(goalCatalog, gearCatalog, route);
             routeVariables = new RouteVariables(route);
             persistence.migrate(route);
-            log.debug("Loaded Iron Compass route {} v{} and gear catalog v{}", route.getRouteId(), route.getVersion(),
-                gearCatalog.getVersion());
+            log.debug("Loaded Iron Compass route {} v{}, gear catalog v{}, and {} training methods",
+                route.getRouteId(), route.getVersion(), gearCatalog.getVersion(), methodCatalog.getMethods().size());
         }
         catch (RouteLoadException | RouteValidationException | GearLoadException | GearValidationException
-            | GoalLoadException | GoalValidationException ex)
+            | GoalLoadException | GoalValidationException | MethodLoadException ex)
         {
             log.error("Unable to load Iron Compass route", ex);
             panel.showError(ex.getMessage());
@@ -193,6 +201,7 @@ public final class IronCompassPlugin extends Plugin
         route = null;
         gearCatalog = null;
         goalCatalog = null;
+        methodCatalog = null;
         routeVariables = null;
         accountStateService.clearSession();
         unlockRadar.reset();
@@ -394,6 +403,8 @@ public final class IronCompassPlugin extends Plugin
         GearProjection nextGear = gearEvaluator.evaluate(gearCatalog, accountState, persistence, persistence);
         GoalResolution nextGoal = goalResolver.resolve(nextGear, next);
         GoalPlanProjection nextPlan = goalPlanner.evaluate(goalCatalog, accountState, nextGear, next, persistence);
+        nextPlan = nextPlan.withMethodRecommendation(methodPlanner.recommend(methodCatalog,
+            nextPlan.getNextAction(), accountState, persistence, nextPlan.getActiveGoals()));
         RecommendationProjection nextRecommendations = recommendationService.evaluate(next, nextGear, nextPlan,
             accountState, persistence);
         UnlockOpportunity opportunity = unlockRadar.evaluate(nextGear, nextPlan);

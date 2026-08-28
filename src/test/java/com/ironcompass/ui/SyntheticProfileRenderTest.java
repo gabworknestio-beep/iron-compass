@@ -36,6 +36,9 @@ import com.ironcompass.state.AccountState;
 import com.ironcompass.state.BankSnapshot;
 import com.ironcompass.state.QuestProgress;
 import com.ironcompass.supply.SupplyForecastService;
+import com.ironcompass.training.IronmanMethodCatalog;
+import com.ironcompass.training.IronmanMethodLoader;
+import com.ironcompass.training.MethodPlannerService;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -108,6 +111,40 @@ public class SyntheticProfileRenderTest
             panel -> panel.showPathSearchForTesting("Song of the Elves"));
         render("profile-k-gear-search.png", route, midgame, new TestPreferences(),
             panel -> panel.showGearSearchForTesting("slayer"));
+
+        TestPreferences earlyMulti = new TestPreferences();
+        earlyMulti.setPrimaryGoalId("goal.skill.prayer-43");
+        earlyMulti.addSecondaryGoalId("goal.unlock.fossil-island");
+        earlyMulti.addSecondaryGoalId("goal.unlock.farming-guild");
+        render("profile-l-multi-goal-early.png", route,
+            AccountState.builder().accountMode(AccountMode.IRONMAN).skill("Prayer", 31)
+                .skill("Farming", 38).bank(BankSnapshot.unknown()).build(), earlyMulti, panel -> { });
+
+        TestPreferences midMulti = new TestPreferences();
+        midMulti.setPrimaryGoalId("goal.quest.song-of-the-elves");
+        midMulti.addSecondaryGoalId("goal.skill.herblore-70");
+        midMulti.addSecondaryGoalId("goal.account.strong-poh");
+        render("profile-m-multi-goal-midgame.png", route, songGoal, midMulti, panel -> { });
+        render("profile-n-sote-method-planner.png", route, songGoal, midMulti, panel -> { });
+
+        TestPreferences resourceShort = new TestPreferences();
+        resourceShort.setPrimaryGoalId("goal.skill.herblore-70");
+        AccountState emptyHerbs = AccountState.builder().accountMode(AccountMode.IRONMAN).skill("Herblore", 61)
+            .bank(BankSnapshot.observed(Collections.emptyMap())).build();
+        render("profile-o-resource-short.png", route, emptyHerbs, resourceShort, panel -> { });
+
+        TestPreferences bowfaBreak = new TestPreferences();
+        bowfaBreak.setPrimaryGoalId("gear.mid.bowfa");
+        bowfaBreak.addSecondaryGoalId("goal.skill.slayer-87");
+        bowfaBreak.addSecondaryGoalId("goal.skill.herblore-70");
+        render("profile-p-bowfa-useful-break.png", route, midgame, bowfaBreak,
+            IronCompassPanel::showUsefulBreaksForTesting);
+
+        TestPreferences shortSession = new TestPreferences();
+        shortSession.setPrimaryGoalId("goal.quest.song-of-the-elves");
+        shortSession.addSecondaryGoalId("goal.skill.herblore-70");
+        shortSession.setSessionLength(SessionLength.FIFTEEN_MINUTES);
+        render("profile-q-15-minute-session.png", route, songGoal, shortSession, panel -> { });
     }
 
     private void render(String name, Route route, AccountState state, TestPreferences overrides,
@@ -119,8 +156,12 @@ public class SyntheticProfileRenderTest
             overrides, overrides);
         GoalCatalog goals = new GoalLoader(gson).loadResource("/goals/ironman-goals-2026.json");
         SupplyForecastService supplies = new SupplyForecastService();
-        GoalPlanProjection goalPlan = new GoalPlannerService(conditions, new GoalDependencyResolver(), supplies)
+        GoalPlanProjection baseGoalPlan = new GoalPlannerService(conditions, new GoalDependencyResolver(), supplies)
             .evaluate(goals, state, gearProjection, routeProjection, overrides);
+        IronmanMethodCatalog methods = new IronmanMethodLoader(gson)
+            .loadResource("/methods/ironman-methods-2026.json");
+        GoalPlanProjection goalPlan = baseGoalPlan.withMethodRecommendation(new MethodPlannerService(conditions)
+            .recommend(methods, baseGoalPlan.getNextAction(), state, overrides, baseGoalPlan.getActiveGoals()));
         RecommendationProjection recommendations = new ProgressionRecommendationService().evaluate(
             routeProjection, gearProjection, goalPlan, state, overrides);
         BufferedImage image = new BufferedImage(242, 900, BufferedImage.TYPE_INT_ARGB);
@@ -211,6 +252,11 @@ public class SyntheticProfileRenderTest
         @Override public java.util.Map<String, ManualOverride> snapshot() { return manual.snapshot(); }
         @Override public String getSelectedGoalId() { return gear.getSelectedGoalId(); }
         @Override public void setSelectedGoalId(String id) { gear.setSelectedGoalId(id); }
+        @Override public String getPrimaryGoalId() { return gear.getPrimaryGoalId(); }
+        @Override public void setPrimaryGoalId(String id) { gear.setPrimaryGoalId(id); }
+        @Override public java.util.List<String> getSecondaryGoalIds() { return gear.getSecondaryGoalIds(); }
+        @Override public boolean addSecondaryGoalId(String id) { return gear.addSecondaryGoalId(id); }
+        @Override public void removeSecondaryGoalId(String id) { gear.removeSecondaryGoalId(id); }
         @Override public boolean isSkipped(String id) { return gear.isSkipped(id); }
         @Override public void setSkipped(String id, boolean value) { gear.setSkipped(id, value); }
         @Override public boolean isMarkedOptional(String id) { return gear.isMarkedOptional(id); }
