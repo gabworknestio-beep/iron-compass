@@ -1,10 +1,20 @@
 # Changelog
 
-All notable IronPath changes are recorded here. The project follows semantic versioning once a release is published.
+All notable Iron Compass changes are recorded here. The project follows semantic versioning once a release is published.
 
 ## [Unreleased]
 
-- No unreleased changes yet.
+## [1.2.0] - 2026-08-28
+
+### Changed
+
+- Adopted the Iron Compass identity throughout the visible metadata, Java package, branded classes, sidebar labels, launcher identifiers, tests, and documentation.
+- Moved normal settings to the unique `ironcompass` ConfigGroup and per-character progress to `ironcompass-progress`.
+
+### Migration
+
+- Added a one-time, per-namespace migration that copies only Iron Compass's known settings when the new value is absent.
+- The former shared namespace is never enumerated, modified, or deleted, and unknown keys belonging to unrelated plugins are never copied.
 
 ## [1.1.0] - 2026-08-27
 
@@ -39,7 +49,7 @@ All notable IronPath changes are recorded here. The project follows semantic ver
 - Supply forecasts, training advice, risk labels, explicit HCIM alternatives, preparation lookahead, and nearby errands.
 - Per-character manual completion, incomplete, skip, optional, goal, and ownership controls.
 - Contextual OSRS Wiki and supported Shortest Path actions, plus honest Quest Helper handoff guidance.
-- Local-only processing with no IronPath backend, telemetry, analytics, or runtime route download.
+- Local-only processing with no Iron Compass backend, telemetry, analytics, or runtime route download.
 
 ### Quality
 

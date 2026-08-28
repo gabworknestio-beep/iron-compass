@@ -1,4 +1,4 @@
-# IronPath research record
+# Iron Compass research record
 
 Audited: **2026-08-25**. These findings drove the V1 architecture. Dates matter: maintainers should repeat this audit before changing an integration contract or regenerating the route.
 
@@ -32,7 +32,7 @@ Primary sources:
 
 The live Wiki data contained **230 route rows** and **111 inline training templates** at audit time. Two current rows have malformed/unclosed `data-rowid` quoting; the generator deliberately parses row IDs only to the line boundary so `Nature Spirit` and `Death Plateau` are not swallowed. The build validates every quest name against the current RuneLite enum. Recipe for Disaster display titles are explicitly mapped to RuneLite's subquest names, including the current final name `Recipe for Disaster - Culinaromancer`.
 
-The route includes modern Sailing-era quest rows such as `Pandemonium`, `Prying Times`, `Current Affairs`, `Troubled Tortugans`, `The Red Reef`, `Fallen From Grace`, and `The Blood Moon Rises`. Source ordering is factual route data; IronPath's short instructions, reasons, preparations, and nearby errands are original wording.
+The route includes modern Sailing-era quest rows such as `Pandemonium`, `Prying Times`, `Current Affairs`, `Troubled Tortugans`, `The Red Reef`, `Fallen From Grace`, and `The Blood Moon Rises`. Source ordering is factual route data; Iron Compass's short instructions, reasons, preparations, and nearby errands are original wording.
 
 Community context reviewed:
 
@@ -47,19 +47,19 @@ Community guides informed the product vocabulary around batching, nearby errands
 
 Source: https://github.com/cesoun/optimal-quest-guide
 
-It mirrors the Wiki optimal quest order, auto-updates quest completion, opens Wiki guides, and displays requirements. Its README says the maintainer no longer plays and has limited maintenance time. IronPath keeps the good account-sync idea but differs by presenting one decision with reason/readiness/preparation, supporting typed non-quest milestones, three-valued bank truth, manual overrides, migration, and a richer route state model.
+It mirrors the Wiki optimal quest order, auto-updates quest completion, opens Wiki guides, and displays requirements. Its README says the maintainer no longer plays and has limited maintenance time. Iron Compass keeps the good account-sync idea but differs by presenting one decision with reason/readiness/preparation, supporting typed non-quest milestones, three-valued bank truth, manual overrides, migration, and a richer route state model.
 
 ### Guide Overlay 2.0
 
 Source: https://github.com/RunelitePlugin/guide-overlay
 
-It is a broad checklist/import system with B0aty HCIM and BRUHsailer guides, completion tracking, banking assistance, locations/markers, Shortest Path hand-off, and Quest Helper awareness. IronPath intentionally avoids guide importing, long checklists as the primary view, its own scene/path overlay, and broad UI customization. The differentiation is a deterministic account-adaptive projection with one next decision and a concise explanation.
+It is a broad checklist/import system with B0aty HCIM and BRUHsailer guides, completion tracking, banking assistance, locations/markers, Shortest Path hand-off, and Quest Helper awareness. Iron Compass intentionally avoids guide importing, long checklists as the primary view, its own scene/path overlay, and broad UI customization. The differentiation is a deterministic account-adaptive projection with one next decision and a concise explanation.
 
 ### Iron Hub
 
 Source: https://github.com/ellismosss/iron-hub
 
-Iron Hub is an all-in-one progression suite covering many modules: quests, gear, farming, dailies, loadouts, diaries, rumours, and more. IronPath deliberately does not copy that scope. V1 owns only progression routing, state-based projection, preparation, and lightweight hand-offs.
+Iron Hub is an all-in-one progression suite covering many modules: quests, gear, farming, dailies, loadouts, diaries, rumours, and more. Iron Compass deliberately does not copy that scope. V1 owns only progression routing, state-based projection, preparation, and lightweight hand-offs.
 
 No implementation code was copied from these competitors.
 
@@ -71,9 +71,9 @@ Primary sources:
 - Proposed inbound launch message: https://github.com/Zoinkwiz/quest-helper/pull/2756
 - Related open API request: https://github.com/Zoinkwiz/quest-helper/issues/2768
 
-At audit time PR #2756, `feat: allow other plugins to start any helper via PluginMessage`, was still **open** and awaiting review. Its proposed payload is therefore not a released public contract. IronPath does not post that message, does not import implementation classes, and does not claim launch support. `QuestHelperBridge` reports `PARTIAL`: authored route milestones may use verified quest-state boundaries from the same server variables Quest Helper consumes, while the player opens the named helper from Quest Helper's own sidebar. The UI provides no fake launch button.
+At audit time PR #2756, `feat: allow other plugins to start any helper via PluginMessage`, was still **open** and awaiting review. Its proposed payload is therefore not a released public contract. Iron Compass does not post that message, does not import implementation classes, and does not claim launch support. `QuestHelperBridge` reports `PARTIAL`: authored route milestones may use verified quest-state boundaries from the same server variables Quest Helper consumes, while the player opens the named helper from Quest Helper's own sidebar. The UI provides no fake launch button.
 
-Re-audit rule: implement launch only after the contract is merged, released, documented/stable, and remains Plugin Hub compliant. Until then users open Quest Helper normally and IronPath owns only high-level route choice.
+Re-audit rule: implement launch only after the contract is merged, released, documented/stable, and remains Plugin Hub compliant. Until then users open Quest Helper normally and Iron Compass owns only high-level route choice.
 
 ## Shortest Path
 
@@ -85,7 +85,7 @@ Primary sources:
 
 The current public event contract accepts namespace `shortestpath`, message `path`, and data key `target` containing a RuneLite `WorldPoint`; `clear` is supported. `ShortestPathBridge` implements exactly that small contract. A unit test captures the posted event and verifies namespace, name, key, and value type.
 
-IronPath offers the action only when Shortest Path is active and a **non-quest** step has a reviewed destination. Quest navigation remains Quest Helper's responsibility, and IronPath draws no competing tile path.
+Iron Compass offers the action only when Shortest Path is active and a **non-quest** step has a reviewed destination. Quest navigation remains Quest Helper's responsibility, and Iron Compass draws no competing tile path.
 
 ## Wiki and WikiSync
 
@@ -96,13 +96,13 @@ Primary sources:
 
 Wiki actions use RuneLite `LinkBrowser` to open the authored page. Page fragments are preserved; there is no runtime scrape or embedded browser.
 
-WikiSync sends selected player facts to personalize Wiki experiences, but it adds no stable capability needed by V1's local route engine. `WikiSyncBridge` is intentionally a future/optional boundary only. IronPath does not require WikiSync, invoke its internals, or call its network API.
+WikiSync sends selected player facts to personalize Wiki experiences, but it adds no stable capability needed by V1's local route engine. `WikiSyncBridge` is intentionally a future/optional boundary only. Iron Compass does not require WikiSync, invoke its internals, or call its network API.
 
 ## Product implications
 
 - Canonical ordering is deterministic; account adaptation removes satisfied work rather than inventing a random route.
 - Unknown knowledge is a first-class state, especially for the bank.
-- Detailed quest execution belongs to Quest Helper/Wiki; IronPath owns high-level route selection and explanation.
+- Detailed quest execution belongs to Quest Helper/Wiki; Iron Compass owns high-level route selection and explanation.
 - The sidebar is primary; no overlay was added because it did not materially improve V1 enough to justify more game-screen surface.
 - Bundled reviewed data and local state keep privacy, reviewability, and offline behaviour straightforward.
 
@@ -135,8 +135,8 @@ Decision notes:
 
 1. **Bowfa remains high value, not mandatory.** Its current 80 Ranged/70 Agility use requirements and Song of the Elves gate prevent early recommendations. Eclipse atlatl, Hunters' sunlight crossbow, Scorching bow, Blowpipe and crossbow routes are explicit alternatives. A player's chosen alternative receives a scoring boost.
 2. **The modern midgame chain is real but branchable.** Barrows tank pieces can smooth Moons; Blood Moon/Eclipse/Blue Moon feed Royal Titans; Royal Titans offer Twinflame and the Deadeye/Mystic Vigour tier. Neither full Barrows nor every Moons set is a universal gate.
-3. **Doom is late progression.** Current strategy guidance recommends The Final Dawn, 90+ Ranged, Rigour-level Prayer, 75 Agility and especially Scorching bow. IronPath therefore classifies Doom rewards as long-term and never recommends them to an unfinished midgame account.
-4. **Supply thresholds are labelled estimates.** Fight Caves and high-end encounters vary sharply with experience and stats. IronPath counts exact potion doses from raw item IDs, but presents researched comfort thresholds as estimates. Moons receives no invented bank requirement because its dungeon supplies food and potions.
+3. **Doom is late progression.** Current strategy guidance recommends The Final Dawn, 90+ Ranged, Rigour-level Prayer, 75 Agility and especially Scorching bow. Iron Compass therefore classifies Doom rewards as long-term and never recommends them to an unfinished midgame account.
+4. **Supply thresholds are labelled estimates.** Fight Caves and high-end encounters vary sharply with experience and stats. Iron Compass counts exact potion doses from raw item IDs, but presents researched comfort thresholds as estimates. Moons receives no invented bank requirement because its dungeon supplies food and potions.
 5. **Consumed unlocks are not faked.** Deadeye/Mystic Vigour and collection-log history do not have a stable public RuneLite state contract suitable for this plugin. They inform sequencing, but are not falsely marked owned from an absent scroll.
 
 ## 2026 skilling and resource audit
@@ -162,7 +162,7 @@ Implemented conclusions:
 - The libation bowl is the safe Varlamore Prayer route; the Chaos Altar is presented as an explicit Wilderness trade-off and not a Hardcore default.
 - Mastering Mixology is described accurately as higher XP per herb but slower than ordinary potion production.
 - Farming contracts and herb runs, giant seaweed/sand, Giants' Foundry versus Blast Furnace, Guardians of the Rift, and Mahogany Homes are chosen according to resource/cash constraints.
-- Bank material lines report real recognized counts only. IronPath does not convert mixed bank contents into a speculative XP total.
+- Bank material lines report real recognized counts only. Iron Compass does not convert mixed bank contents into a speculative XP total.
 
 ## Sailing decision
 
@@ -173,7 +173,7 @@ Primary references:
 - https://oldschool.runescape.com/polls/2026/1757
 - https://oldschool.runescape.com/polls/2026/1717
 
-Sailing released on 19 November 2025 and is now real account state through RuneLite's current Skill API. IronPath retains the route's authored Sailing requirements and gives concise courier/port-task guidance. Deep Sea Trawling, ship combat, sea Slayer and higher boat upgrades are optional branches unless a selected goal explicitly needs them. Sailing is never added as an arbitrary global gear gate.
+Sailing released on 19 November 2025 and is now real account state through RuneLite's current Skill API. Iron Compass retains the route's authored Sailing requirements and gives concise courier/port-task guidance. Deep Sea Trawling, ship combat, sea Slayer and higher boat upgrades are optional branches unless a selected goal explicitly needs them. Sailing is never added as an arbitrary global gear gate.
 
 ## Dynamic recommendation architecture
 
@@ -197,7 +197,7 @@ Rechecked on **2026-08-26**:
 - https://github.com/Zoinkwiz/quest-helper/pull/2756
 - https://github.com/Zoinkwiz/quest-helper/issues/2768
 
-The proposed inbound questhelper/start PluginMessage contract is still open and awaiting review. IronPath therefore does not post it, import Quest Helper internals, or manipulate RuneLite windows to fake a deep link. Quest steps retain exact questHelperKey metadata and Quest Helper-aware boundaries; until the public contract is merged and released, the player opens that helper from Quest Helper's sidebar.
+The proposed inbound questhelper/start PluginMessage contract is still open and awaiting review. Iron Compass therefore does not post it, import Quest Helper internals, or manipulate RuneLite windows to fake a deep link. Quest steps retain exact questHelperKey metadata and Quest Helper-aware boundaries; until the public contract is merged and released, the player opens that helper from Quest Helper's sidebar.
 
 ## Plugin Hub re-audit
 
@@ -224,9 +224,9 @@ Rechecked on **2026-08-27**:
 
 Implemented conclusions:
 
-1. **Profiles are hard session boundaries.** RuneLite exposes both `ProfileChanged` and `RuneScapeProfileChanged`; `ConfigManager` posts the RuneScape-profile event when its RS-profile key changes. IronPath handles both through one idempotent reset path and immediately removes old account, bank, route, Gear, Goal, supply, recommendation, and notification projections.
+1. **Profiles are hard session boundaries.** RuneLite exposes both `ProfileChanged` and `RuneScapeProfileChanged`; `ConfigManager` posts the RuneScape-profile event when its RS-profile key changes. Iron Compass handles both through one idempotent reset path and immediately removes old account, bank, route, Gear, Goal, supply, recommendation, and notification projections.
 2. **Unknown is not availability.** A goal that could be in an unopened bank is `UNCONFIRMED`. Only carried/equipped evidence, an observed current-profile bank, or an explicit manual ownership choice can prove possession.
 3. **Warriors' Guild uses the real alternative gate.** Entry is Attack + Strength at least 130, or level 99 in either skill. The condition is represented as an explicit `ANY`, not the inaccurate 65/65 approximation.
-4. **Slayer helmet (i) needs raw identity.** RuneLite variation mapping intentionally groups imbued and unimbued/cosmetic forms under a canonical family. IronPath therefore uses `ITEM_ANY_EXACT` with the audited current imbued-helmet IDs for this objective, excluding Black mask and unimbued Slayer helmets.
+4. **Slayer helmet (i) needs raw identity.** RuneLite variation mapping intentionally groups imbued and unimbued/cosmetic forms under a canonical family. Iron Compass therefore uses `ITEM_ANY_EXACT` with the audited current imbued-helmet IDs for this objective, excluding Black mask and unimbued Slayer helmets.
 5. **Curated Goal facts reuse existing engines.** Gear-linked goals reference their Gear ID instead of copying readiness/completion. Song of the Elves retains its current level-70 skill and prerequisite-quest boundaries; Bowfa depends on that Goal. Perilous Moons, Royal Titans, and Tombs of Amascut use conservative access statements grounded in the linked Wiki pages.
-6. **Quest Helper remains an honest handoff.** Its current public README still describes choosing helpers from the Quest Helper sidebar. IronPath keeps the existing partial integration and does not claim an inbound launch API that is not a stable released contract.
+6. **Quest Helper remains an honest handoff.** Its current public README still describes choosing helpers from the Quest Helper sidebar. Iron Compass keeps the existing partial integration and does not claim an inbound launch API that is not a stable released contract.

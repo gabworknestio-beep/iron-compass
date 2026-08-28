@@ -1,6 +1,6 @@
-# Contributing to IronPath
+# Contributing to Iron Compass
 
-Thanks for helping improve IronPath. Keep changes focused, explain the player-facing outcome, and preserve the plugin's decision-first scope.
+Thanks for helping improve Iron Compass. Keep changes focused, explain the player-facing outcome, and preserve the plugin's decision-first scope.
 
 ## Before opening a pull request
 

@@ -2,7 +2,7 @@
 
 Audited: **2026-08-27**.
 
-IronPath's Gear view is an account-aware objective engine. It answers **“what is my next useful gear upgrade, why is it timely, and what unlocks it?”** while allowing the player to choose a different path.
+Iron Compass's Gear view is an account-aware objective engine. It answers **“what is my next useful gear upgrade, why is it timely, and what unlocks it?”** while allowing the player to choose a different path.
 
 ## Catalog
 
@@ -72,7 +72,7 @@ Completion checks inventory, equipment, and the locally observed bank. RuneLite'
 
 Catalog validation rejects missing, self, duplicate and conflicting references; prerequisite and previous-item cycles; reverse alternatives; and previous-tier regressions.
 
-Exact raw item IDs are retained alongside canonical IDs for supply forecasting. This lets IronPath count potion doses without weakening gear-family matching.
+Exact raw item IDs are retained alongside canonical IDs for supply forecasting. This lets Iron Compass count potion doses without weakening gear-family matching.
 
 ## Supplies
 
@@ -86,4 +86,4 @@ The sidebar keeps three destinations: **Overview**, **Path**, and **Gear**. Gear
 
 Skipping a Gear goal also clears it if selected. Dependency resolution and supply forecasting independently reject skipped goals; unskipping does not silently reselect one.
 
-IronPath remains planning-only. It does not calculate live DPS, automate actions, guide boss mechanics, read collection-log history, or manipulate RuneLite windows.
+Iron Compass remains planning-only. It does not calculate live DPS, automate actions, guide boss mechanics, read collection-log history, or manipulate RuneLite windows.

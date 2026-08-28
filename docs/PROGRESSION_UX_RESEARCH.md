@@ -1,12 +1,12 @@
-# IronPath progression UX research — 2026 audit
+# Iron Compass progression UX research — 2026 audit
 
 Audited: 2026-08-26
 
 ## Research question
 
-How can IronPath give an Ironman one dependable next action without turning a flexible account journey into a rigid efficiency checklist?
+How can Iron Compass give an Ironman one dependable next action without turning a flexible account journey into a rigid efficiency checklist?
 
-IronPath treats the OSRS Wiki as the source for game facts and the canonical quest order. Community guides and discussions are context for player expectations, pain points, and useful presentation patterns. Their prose is not bundled or copied.
+Iron Compass treats the OSRS Wiki as the source for game facts and the canonical quest order. Community guides and discussions are context for player expectations, pain points, and useful presentation patterns. Their prose is not bundled or copied.
 
 ## Sources reviewed
 
@@ -23,10 +23,10 @@ IronPath treats the OSRS Wiki as the source for game facts and the canonical que
 - [Ladlor's Ironman Progression Chart](https://ladlorchart.com/): visual milestone graph with direct Wiki actions and visible alternate paths.
 - [Wizard-Fish/Ironman-Progression](https://github.com/Wizard-Fish/Ironman-Progression): phases, current focus, collapsible completed sections, and bundled data.
 - [RuneLite Guide Overlay](https://github.com/RunelitePlugin/guide-overlay): one-action rows, section/overall progress, jump-to-current, and automatic completed-section collapse.
-- [Yazi's Ironman Gear Progression 2025](https://oldschool.runescape.wiki/w/Guide:Yazi%27s_Ironman_Gear_Progression_2025), [ironman.guide gear](https://ironman.guide/gear), and [Ladlor](https://ladlorchart.com/) were compared with IronPath's 40-objective catalog for broad style and tier coverage.
+- [Yazi's Ironman Gear Progression 2025](https://oldschool.runescape.wiki/w/Guide:Yazi%27s_Ironman_Gear_Progression_2025), [ironman.guide gear](https://ironman.guide/gear), and [Ladlor](https://ladlorchart.com/) were compared with Iron Compass's 40-objective catalog for broad style and tier coverage.
 - [RuneLite Plugin Hub](https://runelite.net/plugin-hub/) was checked for adjacent progression plugins and the constraints of a normal 242 px sidebar.
 
-No authoritative current project was found for the names “Solo Ironman Strategist” or “Gustav's Helper”; IronPath does not invent comparisons to unverified projects.
+No authoritative current project was found for the names “Solo Ironman Strategist” or “Gustav's Helper”; Iron Compass does not invent comparisons to unverified projects.
 
 ### 2026 community pain points
 
@@ -53,12 +53,12 @@ No authoritative current project was found for the names “Solo Ironman Strateg
 
 - A raw 341-row home checklist: technically complete, cognitively unusable in a RuneLite sidebar.
 - Blind copying of a guide's prose or exact route: hard to maintain, inappropriate for attribution, and contrary to account adaptation.
-- Full-screen map overlays, arrows, or bank-tab automation: useful in Guide Overlay, but outside IronPath's progression-planning scope.
+- Full-screen map overlays, arrows, or bank-tab automation: useful in Guide Overlay, but outside Iron Compass's progression-planning scope.
 - Treating Bowfa, torso, Barrows, or a long Slayer drop as a mandatory gate when a modern alternate branch exists.
 - Displaying the recommendation equation as player-facing justification. It is an implementation tool, not a reason a person can act on.
 - Claiming an item is absent before the player has opened their bank during the session.
 
-## Product decisions applied to IronPath
+## Product decisions applied to Iron Compass
 
 - The canonical 341-step route keeps stable step IDs but is projected into 12 data-driven chapters.
 - Overview uses the sequence: **YOU ARE HERE → DO THIS NOW → WHY → WHAT THIS UNLOCKS → WHAT COMES NEXT**.
@@ -67,5 +67,5 @@ No authoritative current project was found for the names “Solo Ironman Strateg
 - A selected gear goal walks its graph and canonical route to the first unresolved action.
 - Dragon defender is a prerequisite of Avernic defender, never an alternative to it.
 - Graph validation rejects missing/self/duplicate references, relation conflicts, cycles, reverse alternatives, and previous-tier regressions.
-- Partial quests use concrete stop labels and Quest Helper metadata. Where no stable client signal is proven, IronPath asks for a specific manual confirmation instead of pretending to detect it.
+- Partial quests use concrete stop labels and Quest Helper metadata. Where no stable client signal is proven, Iron Compass asks for a specific manual confirmation instead of pretending to detect it.
 - Bowfa remains a high-value ranged branch. Eclipse atlatl, Scorching bow, Blowpipe, crossbows, and other catalogued routes remain visible alternatives.

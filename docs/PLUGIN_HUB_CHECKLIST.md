@@ -1,6 +1,6 @@
 # Plugin Hub release checklist
 
-Status as of **2026-08-27**: IronPath's initial manifest has been accepted and the plugin is visible in RuneLite's Plugin Hub. This checklist now gates later updates; every new source commit still needs its own manifest commit update and review.
+Status as of **2026-08-28**: the Iron Compass rename remains an update candidate until the renamed repository and manifest are pinned, reviewed, and merged in RuneLite's Plugin Hub. This checklist gates that rename and later updates.
 
 ## Complete in this repository
 
@@ -37,7 +37,7 @@ Status as of **2026-08-27**: IronPath's initial manifest has been accepted and t
 - [ ] Re-run the route generator/audit immediately before release and review the resulting diff rather than accepting it blindly.
 - [ ] Re-check the official Plugin Hub README, Plugin Hub review page, rejected-features page, Jagex third-party-client guidance, and Quest Helper PR #2756 at submission time.
 - [ ] Run `gradlew.bat clean test` and `gradlew.bat clean build` on Java 11 from a clean checkout.
-- [ ] Push the exact reviewed source to `https://github.com/gabworknestio-beep/ironpath`, copy its full 40-character SHA, and update only `commit=` in `plugins/ironpath` unless authorship or repository changes.
+- [ ] Push the exact reviewed source to `https://github.com/gabworknestio-beep/iron-compass`, copy its full 40-character SHA, rename the existing manifest to `plugins/iron-compass`, and update its repository and commit fields. Keep `authors=Gab`.
 - [ ] Respond to Plugin Hub CI/reviewer feedback and do not represent acceptance until the manifest is merged.
 
 The exact manifest template and update workflow are in [PLUGIN_HUB_SUBMISSION.md](PLUGIN_HUB_SUBMISSION.md).
@@ -48,4 +48,4 @@ The development-only `tools/generate_route.py` performs explicit network reads w
 
 The Shortest Path bridge posts only a normal in-client `PluginMessage`. The Quest Helper bridge intentionally posts nothing while the proposed inbound API remains unmerged.
 
-The official requirements were rechecked on 2026-08-27 against the [RuneLite example plugin](https://github.com/runelite/example-plugin), [Plugin Hub repository](https://github.com/runelite/plugin-hub), [Plugin Hub review process](https://github.com/runelite/runelite/wiki/Plugin-Hub-Review), and [rejected or rolled-back features](https://github.com/runelite/runelite/wiki/Rejected-or-Rolled-Back-Features). IronPath's public source repository exists; only a tested, pushed update commit can supply the next manifest SHA.
+The official requirements were rechecked on 2026-08-27 against the [RuneLite example plugin](https://github.com/runelite/example-plugin), [Plugin Hub repository](https://github.com/runelite/plugin-hub), [Plugin Hub review process](https://github.com/runelite/runelite/wiki/Plugin-Hub-Review), and [rejected or rolled-back features](https://github.com/runelite/runelite/wiki/Rejected-or-Rolled-Back-Features). Iron Compass's public source repository exists; only a tested, pushed update commit can supply the next manifest SHA.

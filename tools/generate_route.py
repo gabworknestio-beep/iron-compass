@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Regenerate IronPath's bundled route from reviewed public source facts.
+"""Regenerate Iron Compass's bundled route from reviewed public source facts.
 
-This is a development-only tool. IronPath never downloads route data at runtime.
+This is a development-only tool. Iron Compass never downloads route data at runtime.
 The generated instructions and reasons are original concise summaries; the tool
 does not copy Wiki or community-guide prose.
 """
@@ -159,7 +159,7 @@ PREPARATION = {
 
 
 # Stable quest-state boundaries verified against the corresponding Quest Helper
-# loadSteps() state map. These let IronPath hand a partial quest to Quest Helper
+# loadSteps() state map. These let Iron Compass hand a partial quest to Quest Helper
 # while still advancing automatically at the route's intended stopping point.
 PIRATES_TREASURE_MILESTONE = {
     "quest": "Pirate's Treasure",
@@ -298,7 +298,7 @@ LOCATIONS = {
 
 
 def fetch_text(url):
-    request = urllib.request.Request(url, headers={"User-Agent": "IronPath route generator"})
+    request = urllib.request.Request(url, headers={"User-Agent": "Iron Compass route generator"})
     with urllib.request.urlopen(request, timeout=30) as response:
         return response.read().decode("utf-8")
 
@@ -485,7 +485,7 @@ def generate():
                 "title": "OSRS Wiki — Optimal quest guide/Ironman",
                 "url": WIKI_URL,
                 "auditedAt": AUDIT_DATE,
-                "notes": "Quest/action ordering and training milestone facts. IronPath wording is original and concise.",
+                "notes": "Quest/action ordering and training milestone facts. Iron Compass wording is original and concise.",
             },
             {
                 "type": "COMMUNITY_CONTEXT",
