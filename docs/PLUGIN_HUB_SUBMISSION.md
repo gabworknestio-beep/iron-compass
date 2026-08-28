@@ -16,7 +16,7 @@ This is the maintainer handoff for the Iron Compass rename and later updates: Ru
 
 ## 2. Update the existing Plugin Hub manifest
 
-Sync your `runelite/plugin-hub` fork, create a branch, rename the existing manifest to the extensionless file `plugins/iron-compass`, and update it to:
+Sync your `runelite/plugin-hub` fork, create a branch, and edit the existing extensionless file `plugins/ironpath`. Keep this historical manifest filename so RuneLite updates the existing installation instead of treating Iron Compass as a separate new plugin. The filename is not the display name or ConfigGroup. Update its contents to:
 
 ```properties
 repository=https://github.com/gabworknestio-beep/iron-compass.git
@@ -38,7 +38,7 @@ For each update:
 
 1. add a changelog entry and test the exact commit;
 2. push that commit to the public repository;
-3. change only the `commit=` value in `plugins/iron-compass` after the rename release;
+3. change only the `commit=` value in the existing `plugins/ironpath` manifest after the rename release;
 4. open a Plugin Hub update pull request and respond to review feedback.
 
 Official references: [Plugin Hub repository](https://github.com/runelite/plugin-hub), [Plugin Hub review](https://github.com/runelite/runelite/wiki/Plugin-Hub-Review), and [rejected or rolled-back features](https://github.com/runelite/runelite/wiki/Rejected-or-Rolled-Back-Features).

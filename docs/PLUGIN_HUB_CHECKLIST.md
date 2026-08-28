@@ -37,7 +37,7 @@ Status as of **2026-08-28**: the Iron Compass rename remains an update candidate
 - [ ] Re-run the route generator/audit immediately before release and review the resulting diff rather than accepting it blindly.
 - [ ] Re-check the official Plugin Hub README, Plugin Hub review page, rejected-features page, Jagex third-party-client guidance, and Quest Helper PR #2756 at submission time.
 - [ ] Run `gradlew.bat clean test` and `gradlew.bat clean build` on Java 11 from a clean checkout.
-- [ ] Push the exact reviewed source to `https://github.com/gabworknestio-beep/iron-compass`, copy its full 40-character SHA, rename the existing manifest to `plugins/iron-compass`, and update its repository and commit fields. Keep `authors=Gab`.
+- [ ] Push the exact reviewed source to `https://github.com/gabworknestio-beep/iron-compass`, copy its full 40-character SHA, and update the repository and commit fields in the existing `plugins/ironpath` manifest. Keep that historical filename for update continuity and keep `authors=Gab`.
 - [ ] Respond to Plugin Hub CI/reviewer feedback and do not represent acceptance until the manifest is merged.
 
 The exact manifest template and update workflow are in [PLUGIN_HUB_SUBMISSION.md](PLUGIN_HUB_SUBMISSION.md).
