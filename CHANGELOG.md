@@ -2,11 +2,46 @@
 
 All notable Iron Compass changes are recorded here. The project follows semantic versioning once a release is published.
 
-## [Unreleased]
-
-## [1.3.0] - 2026-08-28
+## [1.0.4] - 2026-08-29
 
 ### Added
+
+- Added explainable Account Health, goal-based Quick Wins, objective proximity Unlock Radar, typed Primary Goal blockers, intent-driven alternatives, and a dependency-backed Path to My Goal view.
+- Added persistent goal-level Mark Complete, Mark Incomplete, and Clear Manual actions without colliding with route or Gear overrides.
+- Added current Hunter Rumours, antelope, Vale Totems, Sailing, Wyrmscraig, Golem Crafting, Piety, and fairy-ring milestones to the curated catalog.
+
+### Fixed
+
+- Missing requirement metadata now produces `UNKNOWN`, never a false `READY` claim.
+- Separated Piety and fairy-ring readiness from their actual unlock completion.
+- Replaced goal-specific recommendation exceptions with one shared GoalIntent/AccountNeed evaluator that preserves an unobserved bank as unknown.
+
+### Changed
+
+- Expanded and recured the catalog to 290 goals, 28 cited sources, 17 intents, and typed hard, recommended, synergy, alternative, and leads-to relationships.
+- Centralized major ranking weights and capped multi-goal synergy.
+- Consolidated the public release version and user-facing UI as 1.0.4.
+
+### Catalog expansion included in 1.0.4
+
+#### Added
+
+- Expanded the Goal Picker from its initial compact set into a broad researched catalog spanning seven stages, every skill including Sailing, quests, transport, gear, resources, clues, diaries, minigames, Slayer, bosses, raids, and account infrastructure.
+- Added rich goal metadata for why a goal matters, benefits, related items/skills/quests/activities, usefulness, risk, account types, RNG status, and source references.
+- Added a static source registry and a categorized research report distinguishing game facts from community recommendations.
+- Added stage and Popular filters plus full-text search across descriptions, benefits, tags, skills, quests, items, and activities.
+- Added compact WHAT / WHY / REQUIREMENTS / UNLOCKS / WHY SUGGESTED details to the RuneLite goal dialog.
+
+#### Changed
+
+- Reworked Suggested for you into deterministic account-aware scoring using current stage, route progress, skill proximity, observed gear, active goals, account type, risk, and observed Prayer supplies.
+- Confirmed completed goals are excluded, while manual or unobserved completion remains UNKNOWN and eligible.
+- Added explicit RNG wording and preserved every previously persisted goal ID and the existing multi-goal planner.
+- Made the loaded catalog and its metadata lists immutable after deserialization.
+
+### Goal Planner expansion included in 1.0.4
+
+#### Added
 
 - A profile-specific Goal Queue with one Primary Goal and up to three deduplicated Secondary Goals.
 - Goal Synergy detection that identifies one action advancing multiple active goals and explains the benefit without exposing an opaque score.
@@ -15,14 +50,14 @@ All notable Iron Compass changes are recorded here. The project follows semantic
 - A compact searchable Goal Picker with category, Suggested, Active, and Completed filters.
 - **Take a Useful Break**, offering distinct account-progress alternatives without making psychological claims about the player.
 
-### Changed
+#### Changed
 
 - Recommendation V2 now compares active-goal requirements, upcoming route milestones, and all reachable Gear candidates; explicit primary-goal requirements outrank generic old route steps.
 - The Goal catalog grows from 11 to 26 curated objectives across infrastructure, quests, skill milestones, and PvM.
 - Session fit now evaluates the immediate skill gap and method effort rather than treating every long-term goal as one indivisible grind.
 - The 242 px Overview uses denser progressive disclosure and deterministic **Why this?** reasons.
 
-### Migration
+#### Migration
 
 - Existing `selectedGearGoal` profile data is copied idempotently to `primaryGoal`; `secondaryGoals` starts empty and old data remains readable.
 

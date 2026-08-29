@@ -98,6 +98,20 @@ public final class PublicationReadinessTest
                 "net.runelite.client.plugins.Plugin")));
     }
 
+    @Test
+    public void publicVersionComesFromOneReleaseProperty() throws Exception
+    {
+        Properties gradle = new Properties();
+        try (InputStream input = Files.newInputStream(Paths.get("gradle.properties")))
+        {
+            gradle.load(input);
+        }
+        assertEquals("1.0.4",gradle.getProperty("pluginVersion"));
+        assertEquals("1.0.4",IronCompassVersion.get());
+        assertFalse(new String(Files.readAllBytes(Paths.get("runelite-plugin.properties")),
+            java.nio.charset.StandardCharsets.UTF_8).contains("1.5.0"));
+    }
+
     private static boolean blank(String value)
     {
         return value == null || value.trim().isEmpty();

@@ -26,15 +26,19 @@ The queue is stored in RuneLite's per-character RS-profile configuration as `pri
 
 ## Bundled Goal catalog
 
-`src/main/resources/goals/ironman-goals-2026.json` is versioned and contains 26 curated goals across Gear/PvM, account infrastructure, quest progression, and skill milestones. The searchable Goal Picker exposes Suggested, Active, Completed, and category filters instead of a 26-row permanent combo box. Suggested goals are never selected automatically.
+`src/main/resources/goals/ironman-goals-2026.json` is versioned; its goal count is read from the catalog rather than duplicated in UI strings. It covers every skill (including Sailing), Gear/PvM, resources, transport, account infrastructure, quests, clues, diaries, minigames, Slayer, bosses, and raids. The searchable Goal Picker exposes Suggested, Popular, Active, Completed, broad category, and stage filters. Suggested goals are never selected automatically.
+
+Each goal carries player-facing what/why/unlock metadata plus completion mode, editorial priority, community weight, GoalIntents, typed relationships, related skills, quests, items, activities, usefulness, risk, account types, RNG status, and source references. Search uses those fields. The detail panel displays both the authored reason and the current scoring explanation.
+
+Suggested scoring is deterministic. It combines usefulness, impact, stage relevance blended from account skills and route progress, requirement proximity, active-goal preference, observed missing Gear, the shared GoalIntent/AccountNeed evaluation, account-mode constraints, and risk. A confirmed `TRUE` completion is excluded; `UNKNOWN` remains eligible and is explained. Missing requirements are `UNKNOWN`, never implicitly ready. See `docs/GOAL_CATALOG_RESEARCH.md` for research and evidence policy.
 
 Each definition may contain:
 
-- stable `id`, `title`, `description`, and `category`;
+- stable `id`, `title`, `description`, `whyItMatters`, `category`, and `stage`;
 - `completion` and direct `requirements` conditions;
 - `dependencyIds` for other Goal definitions;
 - one `routeAnchorId` or `gearId` where existing engines already own the progression facts;
-- `impact`, `effort`, `unlocks`, `wikiPage`, and `tags`.
+- `impact`, `effort`, `usefulness`, `unlocks`, `benefits`, related metadata, account types, risk, RNG status, source references, `wikiPage`, and `tags`.
 
 Do not duplicate a Gear objective's completion/readiness conditions in Goal JSON. Set `gearId` and reuse the Gear evaluation. This prevents the Overview and Gear views from disagreeing.
 
@@ -70,6 +74,10 @@ All preferences use RuneLite's per-character RS-profile configuration. Logout an
 ## Unlock Radar
 
 The Unlock Radar compares consecutive projections in the same character session. It emits at most one opportunity when a route/Gear objective becomes available or a selected Goal requirement changes to true. Stable IDs deduplicate repeated ticks. Its baseline resets on logout, shutdown, and profile change, preventing old-character notifications.
+
+The Overview also exposes a non-notifying goal proximity view. **Quick Wins** rank high account value against known remaining effort; **Unlock Radar** sorts objective closeness; unknown or unmodelled requirements remain visibly unknown. **Account Health**, alternatives, blockers, and Suggested all consume the same AccountNeed evaluator. All of these views resolve effective requirements through the same goal-or-linked-Gear policy. **Path to My Goal** is a read-only dependency view and never creates a second route database.
+
+Live-content corrections in v1.0.4 distinguish skill levels from actual world/activity access: Children of the Sun gates Vale Totems, Hunter Guild rumours, and moonlight moth access; the linen trawling net uses 61 Construction; and a Salvaging Station schematic requires manual confirmation when it cannot be observed locally.
 
 ## Validation and contributions
 

@@ -264,7 +264,8 @@ public final class ProgressionRecommendationService
                 if (action.getEffort() == null && plan.getEffort().ordinal() < effort.ordinal()) effort = plan.getEffort();
                 titles.add(plan.getTitle());
             }
-            score += highestImpact + (plans.size() - 1) * 38 - effort.ordinal() * 4;
+            int sharedGoalSynergy = sharedGoalSynergy(plans.size());
+            score += highestImpact + sharedGoalSynergy - effort.ordinal() * 4;
             List<String> why = new ArrayList<>();
             why.add(plans.size() > 1 ? "Advances " + plans.size() + " active goals"
                 : primary ? "Directly advances your primary goal" : "Advances a secondary goal");
@@ -282,5 +283,10 @@ public final class ProgressionRecommendationService
                 highestImpact >= 30 ? "High impact" : "Goal progress", ProgressionCandidate.Source.GOAL,
                 action.getRouteStep(), action.getGearStep(), plans.get(0).getGoal(), score, why, titles);
         }
+    }
+
+    static int sharedGoalSynergy(int planCount)
+    {
+        return Math.min(ScoringWeights.MAX_SHARED_GOAL_SYNERGY,Math.max(0,planCount - 1) * 38);
     }
 }

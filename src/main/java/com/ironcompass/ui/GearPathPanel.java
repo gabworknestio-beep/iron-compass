@@ -34,8 +34,11 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 
 public final class GearPathPanel extends JPanel
 {
@@ -54,6 +57,10 @@ public final class GearPathPanel extends JPanel
     private GearProjection projection;
     private String detailId;
     private boolean updatingFilters;
+    private final java.util.Set<JComboBox<?>> pendingFilterRefresh =
+        java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+    private final java.util.Set<JComboBox<?>> openFilterPopups =
+        java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
 
     public GearPathPanel(WikiBridge wiki, GearPreferenceStore preferences, ManualOverrideStore overrides,
                          Runnable reevaluate)
@@ -76,14 +83,16 @@ public final class GearPathPanel extends JPanel
         search.getAccessibleContext().setAccessibleDescription("Filter gear by name, source, tag, or region");
         styleFilter.getAccessibleContext().setAccessibleName("Gear combat style filter");
         statusFilter.getAccessibleContext().setAccessibleName("Gear status filter");
+        UiTokens.styleComboBox(styleFilter);
+        UiTokens.styleComboBox(statusFilter);
         search.getDocument().addDocumentListener(new DocumentListener()
         {
             @Override public void insertUpdate(DocumentEvent event) { rebuild(); }
             @Override public void removeUpdate(DocumentEvent event) { rebuild(); }
             @Override public void changedUpdate(DocumentEvent event) { rebuild(); }
         });
-        styleFilter.addActionListener(event -> filterChanged(true));
-        statusFilter.addActionListener(event -> filterChanged(false));
+        configureFilter(styleFilter,true);
+        configureFilter(statusFilter,false);
     }
 
     public void update(AccountState newState, GearProjection newProjection)
@@ -113,12 +122,36 @@ public final class GearPathPanel extends JPanel
         search.setText(query);
     }
 
+    JComboBox<String> styleFilterForTesting() { return styleFilter; }
+    JComboBox<String> statusFilterForTesting() { return statusFilter; }
+
     private void filterChanged(boolean style)
     {
         if (updatingFilters) return;
         if (style) preferences.setGearStyleFilter(String.valueOf(styleFilter.getSelectedItem()));
         else preferences.setGearStatusFilter(String.valueOf(statusFilter.getSelectedItem()));
-        rebuild();
+        JComboBox<?> combo = style ? styleFilter : statusFilter;
+        if (combo.isPopupVisible() || openFilterPopups.contains(combo)) pendingFilterRefresh.add(combo);
+        else rebuild();
+    }
+
+    private void configureFilter(JComboBox<?> combo, boolean style)
+    {
+        combo.addActionListener(event -> filterChanged(style));
+        combo.addPopupMenuListener(new PopupMenuListener()
+        {
+            @Override public void popupMenuWillBecomeVisible(PopupMenuEvent event) { openFilterPopups.add(combo); }
+            @Override public void popupMenuCanceled(PopupMenuEvent event)
+            {
+                openFilterPopups.remove(combo);
+                pendingFilterRefresh.remove(combo);
+            }
+            @Override public void popupMenuWillBecomeInvisible(PopupMenuEvent event)
+            {
+                openFilterPopups.remove(combo);
+                if (pendingFilterRefresh.remove(combo)) SwingUtilities.invokeLater(GearPathPanel.this::rebuild);
+            }
+        });
     }
 
     private void rebuild()

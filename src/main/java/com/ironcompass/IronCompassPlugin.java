@@ -78,7 +78,7 @@ import org.slf4j.LoggerFactory;
 
 @PluginDescriptor(
     name = "Iron Compass",
-    description = "Multi-goal Ironman progression, methods, gear, resources, and one explainable next move.",
+    description = "Account-aware Ironman progression that recommends what to do next from your goals, gear, skills, quests, and observed bank.",
     tags = {"ironman", "progression", "gear", "quest", "guide", "planning"}
 )
 public final class IronCompassPlugin extends Plugin
@@ -402,7 +402,8 @@ public final class IronCompassPlugin extends Plugin
             config.preferSafeAlternatives(), 4, config.preparationLookahead());
         GearProjection nextGear = gearEvaluator.evaluate(gearCatalog, accountState, persistence, persistence);
         GoalResolution nextGoal = goalResolver.resolve(nextGear, next);
-        GoalPlanProjection nextPlan = goalPlanner.evaluate(goalCatalog, accountState, nextGear, next, persistence);
+        GoalPlanProjection nextPlan = goalPlanner.evaluate(goalCatalog, accountState, nextGear, next, persistence,
+            persistence);
         nextPlan = nextPlan.withMethodRecommendation(methodPlanner.recommend(methodCatalog,
             nextPlan.getNextAction(), accountState, persistence, nextPlan.getActiveGoals()));
         RecommendationProjection nextRecommendations = recommendationService.evaluate(next, nextGear, nextPlan,

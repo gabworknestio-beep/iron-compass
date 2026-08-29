@@ -29,7 +29,11 @@ The plugin is available from RuneLite's Plugin Hub. The Iron Compass name become
 - Detects when one skill, quest, route step, or Gear action advances multiple active goals and shows deterministic reasons instead of an internal score.
 - Produces distinct **Recommended**, **Quick Win**, **Long-Term**, and opt-in **Useful Break** suggestions from a broader candidate pool. Balanced, Efficient, PvM, and Skilling playstyles influence priority without changing factual requirements.
 - Recommends a good-fit Ironman training method for important skill gates from bundled structured data. Unknown banks stay unknown; observed resources are described qualitatively and are never presented as an exact banked-XP calculation.
-- Provides a compact searchable Goal Picker with Suggested, Active, Completed, and category filters for 26 curated objectives.
+- Provides a compact searchable Goal Picker backed by the bundled researched catalog, with Suggested/Popular/Active/Completed views, broad categories, seven progression stages, and rich goal details.
+- Summarizes Account Health from the same GoalIntent evaluator used by recommendations, with honest Weak/Developing/Good/Strong/Unknown explanations.
+- Shows goal-based Quick Wins, nearby unlocks, typed Primary Goal blockers, intent-compatible alternatives, and a dependency-backed Path to My Goal view.
+- Searches goal titles, descriptions, benefits, tags, related skills, quests, items, and activities; `prayer` and `teleport` therefore reveal whole solution families rather than title-only matches.
+- Ranks explainable account-aware suggestions from skill proximity, account/route stage, observed gear and bank, account type, risk, active goals, usefulness, and resource problems without treating an unopened bank as empty.
 - Tracks `OWNED`, `UNCONFIRMED`, `AVAILABLE`, `LOCKED`, `RECOMMENDED`, `OPTIONAL`, and `SKIPPED` gear states with search and style/state filters. Unknown bank ownership is never promoted as availability.
 - Detects meaningful newly available route, gear, and selected-goal opportunities once per transition through a local Unlock Radar.
 - Counts reviewed encounter supplies from real carried items and the last bank observation, including exact potion doses, while labelling variable thresholds as estimates.
@@ -42,7 +46,7 @@ Iron Compass does not perform game actions, send input, start quests, duplicate 
 
 ## Current route coverage
 
-The bundled `Efficient Ironman` route was audited on **2026-08-26** against the live OSRS Wiki `Optimal quest guide/Ironman` data and the current RuneLite `Quest` enum. Goal and access facts received a focused follow-up audit on **2026-08-27**. Route version 3 contains **341 ordered steps projected into 12 player-facing chapters**:
+The bundled `Efficient Ironman` route was audited on **2026-08-26** against the live OSRS Wiki `Optimal quest guide/Ironman` data and the current RuneLite `Quest` enum. Goal and access facts received a focused follow-up audit on **2026-08-28**. Route version 3 contains **341 ordered steps projected into 12 player-facing chapters**:
 
 - **230 current high-level Wiki route rows**, from `Learning the Ropes` through `The Blood Moon Rises`;
 - **199 RuneLite-detectable quest steps** within those rows;
@@ -66,9 +70,13 @@ The engine does not claim one strict universal gear order. It synthesizes curren
 
 ## Goal Planner
 
-The bundled Goal Planner contains **26 curated objectives**. It retains the original Gear and PvM milestones while adding account infrastructure (Fossil Island, Farming Guild, Kingdom, strong POH), skill milestones (43 Prayer, 70 Herblore, 87/93 Slayer), and high-value quest progression (Monkey Madness I/II, Desert Treasure I, Lunar Diplomacy, Dragon Slayer II, and While Guthix Sleeps). Goal definitions use stable IDs, validated dependencies, route anchors, Gear references, effort/impact metadata, and concise unlock outcomes.
+The bundled Goal Planner loads its current objective count directly from the versioned catalog across seven flexible stages. It covers every skill including Sailing, resource sustainability, transport, modern Varlamore, Gear/PvM, quests, clues, all Achievement Diary regions, minigames, the full useful Slayer ladder, bosses, raids, and endgame preparation. Goal definitions keep stable IDs and use validated dependencies, typed relationships, Gear references, rich what/why/when metadata, account-mode constraints, risk, RNG status, and source references.
 
 The queue deliberately stays small: one Primary Goal and no more than three Secondary Goals. Iron Compass identifies the nearest provable requirement for each, merges identical actions, and gives the Primary Goal enough weight that low-value synergy cannot displace a critical hard requirement. For example, **70 Herblore** can simultaneously advance Song of the Elves and a potion-readiness milestone. Existing single and Gear goals remain backward compatible.
+
+The goal catalog is intentionally broader than the canonical route. It includes small transformative unlocks (for example 75 Hunter for moonlight moths), benefit-led intentions, optional clue/RNG branches, and endgame targets without turning stages into mandatory rules. See [docs/GOAL_CATALOG_RESEARCH.md](docs/GOAL_CATALOG_RESEARCH.md).
+
+Iron Compass v1.0.4 keeps readiness honest: observed skills, quest access, gear requirements, and manual-only unlock facts are evaluated through one shared requirement policy before anything is labelled ready.
 
 For supported skill gates, the bundled method planner suggests a **good fit for this account**, never an unjustified universal “best method.” It considers verified unlocks, Wilderness/Hardcore constraints, observed starting resources, active-goal synergy, playstyle, and qualitative session effort. Useful sources are shown when authored inputs are missing; an unopened bank always produces the explicit unconfirmed-bank message.
 

@@ -6,13 +6,16 @@ import com.ironcompass.gear.GearProjection;
 import com.ironcompass.gear.GearStatus;
 import com.ironcompass.goal.GoalAction;
 import com.ironcompass.goal.GoalCatalog;
+import com.ironcompass.goal.GoalCompletionService;
 import com.ironcompass.goal.GoalDefinition;
+import com.ironcompass.goal.GoalRequirementResolver;
 import com.ironcompass.goal.GoalDependencyResolver;
 import com.ironcompass.goal.GoalResolution;
 import com.ironcompass.requirement.ConditionEvaluator;
 import com.ironcompass.requirement.ConditionSpec;
 import com.ironcompass.requirement.RequirementResult;
 import com.ironcompass.requirement.TruthValue;
+import com.ironcompass.persistence.ManualOverrideStore;
 import com.ironcompass.route.RouteProjection;
 import com.ironcompass.route.StepEvaluation;
 import com.ironcompass.route.StepStatus;
@@ -32,6 +35,7 @@ public final class GoalPlannerService
     private final ConditionEvaluator conditions;
     private final GoalDependencyResolver gearResolver;
     private final SupplyForecastService supplies;
+    private final GoalCompletionService goalCompletion;
 
     public GoalPlannerService(ConditionEvaluator conditions, GoalDependencyResolver gearResolver,
                               SupplyForecastService supplies)
@@ -39,27 +43,36 @@ public final class GoalPlannerService
         this.conditions = conditions;
         this.gearResolver = gearResolver;
         this.supplies = supplies;
+        this.goalCompletion = new GoalCompletionService(conditions);
     }
 
     public GoalPlanProjection evaluate(GoalCatalog catalog, AccountState state, GearProjection gear,
                                        RouteProjection route, GearPreferenceStore preferences)
     {
+        return evaluate(catalog, state, gear, route, preferences, null);
+    }
+
+    public GoalPlanProjection evaluate(GoalCatalog catalog, AccountState state, GearProjection gear,
+                                       RouteProjection route, GearPreferenceStore preferences,
+                                       ManualOverrideStore overrides)
+    {
         String selectedId = preferences.getPrimaryGoalId();
-        GoalPlanProjection primary = evaluateSelected(catalog, state, gear, route, selectedId);
+        GoalPlanProjection primary = evaluateSelected(catalog, state, gear, route, selectedId, overrides);
         List<GoalPlanProjection> secondary = new ArrayList<>();
         Set<String> seen = new HashSet<>();
         if (selectedId != null) seen.add(selectedId);
         for (String secondaryId : preferences.getSecondaryGoalIds())
         {
             if (secondaryId == null || !seen.add(secondaryId) || preferences.isSkipped(secondaryId)) continue;
-            GoalPlanProjection plan = evaluateSelected(catalog, state, gear, route, secondaryId);
+            GoalPlanProjection plan = evaluateSelected(catalog, state, gear, route, secondaryId, overrides);
             if (plan.hasSelectedGoal()) secondary.add(plan);
         }
         return primary.withSecondaryGoals(secondary);
     }
 
     private GoalPlanProjection evaluateSelected(GoalCatalog catalog, AccountState state, GearProjection gear,
-                                                RouteProjection route, String selectedId)
+                                                RouteProjection route, String selectedId,
+                                                ManualOverrideStore overrides)
     {
         if (selectedId == null)
         {
@@ -80,10 +93,10 @@ public final class GoalPlannerService
         }
 
         List<String> path = new ArrayList<>();
-        Resolved resolved = resolve(selected, catalog, state, gear, route, path, new HashSet<>());
-        TruthValue selectedCompletion = completion(selected, state, selectedGear);
+        Resolved resolved = resolve(selected, catalog, state, gear, route, path, new HashSet<>(), overrides);
+        TruthValue selectedCompletion = completion(selected, state, gear, overrides);
         List<RequirementResult> progress = selectedCompletion == TruthValue.TRUE
-            ? new ArrayList<>() : progress(selected, state, selectedGear);
+            ? new ArrayList<>() : progress(selected, state, gear);
         ResourceReadiness resources = resourceReadiness(selectedGear, state);
         return new GoalPlanProjection(catalog, selected, null, selectedCompletion, progress,
             resolved.action, resolved.action == null ? null : resolved.action.getExplanation(),
@@ -106,7 +119,8 @@ public final class GoalPlannerService
     }
 
     private Resolved resolve(GoalDefinition goal, GoalCatalog catalog, AccountState state, GearProjection gear,
-                             RouteProjection route, List<String> path, Set<String> visiting)
+                             RouteProjection route, List<String> path, Set<String> visiting,
+                             ManualOverrideStore overrides)
     {
         if (!visiting.add(goal.getId()))
         {
@@ -114,8 +128,8 @@ public final class GoalPlannerService
                 "Review goal dependencies", "This goal dependency chain contains a cycle.", null, null));
         }
         path.add(goal.getTitle());
-        GearEvaluation linkedGear = gear == null || goal.getGearId() == null ? null : gear.find(goal.getGearId());
-        TruthValue completion = completion(goal, state, linkedGear);
+        GearEvaluation linkedGear = GoalRequirementResolver.linkedGear(goal, gear);
+        TruthValue completion = completion(goal, state, gear, overrides);
         if (completion == TruthValue.TRUE)
         {
             return new Resolved(new PlannedAction(PlannedAction.Kind.COMPLETE, goal.getTitle() + " complete",
@@ -136,14 +150,14 @@ public final class GoalPlannerService
             {
                 GearEvaluation dependencyGear = gear == null || dependency.getGearId() == null
                     ? null : gear.find(dependency.getGearId());
-                if (completion(dependency, state, dependencyGear) != TruthValue.TRUE)
+                if (completion(dependency, state, gear, overrides) != TruthValue.TRUE)
                 {
-                    return resolve(dependency, catalog, state, gear, route, path, visiting);
+                    return resolve(dependency, catalog, state, gear, route, path, visiting, overrides);
                 }
             }
         }
 
-        ConditionSpec requirements = requirements(goal, linkedGear);
+        ConditionSpec requirements = GoalRequirementResolver.effectiveRequirements(goal, gear);
         List<RequirementTarget> targets = requirementTargets(requirements, state);
         RequirementTarget nearest = targets.stream()
             .filter(target -> target.result.getValue() != TruthValue.TRUE)
@@ -213,10 +227,11 @@ public final class GoalPlannerService
             "This is the closest unfinished direct requirement for " + goal.getTitle() + ".", null, null);
     }
 
-    private List<RequirementResult> progress(GoalDefinition goal, AccountState state, GearEvaluation linkedGear)
+    private List<RequirementResult> progress(GoalDefinition goal, AccountState state, GearProjection gear)
     {
         List<RequirementResult> results = new ArrayList<>();
-        for (RequirementTarget target : requirementTargets(requirements(goal, linkedGear), state))
+        for (RequirementTarget target : requirementTargets(
+            GoalRequirementResolver.effectiveRequirements(goal, gear), state))
         {
             results.add(target.result);
         }
@@ -276,15 +291,10 @@ public final class GoalPlannerService
                 : "Your observed bank and carried supplies meet the authored targets.", forecast);
     }
 
-    private static ConditionSpec requirements(GoalDefinition goal, GearEvaluation gear)
+    private TruthValue completion(GoalDefinition goal, AccountState state, GearProjection gear,
+                                  ManualOverrideStore overrides)
     {
-        return goal.getRequirements() != null ? goal.getRequirements()
-            : gear == null ? null : gear.getUpgrade().getRequirements();
-    }
-
-    private TruthValue completion(GoalDefinition goal, AccountState state, GearEvaluation gear)
-    {
-        return gear == null ? conditions.evaluate(goal.getCompletion(), state).getValue() : gear.getCompletion();
+        return goalCompletion.evaluate(goal, state, gear, overrides).getCompletion();
     }
 
     private static PlannedAction fromGearAction(GoalAction action)

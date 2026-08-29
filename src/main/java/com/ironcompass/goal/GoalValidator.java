@@ -15,12 +15,21 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import net.runelite.api.Skill;
 
 public final class GoalValidator
 {
     private static final Pattern STABLE_ID = Pattern.compile("[a-z0-9][a-z0-9._-]{2,95}");
     private static final Set<String> ITEM_SOURCES = Set.of("INVENTORY", "EQUIPMENT", "CARRIED", "BANK", "ANY");
     private static final Set<String> QUEST_STATES = Set.of("NOT_STARTED", "IN_PROGRESS", "FINISHED");
+    private static final Set<String> ACCOUNT_TYPES = Set.of("IRONMAN", "HARDCORE_IRONMAN", "ULTIMATE_IRONMAN",
+        "GROUP_IRONMAN", "HARDCORE_GROUP_IRONMAN", "UNRANKED_GROUP_IRONMAN");
+    private static final Set<String> SOURCE_KINDS = Set.of("FACT", "FACT_AND_GUIDANCE", "COMMUNITY_GUIDE",
+        "COMMUNITY_RECOMMENDATION");
+    private static final Set<String> CATEGORIES = Set.of("Account Infrastructure", "Achievement Diaries",
+        "Bossing", "Clue Scrolls", "Gear", "Minigames", "Quests", "Raids", "Resources", "Skills",
+        "Slayer", "Transportation");
+    private static final Set<String> SKILLS = skillNames();
     private final Set<String> validQuestNames = new HashSet<>();
 
     public GoalValidator(Set<String> validQuestNames)
@@ -38,6 +47,17 @@ public final class GoalValidator
         if (catalog.getGoals().isEmpty()) errors.add("goal catalog must contain goals");
 
         Map<String, GoalDefinition> goals = new HashMap<>();
+        Map<String, GoalSource> sources = new HashMap<>();
+        for (GoalSource source : catalog.getSources())
+        {
+            if (blank(source.getId()) || sources.put(source.getId(), source) != null)
+                errors.add("invalid or duplicate goal source id: " + source.getId());
+            if (blank(source.getTitle()) || blank(source.getKind()) || blank(source.getConfirms())
+                || blank(source.getUrl()) || !source.getUrl().startsWith("https://"))
+                errors.add("goal source needs title, HTTPS URL, kind, and confirmation notes: " + source.getId());
+            if (!SOURCE_KINDS.contains(upper(source.getKind())))
+                errors.add("goal source has unsupported kind: " + source.getId() + " -> " + source.getKind());
+        }
         Set<String> routeSteps = routeStepIds(route);
         for (GoalDefinition goal : catalog.getGoals())
         {
@@ -49,14 +69,19 @@ public final class GoalValidator
             {
                 errors.add("duplicate goal id: " + goal.getId());
             }
-            if (blank(goal.getTitle()) || blank(goal.getDescription()) || blank(goal.getCategory()))
+            if (blank(goal.getTitle()) || blank(goal.getDescription()) || blank(goal.getWhyItMatters())
+                || blank(goal.getCategory()))
             {
-                errors.add("goal needs title, description, and category: " + goal.getId());
+                errors.add("goal needs title, description, why, and category: " + goal.getId());
             }
+            if (!CATEGORIES.contains(goal.getCategory()))
+                errors.add("goal has unknown category: " + goal.getId() + " -> " + goal.getCategory());
             if ((goal.getCompletion() == null && blank(goal.getGearId()))
-                || goal.getImpact() == null || goal.getEffort() == null)
+                || goal.getImpact() == null || goal.getEffort() == null || goal.getStage() == null
+                || goal.getRiskLevel() == null || goal.getCompletionMode() == null || goal.getPriority() == null
+                || goal.getCommunityWeight() == null)
             {
-                errors.add("goal needs completion or a linked Gear objective, plus impact and effort: " + goal.getId());
+                errors.add("goal needs completion or Gear, plus impact, effort, stage, and risk: " + goal.getId());
             }
             validateCondition(goal.getCompletion(), goal.getId() + ".completion", errors);
             validateCondition(goal.getRequirements(), goal.getId() + ".requirements", errors);
@@ -72,6 +97,22 @@ public final class GoalValidator
             {
                 errors.add("goal needs at least one audited unlock: " + goal.getId());
             }
+            if (goal.getBenefits().isEmpty())
+                errors.add("goal needs at least one practical benefit: " + goal.getId());
+            if (goal.getBenefits().equals(goal.getUnlocks()))
+                errors.add("goal benefits must not duplicate unlocks: " + goal.getId());
+            validateUniqueStrings(goal.getTags(), goal.getId() + ".tags", true, errors);
+            validateUniqueStrings(goal.getRelatedItems(), goal.getId() + ".relatedItems", false, errors);
+            validateUniqueStrings(goal.getSourceReferences(), goal.getId() + ".sourceReferences", false, errors);
+            for (String skill : goal.getRelatedSkills())
+                if (!SKILLS.contains(AccountState.normalize(skill)))
+                    errors.add("goal has unknown related skill: " + goal.getId() + " -> " + skill);
+            for (String accountType : goal.getAccountTypes())
+                if (!ACCOUNT_TYPES.contains(upper(accountType)))
+                    errors.add("goal has invalid account type: " + goal.getId() + " -> " + accountType);
+            for (String sourceId : goal.getSourceReferences())
+                if (!sources.containsKey(sourceId))
+                    errors.add("goal has unknown source reference: " + goal.getId() + " -> " + sourceId);
             if (blank(goal.getWikiPage()) || goal.getWikiPage().contains("\n")
                 || goal.getWikiPage().contains("://"))
             {
@@ -90,7 +131,26 @@ public final class GoalValidator
                     errors.add("goal has unknown dependency: " + goal.getId() + " -> " + dependency);
                 }
             }
+            Set<String> relationships = new HashSet<>();
+            for (GoalRelationship relationship : goal.getRelationships())
+            {
+                if (relationship == null || relationship.getType() == null || blank(relationship.getGoalId()))
+                {
+                    errors.add("goal has malformed relationship: " + goal.getId());
+                    continue;
+                }
+                String key = relationship.getType() + ":" + relationship.getGoalId();
+                if (!relationships.add(key)) errors.add("goal repeats relationship: " + goal.getId() + " -> " + key);
+                if (goal.getId().equals(relationship.getGoalId()))
+                    errors.add("goal relates to itself: " + goal.getId());
+                if (!goals.containsKey(relationship.getGoalId()))
+                    errors.add("goal has unknown relationship: " + goal.getId() + " -> " + relationship.getGoalId());
+            }
         }
+        Set<String> usedSources = new HashSet<>();
+        for (GoalDefinition goal : catalog.getGoals()) usedSources.addAll(goal.getSourceReferences());
+        for (String sourceId : sources.keySet())
+            if (!usedSources.contains(sourceId)) errors.add("goal source is never used: " + sourceId);
         detectCycles(goals, errors);
         if (!errors.isEmpty()) throw new GoalValidationException(errors);
     }
@@ -108,10 +168,12 @@ public final class GoalValidator
             errors.add(type + " requires children at " + path);
         if ("NOT".equals(type) && condition.getChild() == null) errors.add("NOT requires child at " + path);
         if ("SKILL_AT_LEAST".equals(type)
-            && (blank(condition.getSkill()) || condition.getLevel() < 1 || condition.getLevel() > 99))
+            && (blank(condition.getSkill()) || !SKILLS.contains(AccountState.normalize(condition.getSkill()))
+                || condition.getLevel() < 1 || condition.getLevel() > 99))
             errors.add("invalid skill requirement at " + path);
         if ("SKILL_SUM_AT_LEAST".equals(type)
             && (condition.getSkills().size() < 2 || condition.getSkills().stream().anyMatch(GoalValidator::blank)
+                || condition.getSkills().stream().map(AccountState::normalize).anyMatch(skill -> !SKILLS.contains(skill))
                 || condition.getLevel() < 1 || condition.getLevel() > condition.getSkills().size() * 99))
             errors.add("invalid skill-sum requirement at " + path);
         if ("QUEST_STATE".equals(type))
@@ -173,8 +235,32 @@ public final class GoalValidator
     }
 
     private static boolean blank(String value) { return value == null || value.trim().isEmpty(); }
+
+    private static void validateUniqueStrings(List<String> values, String path, boolean canonicalTag,
+                                              List<String> errors)
+    {
+        Set<String> unique = new HashSet<>();
+        for (String value : values)
+        {
+            if (blank(value))
+            {
+                errors.add("blank value at " + path);
+                continue;
+            }
+            if (canonicalTag && !value.matches("[a-z0-9][a-z0-9-]*"))
+                errors.add("non-canonical tag at " + path + ": " + value);
+            if (!unique.add(value)) errors.add("duplicate value at " + path + ": " + value);
+        }
+    }
     private static String upper(String value)
     {
         return value == null ? "" : value.trim().toUpperCase(Locale.ENGLISH);
+    }
+
+    private static Set<String> skillNames()
+    {
+        Set<String> names = new HashSet<>();
+        for (Skill skill : Skill.values()) names.add(AccountState.normalize(skill.getName()));
+        return names;
     }
 }

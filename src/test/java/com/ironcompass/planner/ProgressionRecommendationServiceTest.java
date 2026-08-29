@@ -73,6 +73,16 @@ public final class ProgressionRecommendationServiceTest
         assertEquals(EffortClass.QUICK, projection.getQuickWin().getEffort());
     }
 
+    @Test
+    public void sharedGoalSynergySaturates()
+    {
+        assertEquals(0,ProgressionRecommendationService.sharedGoalSynergy(1));
+        assertEquals(ScoringWeights.MAX_SHARED_GOAL_SYNERGY,
+            ProgressionRecommendationService.sharedGoalSynergy(3));
+        assertEquals(ScoringWeights.MAX_SHARED_GOAL_SYNERGY,
+            ProgressionRecommendationService.sharedGoalSynergy(20));
+    }
+
     private ProjectionFixture fixture(AccountState state, int magicRequirement) throws Exception
     {
         Route route = new RouteLoader(gson).load(new StringReader(

@@ -7,10 +7,15 @@ import com.ironcompass.gear.GearLoader;
 import com.ironcompass.gear.GearProjection;
 import com.ironcompass.gear.GearRecommendationService;
 import com.ironcompass.gear.InMemoryGearPreferenceStore;
+import com.ironcompass.goal.GoalCatalog;
+import com.ironcompass.goal.GoalDependencyResolver;
+import com.ironcompass.goal.GoalLoader;
 import com.ironcompass.integration.QuestHelperBridge;
 import com.ironcompass.integration.WikiBridge;
 import com.ironcompass.persistence.InMemoryManualOverrideStore;
 import com.ironcompass.persistence.ManualOverride;
+import com.ironcompass.planner.GoalPlanProjection;
+import com.ironcompass.planner.GoalPlannerService;
 import com.ironcompass.requirement.ConditionEvaluator;
 import com.ironcompass.route.Route;
 import com.ironcompass.route.RouteEvaluator;
@@ -20,6 +25,7 @@ import com.ironcompass.route.RouteSection;
 import com.ironcompass.route.RouteStep;
 import com.ironcompass.state.AccountMode;
 import com.ironcompass.state.AccountState;
+import com.ironcompass.supply.SupplyForecastService;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Container;
@@ -287,6 +293,33 @@ public class IronCompassPanelRenderTest
             panel.update(state, projection, gearProjection, null, null);
             assertTrue("Account refresh must not return the user to the home card",
                 findVisibleButton(panel, "OVERVIEW") != null);
+        });
+    }
+
+    @Test
+    public void accountInsightsRenderFromTheSameGoalSnapshot() throws Exception
+    {
+        Route route = new RouteLoader(new Gson()).loadResource("/routes/efficient-ironman.json");
+        GoalCatalog goals = new GoalLoader(new Gson()).loadResource("/goals/ironman-goals-2026.json");
+        AccountState state = AccountState.builder().accountMode(AccountMode.IRONMAN)
+            .bank(com.ironcompass.state.BankSnapshot.observed(java.util.Map.of())).build();
+        InMemoryManualOverrideStore overrides = new InMemoryManualOverrideStore();
+        InMemoryGearPreferenceStore preferences = new InMemoryGearPreferenceStore();
+        preferences.setPrimaryGoalId("goal.unlock.piety");
+        RouteProjection projection = new RouteEvaluator(new ConditionEvaluator())
+            .evaluate(route,state,overrides,true,4,7);
+        GearProjection gear = new GearRecommendationService(new ConditionEvaluator())
+            .evaluate(new GearLoader(new Gson()).loadResource("/gear/ironman-gear-2026.json"),
+                state,preferences,overrides);
+        GoalPlanProjection plan = new GoalPlannerService(new ConditionEvaluator(),new GoalDependencyResolver(),
+            new SupplyForecastService()).evaluate(goals,state,gear,projection,preferences,overrides);
+
+        SwingUtilities.invokeAndWait(() ->
+        {
+            IronCompassPanel panel = new IronCompassPanel(new IronCompassConfig() { },new WikiBridge(),null,
+                new QuestHelperBridge(),overrides,() -> { });
+            panel.update(state,projection,gear,null,null,plan,null);
+            assertNotNull(findVisibleButton(panel,"VIEW ACCOUNT INSIGHTS"));
         });
     }
 

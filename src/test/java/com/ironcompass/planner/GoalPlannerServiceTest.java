@@ -78,8 +78,8 @@ public final class GoalPlannerServiceTest
         InMemoryGearPreferenceStore preferences = new InMemoryGearPreferenceStore();
         preferences.setSelectedGoalId("gear.mid.bowfa");
         GoalPlanProjection plan = project(songState(QuestProgress.NOT_STARTED), preferences);
-        assertEquals(2, plan.getDependencyPath().size());
-        assertEquals("Song of the Elves", plan.getDependencyPath().get(1));
+        assertEquals(4, plan.getDependencyPath().size());
+        assertEquals("Song of the Elves", plan.getDependencyPath().get(3));
         assertEquals("Train Farming 69 → 70", plan.getNextAction().getTitle());
     }
 
@@ -95,7 +95,7 @@ public final class GoalPlannerServiceTest
     }
 
     @Test
-    public void existingGearGoalsOutsideCuratedCatalogRemainBackwardCompatible() throws Exception
+    public void newlyCuratedGearGoalUsesTheSamePersistentId() throws Exception
     {
         InMemoryGearPreferenceStore preferences = new InMemoryGearPreferenceStore();
         preferences.setSelectedGoalId("gear.early.ava");
@@ -104,8 +104,9 @@ public final class GoalPlannerServiceTest
         GoalPlanProjection plan = project(state, preferences);
 
         assertTrue(plan.hasSelectedGoal());
-        assertNotNull(plan.getLegacyGearGoal());
-        assertEquals("Ava's accumulator", plan.getTitle());
+        assertNotNull(plan.getGoal());
+        assertNull(plan.getLegacyGearGoal());
+        assertEquals("Ava's Accumulator", plan.getTitle());
         assertNull(plan.getUnavailableSelectedId());
     }
 

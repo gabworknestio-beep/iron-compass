@@ -25,7 +25,13 @@ dependencies {
 }
 
 group = 'com.ironcompass'
-version = '1.3.0'
+version = providers.gradleProperty('pluginVersion').get()
+
+processResources {
+    filesMatching('iron-compass-version.properties') {
+        expand(pluginVersion: project.version)
+    }
+}
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'

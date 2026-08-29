@@ -104,6 +104,28 @@ public final class IronCompassPersistenceTest
     }
 
     @Test
+    public void goalOverridesWithNamespacedKeysPersistPerProfile()
+    {
+        FakeProfileConfig config = new FakeProfileConfig();
+        IronCompassPersistence persistence = new IronCompassPersistence(config);
+        String key = "goal:goal.transport.fairy-rings";
+
+        config.use("A");
+        persistence.put(key,ManualOverride.FORCE_COMPLETE);
+        persistence.profileChanged();
+        assertEquals(ManualOverride.FORCE_COMPLETE,persistence.get(key));
+
+        config.use("B");
+        persistence.profileChanged();
+        assertNull(persistence.get(key));
+        persistence.put(key,ManualOverride.FORCE_INCOMPLETE);
+
+        config.use("A");
+        persistence.profileChanged();
+        assertEquals(ManualOverride.FORCE_COMPLETE,persistence.get(key));
+    }
+
+    @Test
     public void skipClearsSelectedGoalAndUnskipDoesNotReselectIt()
     {
         FakeProfileConfig config = new FakeProfileConfig();

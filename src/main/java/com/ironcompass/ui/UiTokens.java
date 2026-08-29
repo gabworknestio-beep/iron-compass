@@ -3,6 +3,9 @@ package com.ironcompass.ui;
 import java.awt.Color;
 import java.awt.Font;
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JComboBox;
+import javax.swing.JList;
 import javax.swing.border.Border;
 import net.runelite.client.ui.ColorScheme;
 
@@ -31,5 +34,32 @@ final class UiTokens
         return BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(BORDER),
             BorderFactory.createEmptyBorder(9, 9, 9, 9));
+    }
+
+    static <T> void styleComboBox(JComboBox<T> combo)
+    {
+        combo.setOpaque(true);
+        combo.setBackground(CARD);
+        combo.setForeground(TEXT);
+        combo.setFont(BODY);
+        combo.setFocusable(true);
+        combo.setMaximumRowCount(10);
+        combo.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(BORDER),
+            BorderFactory.createEmptyBorder(2, 3, 2, 3)));
+        combo.setRenderer(new DefaultListCellRenderer()
+        {
+            @Override
+            public java.awt.Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                                    boolean selected, boolean focus)
+            {
+                super.getListCellRendererComponent(list,value,index,selected,focus);
+                setOpaque(true);
+                setBackground(selected ? ACCENT.darker().darker() : CARD);
+                setForeground(selected ? java.awt.Color.WHITE : TEXT);
+                setBorder(BorderFactory.createEmptyBorder(3,5,3,5));
+                return this;
+            }
+        });
     }
 }

@@ -44,6 +44,7 @@ public final class GoalLoader
             {
                 throw new GoalLoadException("Empty goal catalog: " + source, null);
             }
+            catalog.freeze();
             return catalog;
         }
         catch (RuntimeException ex)
