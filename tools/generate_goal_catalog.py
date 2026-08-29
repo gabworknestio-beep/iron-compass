@@ -2,6 +2,8 @@
 import json
 from pathlib import Path
 
+from goal_catalog_expansion_2026 import EXPANSION_GOALS
+
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "src/main/resources/goals/ironman-goals-2026.json"
 goals = []
@@ -37,6 +39,27 @@ SOURCES = [
     ,{"id":"reddit-2026-modern","title":"r/ironscape — modern early-account priorities","url":"https://www.reddit.com/r/ironscape/comments/1t4p4p6/","kind":"COMMUNITY_RECOMMENDATION","confirms":"Current players value transport, food, Prayer, money, and repeatable resource systems over a single rigid route."}
     ,{"id":"reddit-vale","title":"r/ironscape — Vale Totems experience","url":"https://www.reddit.com/r/ironscape/comments/1r6gfil/","kind":"COMMUNITY_RECOMMENDATION","confirms":"Vale Totems can produce useful roots, nests, arrowtips, and logs, but 99 is a long optional grind."}
     ,{"id":"reddit-sailing","title":"r/ironscape — useful Sailing unlocks","url":"https://www.reddit.com/r/ironscape/comments/1vanvsd/","kind":"COMMUNITY_RECOMMENDATION","confirms":"Players highlight salvage, Wyrmscraig, Golem Crafting, trawling, and regional unlocks rather than level for its own sake."}
+    ,{"id":"wiki-melee","title":"OSRS Wiki — Ironman melee","url":"https://oldschool.runescape.wiki/w/Ironman_Guide/Melee","kind":"FACT","confirms":"Melee weapon and armour tiers, untradeable upgrades, and practical Ironman combat progression."}
+    ,{"id":"wiki-ranged","title":"OSRS Wiki — Ironman Ranged","url":"https://oldschool.runescape.wiki/w/Ironman_Guide/Ranged","kind":"FACT","confirms":"Bone crossbow, rune crossbow, ammunition, Ava devices, crystal equipment, blowpipe, and endgame weapon progression."}
+    ,{"id":"wiki-prayer","title":"OSRS Wiki — Ironman Prayer","url":"https://oldschool.runescape.wiki/w/Ironman_Guide/Prayer","kind":"FACT","confirms":"Protection and offensive prayers, Ectofuntus, libation bowl, altars, bonecrusher, and ash sanctifier utility."}
+    ,{"id":"wiki-magic","title":"OSRS Wiki — Ironman Magic","url":"https://oldschool.runescape.wiki/w/Ironman_Guide/Magic","kind":"FACT","confirms":"Teleport, alchemy, combat, Lunar, Ancient and Arceuus spell milestones used by Ironmen."}
+    ,{"id":"wiki-thieving","title":"OSRS Wiki — Ironman Thieving","url":"https://oldschool.runescape.wiki/w/Ironman_Guide/Thieving","kind":"FACT","confirms":"Early food, Varlamore stalls, Pyramid Plunder, Master Farmers, elves and vyres."}
+    ,{"id":"wiki-fletching","title":"OSRS Wiki — Ironman Fletching","url":"https://oldschool.runescape.wiki/w/Ironman_Guide/Fletching","kind":"FACT","confirms":"Useful bow, bolt, arrow and dart production levels and Ironman input loops."}
+    ,{"id":"wiki-mining","title":"OSRS Wiki — Ironman Mining","url":"https://oldschool.runescape.wiki/w/Ironman_Guide/Mining","kind":"FACT","confirms":"Motherlode Mine, gems, sandstone, runite, Amethyst and utility-reward progression."}
+    ,{"id":"wiki-smithing","title":"OSRS Wiki — Ironman Smithing","url":"https://oldschool.runescape.wiki/w/Ironman_Guide/Smithing","kind":"FACT","confirms":"Cannonballs, bolts, darts, grapples, runite items and Giant's Foundry inputs."}
+    ,{"id":"wiki-cooking","title":"OSRS Wiki — Ironman Cooking","url":"https://oldschool.runescape.wiki/w/Ironman_Guide/Cooking","kind":"FACT","confirms":"Useful food unlocks and sustainable Cooking progression for Ironman combat supplies."}
+    ,{"id":"wiki-firemaking","title":"OSRS Wiki — Ironman Firemaking","url":"https://oldschool.runescape.wiki/w/Ironman_Guide/Firemaking","kind":"FACT","confirms":"Wintertodt and Shades of Mort'ton milestones without padding arbitrary Firemaking levels."}
+    ,{"id":"wiki-woodcutting","title":"OSRS Wiki — Ironman Woodcutting","url":"https://oldschool.runescape.wiki/w/Ironman_Guide/Woodcutting","kind":"FACT","confirms":"Hardwoods, Forestry, magic logs, redwoods and modern Ironwood resource use."}
+    ,{"id":"wiki-quest-unlocks","title":"OSRS Wiki — Optimal quest guide for Ironmen","url":"https://oldschool.runescape.wiki/w/Optimal_quest_guide/Ironman","kind":"FACT_AND_GUIDANCE","confirms":"Notable quest rewards, world access, equipment and transportation unlocks for Ironman accounts."}
+    ,{"id":"wiki-transportation","title":"OSRS Wiki — Transportation","url":"https://oldschool.runescape.wiki/w/Transportation","kind":"FACT","confirms":"Live requirements and destinations for jewellery, quest, diary, POH, Varlamore and Sailing transport systems."}
+    ,{"id":"wiki-minigames","title":"OSRS Wiki — Minigames","url":"https://oldschool.runescape.wiki/w/Minigames","kind":"FACT","confirms":"Access and reward paths for major Ironman skilling, storage, imbue and equipment minigames."}
+    ,{"id":"wiki-pvm-strategies","title":"OSRS Wiki — Ironman PvM strategy pages","url":"https://oldschool.runescape.wiki/w/Ironman_Guide/PvM","kind":"FACT_AND_GUIDANCE","confirms":"Boss access, hard requirements and practical preparation while keeping recommendations separate."}
+    ,{"id":"wiki-combat-achievements","title":"OSRS Wiki — Combat Achievements","url":"https://oldschool.runescape.wiki/w/Combat_Achievements","kind":"FACT","confirms":"Combat Achievement tiers, point thresholds and reward progression."}
+    ,{"id":"wiki-moons-strategy","title":"OSRS Wiki — Moons of Peril strategies","url":"https://oldschool.runescape.wiki/w/Moons_of_Peril/Strategies","kind":"FACT_AND_GUIDANCE","confirms":"Quest gate, dungeon-made supplies, defensive preparation and recommended combat levels for repeat Moons clears."}
+    ,{"id":"reddit-qol-2026","title":"r/ironscape — significant Ironman unlocks","url":"https://www.reddit.com/r/ironscape/comments/1tn6rzc/","kind":"COMMUNITY_RECOMMENDATION","confirms":"Players repeatedly prioritize transport, POH, storage tools, defender, rune pouch, moths and sustainable supply loops."}
+    ,{"id":"reddit-2026-start","title":"r/ironscape — starting an Ironman in 2026","url":"https://www.reddit.com/r/ironscape/comments/1vxuzey/","kind":"COMMUNITY_RECOMMENDATION","confirms":"Modern new-account priorities include Vale Totems, Hunter Rumours, moths, Moons, GOTR and Sailing alongside flexible questing."}
+    ,{"id":"reddit-goal-tracker","title":"r/ironscape — 2025–2026 goals tracker","url":"https://www.reddit.com/r/ironscape/comments/1ow7yv7/","kind":"COMMUNITY_GUIDE","confirms":"Players value a broad stage-spanning checklist while still treating optional collection grinds separately."}
+    ,{"id":"youtube-midgame-2025","title":"Kaoz OSRS — 15 Mid Game Goals for 2025","url":"https://www.youtube.com/watch?v=aVAfnfUjK2s","kind":"COMMUNITY_RECOMMENDATION","confirms":"Modern midgame priorities include transport, Varlamore, bossing, spellbooks, diaries, clues, money and combat preparation."}
 ]
 
 def manual(label):
@@ -601,6 +624,38 @@ add("goal.activity.sailing-trawling","Establish Deep Sea Trawling","Resources","
     completion_mode="MANUAL",priority="OPTIONAL",community="NOTABLE",
     intents=["FOOD_SUSTAIN","ACCOUNT_INFRASTRUCTURE"])
 
+# The large 2026 expansion lives in a curated data module so this generator remains reviewable.
+# Every entry still flows through the same add(), normalization, relationship, and validation path.
+for spec in EXPANSION_GOALS:
+    mode = spec.get("mode", "manual")
+    if mode == "skill":
+        completion = skill_condition(spec["skill"], spec["level"])
+        requirements = completion
+    elif mode == "quest":
+        completion = quest_condition(spec["quest"])
+        requirements = completion
+    else:
+        completion = manual("Confirm " + spec["title"])
+        hard = [skill_condition(name, level) for name, level in spec.get("hardSkills", [])]
+        hard.extend(quest_condition(name) for name in spec.get("hardQuests", []))
+        requirements = all_condition(spec["title"] + " requirements", *hard) if len(hard) > 1 \
+            else hard[0] if hard else None
+    relationships = [
+        {"goalId": related_id, "type": relation_type}
+        for related_id, relation_type in spec.get("relationships", [])
+    ]
+    add(spec["id"], spec["title"], spec["category"], spec["stage"], spec["description"],
+        spec["why"], spec["unlocks"], spec["wiki"], spec["tags"],
+        completion=completion, requirements=requirements, dependencies=spec.get("dependencies"),
+        impact=spec.get("impact", "HIGH"), effort=spec.get("effort", "MEDIUM"),
+        usefulness=spec.get("usefulness", 4), popular=spec.get("popular", False),
+        rng=spec.get("rng", False), risk=spec.get("risk", "SAFE"),
+        skills=spec.get("skills"), quests=spec.get("quests"), activities=spec.get("activities"),
+        items=spec.get("items"), accounts=spec.get("accounts"), sources=spec.get("sources"),
+        benefits=spec.get("benefits"), completion_mode="MANUAL" if mode == "manual" else "AUTO",
+        priority=spec.get("priority"), community=spec.get("community"), intents=spec.get("intents"),
+        relationships=relationships)
+
 # Dependency chains make major goals decompose through the existing GoalPlannerService.
 DEPENDENCIES = {
     "goal.transport.fairy-rings":["goal.quest.lost-city","goal.quest.fairytale-i"],
@@ -930,6 +985,6 @@ BENEFIT_OVERRIDES = {
 for goal_id, benefits in BENEFIT_OVERRIDES.items():
     by_id[goal_id]["benefits"] = benefits
 
-catalog = {"version":5,"auditedAt":"2026-08-29","sources":SOURCES,"goals":goals}
+catalog = {"version":6,"auditedAt":"2026-08-29","sources":SOURCES,"goals":goals}
 OUTPUT.write_text(json.dumps(catalog,indent=2,ensure_ascii=False) + "\n",encoding="utf-8")
 print(f"Wrote {len(goals)} goals to {OUTPUT}")

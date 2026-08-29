@@ -76,7 +76,7 @@ The queue deliberately stays small: one Primary Goal and no more than three Seco
 
 The goal catalog is intentionally broader than the canonical route. It includes small transformative unlocks (for example 75 Hunter for moonlight moths), benefit-led intentions, optional clue/RNG branches, and endgame targets without turning stages into mandatory rules. See [docs/GOAL_CATALOG_RESEARCH.md](docs/GOAL_CATALOG_RESEARCH.md).
 
-Iron Compass v1.0.4 keeps readiness honest: observed skills, quest access, gear requirements, and manual-only unlock facts are evaluated through one shared requirement policy before anything is labelled ready.
+Iron Compass v1.0.5 keeps readiness honest: observed skills, quest access, gear requirements, and manual-only unlock facts are evaluated through one shared requirement policy before anything is labelled ready.
 
 For supported skill gates, the bundled method planner suggests a **good fit for this account**, never an unjustified universal “best method.” It considers verified unlocks, Wilderness/Hardcore constraints, observed starting resources, active-goal synergy, playstyle, and qualitative session effort. Useful sources are shown when authored inputs are missing; an unopened bank always produces the explicit unconfirmed-bank message.
 

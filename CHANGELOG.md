@@ -2,6 +2,19 @@
 
 All notable Iron Compass changes are recorded here. The project follows semantic versioning once a release is published.
 
+## [1.0.5] - 2026-08-29
+
+### Added
+
+- Expanded the researched Ironman goal library from 290 to 558 goals across all 24 skills, quests, resources, transportation, diaries, clues, minigames, boss preparation, raids, Varlamore, and Sailing.
+- Added 21 factual and community sources, 187 typed relationships, and 87 dependency links for richer Personal Goal paths.
+- Added catalog coverage tests for every skill, major categories, modern flagship goals, effort/impact balance, normalized duplicate titles, and valid related quests.
+
+### Changed
+
+- Strengthened catalog validation for duplicate normalized titles, duplicate related metadata, and RuneLite quest references.
+- Bumped the generated goal catalog schema version to 6 while preserving every existing goal ID.
+
 ## [1.0.4] - 2026-08-29
 
 ### Added

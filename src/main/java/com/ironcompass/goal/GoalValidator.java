@@ -48,6 +48,7 @@ public final class GoalValidator
 
         Map<String, GoalDefinition> goals = new HashMap<>();
         Map<String, GoalSource> sources = new HashMap<>();
+        Map<String, String> titles = new HashMap<>();
         for (GoalSource source : catalog.getSources())
         {
             if (blank(source.getId()) || sources.put(source.getId(), source) != null)
@@ -68,6 +69,13 @@ public final class GoalValidator
             else if (goals.put(goal.getId(), goal) != null)
             {
                 errors.add("duplicate goal id: " + goal.getId());
+            }
+            String normalizedTitle = AccountState.normalize(goal.getTitle());
+            if (!blank(normalizedTitle))
+            {
+                String existingId = titles.putIfAbsent(normalizedTitle, goal.getId());
+                if (existingId != null)
+                    errors.add("duplicate normalized goal title: " + existingId + " and " + goal.getId());
             }
             if (blank(goal.getTitle()) || blank(goal.getDescription()) || blank(goal.getWhyItMatters())
                 || blank(goal.getCategory()))
@@ -103,10 +111,15 @@ public final class GoalValidator
                 errors.add("goal benefits must not duplicate unlocks: " + goal.getId());
             validateUniqueStrings(goal.getTags(), goal.getId() + ".tags", true, errors);
             validateUniqueStrings(goal.getRelatedItems(), goal.getId() + ".relatedItems", false, errors);
+            validateUniqueStrings(goal.getRelatedSkills(), goal.getId() + ".relatedSkills", false, errors);
+            validateUniqueStrings(goal.getRelatedQuests(), goal.getId() + ".relatedQuests", false, errors);
             validateUniqueStrings(goal.getSourceReferences(), goal.getId() + ".sourceReferences", false, errors);
             for (String skill : goal.getRelatedSkills())
                 if (!SKILLS.contains(AccountState.normalize(skill)))
                     errors.add("goal has unknown related skill: " + goal.getId() + " -> " + skill);
+            for (String quest : goal.getRelatedQuests())
+                if (!validQuestNames.isEmpty() && !validQuestNames.contains(AccountState.normalize(quest)))
+                    errors.add("goal has unknown related quest: " + goal.getId() + " -> " + quest);
             for (String accountType : goal.getAccountTypes())
                 if (!ACCOUNT_TYPES.contains(upper(accountType)))
                     errors.add("goal has invalid account type: " + goal.getId() + " -> " + accountType);

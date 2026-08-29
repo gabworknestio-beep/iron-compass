@@ -5,11 +5,14 @@ import com.ironcompass.gear.GearCatalog;
 import com.ironcompass.gear.GearLoader;
 import com.ironcompass.route.Route;
 import com.ironcompass.route.RouteLoader;
+import com.ironcompass.planner.EffortClass;
 import com.ironcompass.state.AccountState;
 import com.ironcompass.requirement.ConditionSpec;
 import java.io.StringReader;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import net.runelite.api.Quest;
@@ -28,10 +31,10 @@ public final class GoalCatalogValidationTest
     {
         GoalCatalog catalog = new GoalLoader(gson).loadResource("/goals/ironman-goals-2026.json");
         validate(catalog);
-        assertEquals(5, catalog.getVersion());
-        assertEquals(290, catalog.getGoals().size());
+        assertEquals(6, catalog.getVersion());
+        assertTrue(catalog.getGoals().size() >= 500 && catalog.getGoals().size() <= 600);
         assertEquals("2026-08-29", catalog.getAuditedAt());
-        assertEquals(30, catalog.getSources().size());
+        assertTrue(catalog.getSources().size() >= 45);
     }
 
     @Test
@@ -119,11 +122,70 @@ public final class GoalCatalogValidationTest
             org.junit.Assert.assertTrue(skill.getName(), covered.contains(AccountState.normalize(skill.getName())));
     }
 
+    @Test
+    public void bundledCatalogHasMeaningfulCoverageAcrossEverySkill() throws Exception
+    {
+        GoalCatalog catalog = new GoalLoader(gson).loadResource("/goals/ironman-goals-2026.json");
+        Map<String, Integer> counts = new HashMap<>();
+        for (GoalDefinition goal : catalog.getGoals())
+            for (String skill : goal.getRelatedSkills())
+                counts.merge(AccountState.normalize(skill), 1, Integer::sum);
+        for (Skill skill : Skill.values())
+            assertTrue(skill.getName(), counts.getOrDefault(AccountState.normalize(skill.getName()), 0) >= 4);
+    }
+
+    @Test
+    public void bundledCatalogKeepsBroadCategoryAndModernContentCoverage() throws Exception
+    {
+        GoalCatalog catalog = new GoalLoader(gson).loadResource("/goals/ironman-goals-2026.json");
+        Map<String, Long> categoryCounts = catalog.getGoals().stream()
+            .collect(Collectors.groupingBy(GoalDefinition::getCategory, Collectors.counting()));
+        assertTrue(categoryCounts.getOrDefault("Skills", 0L) >= 180);
+        assertTrue(categoryCounts.getOrDefault("Resources", 0L) >= 35);
+        assertTrue(categoryCounts.getOrDefault("Transportation", 0L) >= 20);
+        assertTrue(categoryCounts.getOrDefault("Quests", 0L) >= 50);
+        assertTrue(categoryCounts.getOrDefault("Bossing", 0L) >= 35);
+        for (String id : Arrays.asList("goal.skill.sailing-15", "goal.skill.sailing-50",
+            "goal.skill.sailing-87", "goal.activity.hunter-rumours", "goal.activity.vale-totems",
+            "goal.activity.golem-crafting", "goal.resource.moth-mixes", "goal.resource.food-karambwans",
+            "goal.skill.herblore-38", "goal.transport.fairy-rings", "goal.unlock.piety",
+            "gear.early.gloves", "goal.account.strong-poh", "gear.early.fire-cape",
+            "goal.pvm.perilous-moons-loop", "gear.mid.bowfa", "goal.pvm.zulrah",
+            "goal.raid.toa-normal", "gear.endgame.infernal", "goal.pvm.colosseum-prep",
+            "gear.endgame.quiver", "goal.transport.sailors-amulet"))
+            assertTrue(id, catalog.find(id) != null);
+    }
+
+    @Test
+    public void bundledCatalogAvoidsOverusingOneEffortOrImpactBand() throws Exception
+    {
+        GoalCatalog catalog = new GoalLoader(gson).loadResource("/goals/ironman-goals-2026.json");
+        long total = catalog.getGoals().size();
+        long mediumEffort = catalog.getGoals().stream().filter(goal -> goal.getEffort() == EffortClass.MEDIUM).count();
+        long highImpact = catalog.getGoals().stream().filter(goal -> goal.getImpact() == GoalImpact.HIGH).count();
+        assertTrue(mediumEffort * 100 < total * 60);
+        assertTrue(highImpact * 100 < total * 70);
+    }
+
     @Test(expected = GoalValidationException.class)
     public void duplicateGoalIdsAreRejected() throws Exception
     {
         validate(load("[" + goal("goal.same", "", "SKILL_AT_LEAST") + ","
             + goal("goal.same", "", "SKILL_AT_LEAST") + "]"));
+    }
+
+    @Test(expected = GoalValidationException.class)
+    public void duplicateNormalizedTitlesAreRejected() throws Exception
+    {
+        validate(load("[" + goal("goal.first", "", "SKILL_AT_LEAST") + ","
+            + goal("goal.second", "", "SKILL_AT_LEAST").replace("\"Title\"", "\" title! \"") + "]"));
+    }
+
+    @Test(expected = GoalValidationException.class)
+    public void invalidRelatedQuestsAreRejected() throws Exception
+    {
+        validate(load("[" + goal("goal.valid", "", "SKILL_AT_LEAST")
+            .replace("\"impact\"", "\"relatedQuests\":[\"Imaginary Quest\"],\"impact\"") + "]"));
     }
 
     @Test(expected = GoalValidationException.class)
