@@ -33,12 +33,13 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import javax.swing.JTextField;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -64,10 +65,15 @@ public class IronCompassPanelRenderTest
             assertEquals("OVERVIEW view", overview.getAccessibleContext().getAccessibleName());
             assertEquals("PATH view", path.getAccessibleContext().getAccessibleName());
             assertEquals("GEAR view", gear.getAccessibleContext().getAccessibleName());
-            assertFalse("Selected view is identified without relying on colour", overview.isEnabled());
+            assertTrue("Selected navigation remains actionable", overview.isEnabled());
+            assertEquals(Boolean.TRUE, overview.getClientProperty(PremiumButtonUI.SELECTED_PROPERTY));
+            assertEquals(UiComponents.ButtonStyle.NAVIGATION,
+                overview.getClientProperty(PremiumButtonUI.STYLE_PROPERTY));
 
             path.doClick();
-            assertFalse("Path becomes the selected persistent view", path.isEnabled());
+            assertTrue("Path remains enabled when selected", path.isEnabled());
+            assertEquals(Boolean.TRUE, path.getClientProperty(PremiumButtonUI.SELECTED_PROPERTY));
+            assertEquals(Boolean.FALSE, overview.getClientProperty(PremiumButtonUI.SELECTED_PROPERTY));
             assertTrue(overview.isEnabled());
             assertTrue(gear.isEnabled());
         });
@@ -94,6 +100,7 @@ public class IronCompassPanelRenderTest
             {
                 layoutRecursively(panel);
             }
+            assertNoHorizontalScrollbars(panel);
             Graphics2D graphics = image.createGraphics();
             panel.printAll(graphics);
             graphics.dispose();
@@ -320,6 +327,12 @@ public class IronCompassPanelRenderTest
                 new QuestHelperBridge(),overrides,() -> { });
             panel.update(state,projection,gear,null,null,plan,null);
             assertNotNull(findVisibleButton(panel,"VIEW ACCOUNT INSIGHTS"));
+            JPanel content = panel.accountInsightsContentForTesting();
+            assertNotNull(findButton(content, "DONE"));
+            assertNotNull(findLabel(content, "ACCOUNT HEALTH"));
+            JPanel picker = panel.goalPickerContentForTesting();
+            assertNotNull(findButton(picker, "SET PRIMARY"));
+            assertNotNull(findButton(picker, "ADD SECONDARY"));
         });
     }
 
@@ -411,6 +424,35 @@ public class IronCompassPanelRenderTest
             }
         }
         return null;
+    }
+
+    private static javax.swing.JLabel findLabel(Container container, String text)
+    {
+        for (java.awt.Component child : container.getComponents())
+        {
+            if (child instanceof javax.swing.JLabel && text.equals(((javax.swing.JLabel) child).getText()))
+                return (javax.swing.JLabel) child;
+            if (child instanceof Container)
+            {
+                javax.swing.JLabel match = findLabel((Container) child, text);
+                if (match != null) return match;
+            }
+        }
+        return null;
+    }
+
+    private static void assertNoHorizontalScrollbars(Container container)
+    {
+        for (java.awt.Component child : container.getComponents())
+        {
+            if (child instanceof JScrollPane)
+            {
+                assertEquals("242 px layouts must never expose a horizontal scrollbar",
+                    javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER,
+                    ((JScrollPane) child).getHorizontalScrollBarPolicy());
+            }
+            if (child instanceof Container) assertNoHorizontalScrollbars((Container) child);
+        }
     }
 
 }

@@ -139,6 +139,27 @@ public final class AccountState
         return quests;
     }
 
+    /** Returns an immutable projection with one skill level changed and all other observations preserved. */
+    public AccountState withSkillLevel(String skill, int level)
+    {
+        Builder projected = new Builder();
+        projected.loggedIn = loggedIn;
+        projected.accountMode = accountMode;
+        projected.skills.putAll(skills);
+        projected.skills.put(normalize(skill), level);
+        projected.quests.putAll(quests);
+        projected.inventory.putAll(inventory);
+        projected.equipment.putAll(equipment);
+        projected.exactInventory.putAll(exactInventory);
+        projected.exactEquipment.putAll(exactEquipment);
+        projected.bank = bank;
+        projected.varbits.putAll(varbits);
+        projected.varps.putAll(varps);
+        projected.location = location;
+        projected.questPoints = questPoints;
+        return projected.build();
+    }
+
     public static String normalize(String value)
     {
         return value == null ? "" : value.trim().toLowerCase(Locale.ENGLISH)

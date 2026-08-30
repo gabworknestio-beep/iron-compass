@@ -28,7 +28,8 @@ The plugin is available from RuneLite's Plugin Hub. The Iron Compass name become
 - Adds a Goal Queue with one Primary and up to three Secondary Goals, profile-specific migration from the former single selected goal, and duplicate/skip protection.
 - Detects when one skill, quest, route step, or Gear action advances multiple active goals and shows deterministic reasons instead of an internal score.
 - Produces distinct **Recommended**, **Quick Win**, **Long-Term**, and opt-in **Useful Break** suggestions from a broader candidate pool. Balanced, Efficient, PvM, and Skilling playstyles influence priority without changing factual requirements.
-- Recommends a good-fit Ironman training method for important skill gates from bundled structured data. Unknown banks stay unknown; observed resources are described qualitatively and are never presented as an exact banked-XP calculation.
+- Builds an account-aware Ironman Skill Plan from current level to target, with multi-band recommendations, relevant alternatives, locked methods, resource chains, milestones, broad XP-rate/time estimates, and full 1–99 pilot guides for Hunter, Crafting, Herblore, Construction, and Slayer.
+- Searches bundled method titles, tags, resources, outputs, and styles. Unknown banks stay neutral; observed resources are described qualitatively and are never presented as an exact banked-XP calculation.
 - Provides a compact searchable Goal Picker backed by the bundled researched catalog, with Suggested/Popular/Active/Completed views, broad categories, seven progression stages, and rich goal details.
 - Summarizes Account Health from the same GoalIntent evaluator used by recommendations, with honest Weak/Developing/Good/Strong/Unknown explanations.
 - Shows goal-based Quick Wins, nearby unlocks, typed Primary Goal blockers, intent-compatible alternatives, and a dependency-backed Path to My Goal view.
@@ -76,9 +77,9 @@ The queue deliberately stays small: one Primary Goal and no more than three Seco
 
 The goal catalog is intentionally broader than the canonical route. It includes small transformative unlocks (for example 75 Hunter for moonlight moths), benefit-led intentions, optional clue/RNG branches, and endgame targets without turning stages into mandatory rules. See [docs/GOAL_CATALOG_RESEARCH.md](docs/GOAL_CATALOG_RESEARCH.md).
 
-Iron Compass v1.0.5 keeps readiness honest: observed skills, quest access, gear requirements, and manual-only unlock facts are evaluated through one shared requirement policy before anything is labelled ready.
+Iron Compass v1.1.0 keeps readiness honest: observed skills, quest access, gear requirements, and manual-only unlock facts are evaluated through one shared requirement policy before anything is labelled ready.
 
-For supported skill gates, the bundled method planner suggests a **good fit for this account**, never an unjustified universal “best method.” It considers verified unlocks, Wilderness/Hardcore constraints, observed starting resources, active-goal synergy, playstyle, and qualitative session effort. Useful sources are shown when authored inputs are missing; an unopened bank always produces the explicit unconfirmed-bank message.
+For supported skill gates, the bundled Skill Planner suggests a **good fit for this account**, never an unjustified universal “best method.” It considers verified unlocks, Wilderness/Hardcore constraints, observed starting resources, active-goal synergy, playstyle, session length, outputs, costs, and Ironman resource value. The same projection powers Primary Goals and route training details; **View Skill Plan** opens the compact target path, while **Full 1–99 Guide** exposes the researched bands and important milestones. Useful supply chains are shown when authored inputs are missing; an unopened bank always produces the explicit unconfirmed-bank message.
 
 See [docs/GOAL_PLANNER.md](docs/GOAL_PLANNER.md) for the data contract, preference semantics, and extension rules.
 

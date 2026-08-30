@@ -8,6 +8,7 @@ import com.ironcompass.requirement.TruthValue;
 import java.util.Collections;
 import java.util.List;
 import com.ironcompass.training.MethodRecommendation;
+import com.ironcompass.training.SkillTrainingPlan;
 
 public final class GoalPlanProjection
 {
@@ -24,6 +25,7 @@ public final class GoalPlanProjection
     private final String unavailableSelectedId;
     private final List<GoalPlanProjection> secondaryGoals;
     private final MethodRecommendation methodRecommendation;
+    private final SkillTrainingPlan skillTrainingPlan;
 
     public GoalPlanProjection(GoalCatalog catalog, GoalDefinition goal, GearEvaluation legacyGearGoal,
                               TruthValue completion,
@@ -42,14 +44,15 @@ public final class GoalPlanProjection
                               List<GoalPlanProjection> secondaryGoals)
     {
         this(catalog, goal, legacyGearGoal, completion, progress, nextAction, whyNow, afterThis, dependencyPath,
-            resourceReadiness, unavailableSelectedId, secondaryGoals, null);
+            resourceReadiness, unavailableSelectedId, secondaryGoals, null, null);
     }
 
     private GoalPlanProjection(GoalCatalog catalog, GoalDefinition goal, GearEvaluation legacyGearGoal,
                                TruthValue completion, List<RequirementResult> progress, PlannedAction nextAction,
                                String whyNow, String afterThis, List<String> dependencyPath,
                                ResourceReadiness resourceReadiness, String unavailableSelectedId,
-                               List<GoalPlanProjection> secondaryGoals, MethodRecommendation methodRecommendation)
+                               List<GoalPlanProjection> secondaryGoals, MethodRecommendation methodRecommendation,
+                               SkillTrainingPlan skillTrainingPlan)
     {
         this.catalog = catalog;
         this.goal = goal;
@@ -64,6 +67,7 @@ public final class GoalPlanProjection
         this.unavailableSelectedId = unavailableSelectedId;
         this.secondaryGoals = Collections.unmodifiableList(new java.util.ArrayList<>(secondaryGoals));
         this.methodRecommendation = methodRecommendation;
+        this.skillTrainingPlan = skillTrainingPlan;
     }
 
     public GoalCatalog getCatalog() { return catalog; }
@@ -79,6 +83,7 @@ public final class GoalPlanProjection
     public String getUnavailableSelectedId() { return unavailableSelectedId; }
     public List<GoalPlanProjection> getSecondaryGoals() { return secondaryGoals; }
     public MethodRecommendation getMethodRecommendation() { return methodRecommendation; }
+    public SkillTrainingPlan getSkillTrainingPlan() { return skillTrainingPlan; }
     public boolean hasSelectedGoal() { return goal != null || legacyGearGoal != null; }
     public boolean hasActiveGoals() { return hasSelectedGoal() || !secondaryGoals.isEmpty(); }
     public List<GoalPlanProjection> getActiveGoals()
@@ -92,13 +97,23 @@ public final class GoalPlanProjection
     public GoalPlanProjection withSecondaryGoals(List<GoalPlanProjection> secondary)
     {
         return new GoalPlanProjection(catalog, goal, legacyGearGoal, completion, progress, nextAction, whyNow,
-            afterThis, dependencyPath, resourceReadiness, unavailableSelectedId, secondary, methodRecommendation);
+            afterThis, dependencyPath, resourceReadiness, unavailableSelectedId, secondary, methodRecommendation,
+            skillTrainingPlan);
     }
 
     public GoalPlanProjection withMethodRecommendation(MethodRecommendation recommendation)
     {
         return new GoalPlanProjection(catalog, goal, legacyGearGoal, completion, progress, nextAction, whyNow,
-            afterThis, dependencyPath, resourceReadiness, unavailableSelectedId, secondaryGoals, recommendation);
+            afterThis, dependencyPath, resourceReadiness, unavailableSelectedId, secondaryGoals, recommendation,
+            null);
+    }
+
+    public GoalPlanProjection withSkillTrainingPlan(SkillTrainingPlan plan)
+    {
+        SkillTrainingPlan supportedPlan = plan != null && !plan.getSegments().isEmpty() ? plan : null;
+        return new GoalPlanProjection(catalog, goal, legacyGearGoal, completion, progress, nextAction, whyNow,
+            afterThis, dependencyPath, resourceReadiness, unavailableSelectedId, secondaryGoals,
+            supportedPlan == null ? null : supportedPlan.getFirstRecommendation(), supportedPlan);
     }
     public String getGoalId()
     {

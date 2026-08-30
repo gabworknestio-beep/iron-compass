@@ -3,27 +3,54 @@ package com.ironcompass.ui;
 import java.awt.Color;
 import java.awt.Font;
 import javax.swing.BorderFactory;
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.JComboBox;
-import javax.swing.JList;
 import javax.swing.border.Border;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.FontManager;
 
+/** Shared visual language for the compact 242 px RuneLite sidebar. */
 final class UiTokens
 {
     static final Color BACKGROUND = ColorScheme.DARK_GRAY_COLOR;
-    static final Color CARD = ColorScheme.DARKER_GRAY_COLOR;
-    static final Color BORDER = new Color(58, 58, 58);
-    static final Color TEXT = new Color(215, 215, 215);
-    static final Color MUTED = new Color(155, 155, 155);
+    static final Color SURFACE = ColorScheme.DARKER_GRAY_COLOR;
+    static final Color SURFACE_RAISED = new Color(35, 35, 35);
+    static final Color SURFACE_HOVER = new Color(47, 47, 47);
+    static final Color SURFACE_SELECTED = new Color(48, 44, 34);
+    static final Color BORDER_SUBTLE = new Color(52, 52, 52);
+    static final Color BORDER_STRONG = new Color(73, 73, 73);
+    static final Color TEXT_PRIMARY = new Color(224, 224, 220);
+    static final Color TEXT_SECONDARY = new Color(184, 184, 180);
+    static final Color TEXT_MUTED = new Color(139, 139, 136);
     static final Color ACCENT = new Color(214, 183, 101);
-    static final Color SUCCESS = new Color(104, 190, 120);
-    static final Color DANGER = new Color(215, 100, 92);
-    static final Color UNKNOWN = new Color(190, 164, 105);
-    static final Font TITLE = new Font(Font.SANS_SERIF, Font.BOLD, 15);
-    static final Font STEP_TITLE = new Font(Font.SANS_SERIF, Font.BOLD, 14);
-    static final Font LABEL = new Font(Font.SANS_SERIF, Font.BOLD, 10);
-    static final Font BODY = new Font(Font.SANS_SERIF, Font.PLAIN, 11);
+    static final Color ACCENT_HOVER = new Color(229, 201, 126);
+    static final Color ACCENT_DARK = new Color(82, 69, 38);
+    static final Color SUCCESS = new Color(108, 187, 122);
+    static final Color WARNING = new Color(205, 166, 86);
+    static final Color DANGER = new Color(207, 102, 93);
+    static final Color UNKNOWN = WARNING;
+
+    // Compatibility names retained while the views migrate to semantic tokens.
+    static final Color CARD = SURFACE;
+    static final Color BORDER = BORDER_SUBTLE;
+    static final Color TEXT = TEXT_PRIMARY;
+    static final Color MUTED = TEXT_MUTED;
+
+    static final Font APP_TITLE = FontManager.getRunescapeBoldFont().deriveFont(16f);
+    static final Font CARD_TITLE = FontManager.getDefaultBoldFont().deriveFont(12f);
+    static final Font BODY = FontManager.getDefaultFont().deriveFont(11f);
+    static final Font META = FontManager.getDefaultFont().deriveFont(10f);
+    static final Font EYEBROW = FontManager.getDefaultBoldFont().deriveFont(9f);
+    static final Font SMALL = FontManager.getDefaultFont().deriveFont(9f);
+    static final Font TITLE = APP_TITLE;
+    static final Font STEP_TITLE = CARD_TITLE;
+    static final Font LABEL = EYEBROW;
+
+    static final int XS = 3;
+    static final int SM = 5;
+    static final int MD = 8;
+    static final int LG = 12;
+    static final int XL = 16;
+    static final int CONTROL_HEIGHT = 26;
+    static final int SCROLLBAR_WIDTH = 7;
 
     private UiTokens()
     {
@@ -32,34 +59,7 @@ final class UiTokens
     static Border cardBorder()
     {
         return BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(BORDER),
-            BorderFactory.createEmptyBorder(9, 9, 9, 9));
-    }
-
-    static <T> void styleComboBox(JComboBox<T> combo)
-    {
-        combo.setOpaque(true);
-        combo.setBackground(CARD);
-        combo.setForeground(TEXT);
-        combo.setFont(BODY);
-        combo.setFocusable(true);
-        combo.setMaximumRowCount(10);
-        combo.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(BORDER),
-            BorderFactory.createEmptyBorder(2, 3, 2, 3)));
-        combo.setRenderer(new DefaultListCellRenderer()
-        {
-            @Override
-            public java.awt.Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                                    boolean selected, boolean focus)
-            {
-                super.getListCellRendererComponent(list,value,index,selected,focus);
-                setOpaque(true);
-                setBackground(selected ? ACCENT.darker().darker() : CARD);
-                setForeground(selected ? java.awt.Color.WHITE : TEXT);
-                setBorder(BorderFactory.createEmptyBorder(3,5,3,5));
-                return this;
-            }
-        });
+            BorderFactory.createLineBorder(BORDER_SUBTLE),
+            BorderFactory.createEmptyBorder(MD, MD, MD, MD));
     }
 }

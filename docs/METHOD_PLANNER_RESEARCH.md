@@ -1,26 +1,40 @@
-# Method Planner research
+# Ironman Skill Planner research
 
-Audited: **2026-08-28**.
+Audited: **2026-08-30**.
 
-This note records the factual boundaries used by the bundled Method Planner. The shipped plugin performs no web requests: the reviewed definitions are local JSON loaded once from the JAR.
+Iron Compass bundles an original, structured synthesis of current training facts. The shipped plugin performs no web requests. Method definitions, level bands, source links, scoring metadata, resource chains, and milestones are loaded once from local JSON in the Plugin Hub JAR.
 
-## Primary references
+## Phase-one coverage
 
-- [Ironman Guide/Herblore](https://oldschool.runescape.wiki/w/Ironman_Guide/Herblore): quest-led early levels, Farming Contracts, herb runs, Slayer/PvM herb sources, and potion processing.
-- [Mastering Mixology](https://oldschool.runescape.wiki/w/Mastering_Mixology): level 60 Herblore access, paste inputs, and the resource-efficiency trade-off.
-- [Ironman Guide/Crafting](https://oldschool.runescape.wiki/w/Ironman_Guide/Crafting): gems/jewellery, giant seaweed, sandstone, Lunar Diplomacy, and Superglass Make.
-- [Ironman Guide/Smithing](https://oldschool.runescape.wiki/w/Ironman_Guide/Smithing) and [Giants' Foundry](https://oldschool.runescape.wiki/w/Giants%27_Foundry): quest XP, Foundry access/material use, and the Blast Furnace alternative.
-- [Ironman Guide/Prayer](https://oldschool.runescape.wiki/w/Ironman_Guide/Prayer) and [Pay-to-play Prayer training](https://oldschool.runescape.wiki/w/Pay-to-play_Prayer_training): blessed bone shards/libation bowl, gilded altar, and explicit Wilderness risk at the Chaos Altar.
-- [Ironman Guide/Hunter](https://oldschool.runescape.wiki/w/Ironman_Guide/Hunter) and [Hunters' Rumours](https://oldschool.runescape.wiki/w/Hunters%27_Rumours): Bone Voyage bird houses, Hunter Guild rumours, useful supplies, and Wilderness alternatives.
-- [Ironman Guide/Farming](https://oldschool.runescape.wiki/w/Ironman_Guide/Farming): contract-based seed sustain and the relationship between Farming and Herblore.
-- [Player-owned house](https://oldschool.runescape.wiki/w/Player-owned_house): high-level transport/restoration utility used to justify the strong-POH goal without claiming one mandatory layout.
-- [Slayer level-up table](https://oldschool.runescape.wiki/w/Slayer/Level_up_table): audited 87 and 93 Slayer milestone unlocks.
+The first complete guides intentionally cover five skills: **Hunter, Crafting, Herblore, Construction, and Slayer**. They exercise passive routines, modern unlocks, competing methods, bank-dependent inputs, GP costs, supply chains, combat progression, and quest locks before the same model is extended to every skill.
 
-## Deliberate product limits
+The catalog currently contains 44 methods/support chains and 46 Ironman-relevant milestones. A loader validator rejects duplicate IDs, unknown skills, invalid levels, malformed references, invalid styles, and any level gap in a guide that claims full 1–99 coverage.
 
-- Method speed, attention, and resource efficiency are qualitative.
-- Resource thresholds mean “enough to begin a useful session,” not “enough XP to reach the target.”
-- The planner does not estimate potion conversions, XP rates, completion time, drop chance, or dryness.
-- Wilderness methods are removed when Avoid Wilderness is active and for detected Hardcore accounts.
-- The old text `SkillTrainingAdvisor` remains for canonical route detail; the structured Method Planner owns active Goal skill gates. It can replace more legacy advice gradually after equivalent data is audited.
-- RuneLite `ItemID` constants from the resolved 1.12.37 API were used to verify the small set of resource-family IDs represented in JSON.
+## Primary factual references
+
+- [Ironman guide](https://oldschool.runescape.wiki/w/Ironman_guide): account-wide Ironman priorities and cross-skill resource loops.
+- [Ironman Guide/Hunter](https://oldschool.runescape.wiki/w/Ironman_Guide/Hunter), [Hunters' Rumours](https://oldschool.runescape.wiki/w/Hunters%27_Rumours), and [Rumour strategies](https://oldschool.runescape.wiki/w/Hunters%27_Rumours/Strategies): the 46/57/72/91 rumour tiers, bird houses, chinchompas, antelopes, moonlight moths, rewards, and access requirements.
+- [Ironman Guide/Crafting](https://oldschool.runescape.wiki/w/Ironman_Guide/Crafting): early quests and jewellery, pre-Lunar glass, giant seaweed, sandstone, and Superglass Make.
+- [Golem Crafting](https://oldschool.runescape.wiki/w/Golem_crafting) and the official [Wyrmscraig poll/release facts](https://oldschool.runescape.com/polls/2026/1758): level-60 Crafting access after Fallen From Grace, Wyrmscraig prerequisites, sunstone, Hunter-fur inputs, and active/relaxed execution.
+- [Ironman Guide/Herblore](https://oldschool.runescape.wiki/w/Ironman_Guide/Herblore) and [Mastering Mixology](https://oldschool.runescape.wiki/w/Mastering_Mixology): early reward XP, level-60 Mixology, useful potion processing, farming contracts, herb runs, Master Farmers, Slayer/PvM supplies, and secondary sourcing.
+- [Ironman Guide/Construction](https://oldschool.runescape.wiki/w/Ironman_Guide/Construction), [Mahogany Homes](https://oldschool.runescape.wiki/w/Mahogany_Homes), and the [Construction level table](https://oldschool.runescape.wiki/w/Construction/Level_up_table): plank sourcing, contract tiers, furniture alternatives, costs, and high-value POH milestones.
+- [Ironman Guide/Slayer](https://oldschool.runescape.wiki/w/Ironman_Guide/Slayer), [Slayer training](https://oldschool.runescape.wiki/w/Slayer_training), [Slayer masters](https://oldschool.runescape.wiki/w/Slayer_Master), and the [Slayer level table](https://oldschool.runescape.wiki/w/Slayer/Level_up_table): useful task selection, master access, bursting/barraging, resource tasks, and exact monster milestones.
+
+The Wyrmscraig Golem Crafting rate band was conservatively cross-checked against the current community calculator at [OSRS Iron](https://osrsiron.com/crafting/golem-crafting). Community observations affect only the broad estimated rate and method preference; Wiki/Jagex pages remain authoritative for requirements and mechanics.
+
+## Planner policy
+
+- A plan is generated from current level, target level, account requirements, active goals, observed resources, playstyle, session length, and method metadata.
+- Candidate scores reward useful outputs, low cost, resource efficiency, goal synergy, session fit, and preference fit. XP rate is one factor, not the answer.
+- A false requirement keeps the method visible as a **locked option**; an unknown requirement may remain recommendable but is labelled unconfirmed.
+- An unopened bank is neutral. `UNKNOWN` never becomes zero, empty, impossible, or unavailable.
+- Resource thresholds mean “enough to begin a useful session,” never “enough XP to reach the target.”
+- XP/hour values are broad ranges. Time estimates use level-boundary XP because RuneLite's current snapshot stores levels, not exact skill XP in this domain model.
+- The same planner projection serves active Goal skill gates, route training details, target plans, full guides, search, milestones, and alternatives. The older hard-coded route advice is no longer used by the UI.
+
+## Deliberate limitations
+
+- Only the five pilot skills claim complete 1–99 coverage in this phase.
+- Combat level is not stored in `AccountState`; Slayer methods that require a combat threshold expose it as recommended setup instead of pretending it was verified.
+- The planner does not calculate exact banked XP, exact material totals, drop times, or RNG completion dates.
+- Golem Crafting rates are still execution- and fur-dependent; the UI presents a range and labels total time as rough.

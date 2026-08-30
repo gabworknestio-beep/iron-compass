@@ -1,24 +1,26 @@
 package com.ironcompass.training;
 
 import com.google.gson.Gson;
+import com.ironcompass.goal.GoalCatalog;
+import com.ironcompass.goal.GoalDefinition;
+import com.ironcompass.goal.GoalLoader;
+import com.ironcompass.planner.GoalPlanProjection;
 import com.ironcompass.planner.InMemoryPlannerPreferenceStore;
-import com.ironcompass.planner.PlannedAction;
 import com.ironcompass.planner.Playstyle;
 import com.ironcompass.requirement.ConditionEvaluator;
-import com.ironcompass.state.AccountMode;
+import com.ironcompass.requirement.TruthValue;
 import com.ironcompass.state.AccountState;
 import com.ironcompass.state.BankSnapshot;
 import com.ironcompass.state.QuestProgress;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public final class MethodPlannerServiceTest
 {
@@ -35,88 +37,193 @@ public final class MethodPlannerServiceTest
     }
 
     @Test
-    public void lockedMethodIsNotRecommended()
+    public void hunter68To75UsesRumoursAndEndsAtMoonlightMoths()
     {
-        AccountState state = AccountState.builder().skill("Crafting", 61).skill("Magic", 70)
-            .quest("Lunar Diplomacy", QuestProgress.NOT_STARTED).build();
-        assertNull(recommend("Crafting", 70, state));
+        AccountState state = AccountState.builder().skill("Hunter", 68)
+            .quest("Children of the Sun", QuestProgress.FINISHED).build();
+        SkillTrainingPlan plan = plan("Hunter", 75, state);
+
+        assertEquals(68, plan.getCurrentLevel());
+        assertEquals(75, plan.getTargetLevel());
+        assertEquals("method.hunter.rumours-adept",
+            plan.getSegments().get(0).getRecommendation().getRecommended().getId());
+        assertEquals("method.hunter.rumours-expert",
+            plan.getSegments().get(1).getRecommendation().getRecommended().getId());
+        assertTrue(plan.getMilestones().stream().anyMatch(value -> value.getLevel() == 75
+            && value.getTitle().contains("Moonlight moth")));
     }
 
     @Test
-    public void multipleValidMethodsProduceOneRecommendationAndAlternatives()
+    public void crafting52To70TransitionsIntoModernGolemCraftingWhenUnlocked()
     {
-        Map<Integer, Integer> herbs = new HashMap<>();
-        herbs.put(249, 50);
-        AccountState state = AccountState.builder().skill("Herblore", 61).skill("Farming", 50)
-            .quest("Children of the Sun", QuestProgress.FINISHED).bank(BankSnapshot.observed(herbs)).build();
-        MethodRecommendation result = recommend("Herblore", 70, state);
-
-        assertNotNull(result);
-        assertEquals("method.herblore.banked-potions", result.getRecommended().getId());
-        assertFalse(result.getAlternatives().isEmpty());
-        assertEquals(MethodResourceStatus.SUFFICIENT, result.getResourceStatus());
-    }
-
-    @Test
-    public void wildernessPreferenceAndHardcoreModeSelectSafePrayerMethod()
-    {
-        Map<Integer, Integer> bones = Collections.singletonMap(536, 20);
-        AccountState normal = AccountState.builder().accountMode(AccountMode.IRONMAN).skill("Prayer", 40)
-            .bank(BankSnapshot.observed(bones)).build();
         preferences.setPlaystyle(Playstyle.EFFICIENT);
-        assertEquals("method.prayer.chaos-altar", recommend("Prayer", 43, normal).getRecommended().getId());
+        AccountState state = AccountState.builder().skill("Crafting", 52).skill("Sailing", 62)
+            .skill("Runecraft", 47).skill("Mining", 53).skill("Magic", 77)
+            .quest("Fallen From Grace", QuestProgress.FINISHED)
+            .quest("Lunar Diplomacy", QuestProgress.FINISHED).build();
+        SkillTrainingPlan plan = plan("Crafting", 70, state);
 
-        preferences.setAvoidWilderness(true);
-        assertEquals("method.prayer.gilded-altar", recommend("Prayer", 43, normal).getRecommended().getId());
-
-        preferences.setAvoidWilderness(false);
-        AccountState hardcore = AccountState.builder().accountMode(AccountMode.HARDCORE_IRONMAN).skill("Prayer", 40)
-            .bank(BankSnapshot.observed(bones)).build();
-        assertEquals("method.prayer.gilded-altar", recommend("Prayer", 43, hardcore).getRecommended().getId());
+        assertEquals(52, plan.getSegments().get(0).getFromLevel());
+        assertTrue(plan.getSegments().stream().anyMatch(segment -> segment.getFromLevel() == 60
+            && segment.getRecommendation().getRecommended().getId().equals("method.crafting.golem")));
+        assertEquals(70, plan.getSegments().get(plan.getSegments().size() - 1).getToLevel());
     }
 
     @Test
-    public void unknownBankNeverInventsResourceAvailability()
+    public void lockedQuestMethodRemainsVisibleAsLockedAlternative()
     {
-        AccountState state = AccountState.builder().skill("Herblore", 61).bank(BankSnapshot.unknown()).build();
-        MethodRecommendation result = recommend("Herblore", 70, state);
-        assertEquals(MethodResourceStatus.UNKNOWN, result.getResourceStatus());
-        assertEquals("Resources unconfirmed — open your bank once if you want Iron Compass to include stored supplies.",
-            result.getResourceSummary());
-        assertFalse(result.getResourceSummary().toLowerCase().contains(" xp"));
+        AccountState state = AccountState.builder().skill("Crafting", 60).skill("Sailing", 62)
+            .skill("Runecraft", 47).skill("Mining", 53)
+            .quest("Fallen From Grace", QuestProgress.NOT_STARTED).build();
+        MethodRecommendation recommendation = plan("Crafting", 61, state).getFirstRecommendation();
+
+        assertFalse(recommendation.getRecommended().getId().equals("method.crafting.golem"));
+        assertTrue(recommendation.getLockedAlternatives().stream()
+            .anyMatch(method -> method.getId().equals("method.crafting.golem")));
     }
 
     @Test
-    public void observedEmptyPartialSufficientAndCarriedResourcesRemainDistinct()
+    public void unknownBankIsNeutralAndNeverMeansUnavailable()
     {
-        AccountState empty = craftingState(BankSnapshot.observed(Collections.emptyMap()));
-        assertEquals(MethodResourceStatus.EMPTY, recommend("Crafting", 70, empty).getResourceStatus());
+        AccountState state = AccountState.builder().skill("Herblore", 63)
+            .quest("Children of the Sun", QuestProgress.FINISHED).bank(BankSnapshot.unknown()).build();
+        MethodRecommendation recommendation = plan("Herblore", 70, state).getFirstRecommendation();
 
-        AccountState partial = craftingState(BankSnapshot.observed(Collections.singletonMap(21504, 3)));
-        assertEquals(MethodResourceStatus.PARTIAL, recommend("Crafting", 70, partial).getResourceStatus());
-
-        Map<Integer, Integer> complete = new HashMap<>();
-        complete.put(21504, 3);
-        complete.put(1783, 18);
-        AccountState sufficient = craftingState(BankSnapshot.observed(complete));
-        assertEquals(MethodResourceStatus.SUFFICIENT, recommend("Crafting", 70, sufficient).getResourceStatus());
-
-        AccountState carried = AccountState.builder().skill("Crafting", 61).skill("Magic", 77)
-            .quest("Lunar Diplomacy", QuestProgress.FINISHED).bank(BankSnapshot.unknown())
-            .inventoryItem(21504, 3).inventoryItem(1783, 18).build();
-        assertEquals(MethodResourceStatus.SUFFICIENT, recommend("Crafting", 70, carried).getResourceStatus());
+        assertNotNull(recommendation);
+        assertEquals(MethodResourceStatus.UNKNOWN, recommendation.getResourceStatus());
+        assertTrue(recommendation.getResourceSummary().startsWith("Resources unconfirmed"));
+        assertFalse(recommendation.getResourceSummary().toLowerCase().contains("zero"));
+        assertFalse(recommendation.getResourceSummary().toLowerCase().contains("unavailable"));
     }
 
-    private MethodRecommendation recommend(String skill, int target, AccountState state)
+    @Test
+    public void playstyleChangesTheHerbloreRecommendation()
     {
-        PlannedAction action = new PlannedAction(PlannedAction.Kind.REQUIREMENT, "Train " + skill,
-            "Test requirement", null, null, skill, target);
-        return planner.recommend(catalog, action, state, preferences, Collections.emptyList());
+        AccountState state = AccountState.builder().skill("Herblore", 63)
+            .quest("Children of the Sun", QuestProgress.FINISHED).build();
+        preferences.setPlaystyle(Playstyle.EFFICIENT);
+        String efficient = plan("Herblore", 70, state).getFirstRecommendation().getRecommended().getId();
+
+        preferences.setPlaystyle(Playstyle.PVM);
+        String pvm = plan("Herblore", 70, state).getFirstRecommendation().getRecommended().getId();
+
+        assertEquals("method.herblore.mixology", efficient);
+        assertEquals("method.herblore.useful-potions", pvm);
     }
 
-    private static AccountState craftingState(BankSnapshot bank)
+    @Test
+    public void fullGuideUsesProjectedSkillLevelForLaterRequirements()
     {
-        return AccountState.builder().skill("Crafting", 61).skill("Magic", 77)
-            .quest("Lunar Diplomacy", QuestProgress.FINISHED).bank(bank).build();
+        preferences.setPlaystyle(Playstyle.EFFICIENT);
+        AccountState state = AccountState.builder().skill("Herblore", 1)
+            .quest("Children of the Sun", QuestProgress.FINISHED).build();
+
+        SkillTrainingPlan guide = planner.fullGuide(catalog, "Herblore", state, preferences,
+            Collections.emptyList());
+
+        assertTrue(guide.getSegments().stream().anyMatch(segment -> segment.getFromLevel() >= 60
+            && segment.getRecommendation().getRecommended().getId().equals("method.herblore.mixology")));
+    }
+
+    @Test
+    public void construction60To83UsesResourceEfficientContractBands()
+    {
+        AccountState state = AccountState.builder().skill("Construction", 60).build();
+        SkillTrainingPlan plan = plan("Construction", 83, state);
+
+        assertEquals("method.construction.mahomes-adept",
+            plan.getSegments().get(0).getRecommendation().getRecommended().getId());
+        assertTrue(plan.getSegments().stream().anyMatch(segment ->
+            segment.getRecommendation().getRecommended().getId().equals("method.construction.mahomes-expert")));
+        assertTrue(plan.getMilestones().stream().anyMatch(value -> value.getLevel() == 83));
+    }
+
+    @Test
+    public void efficientSlayer72To87TransitionsIntoNechryaelBand()
+    {
+        preferences.setPlaystyle(Playstyle.EFFICIENT);
+        AccountState state = AccountState.builder().skill("Slayer", 72).skill("Magic", 80)
+            .quest("Shilo Village", QuestProgress.FINISHED)
+            .quest("Desert Treasure I", QuestProgress.FINISHED).build();
+        SkillTrainingPlan plan = plan("Slayer", 87, state);
+
+        assertEquals("method.slayer.burst-dust-devils",
+            plan.getSegments().get(0).getRecommendation().getRecommended().getId());
+        assertTrue(plan.getSegments().stream().anyMatch(segment -> segment.getFromLevel() == 80
+            && segment.getRecommendation().getRecommended().getId()
+                .equals("method.slayer.barrage-nechryael")));
+        assertTrue(plan.getMilestones().stream().anyMatch(value -> value.getLevel() == 87));
+    }
+
+    @Test
+    public void currentAndTargetLevelsBoundEverySegment()
+    {
+        AccountState state = AccountState.builder().skill("Hunter", 68)
+            .quest("Children of the Sun", QuestProgress.FINISHED).build();
+        SkillTrainingPlan plan = plan("Hunter", 75, state);
+
+        assertFalse(plan.getSegments().isEmpty());
+        assertEquals(68, plan.getSegments().get(0).getFromLevel());
+        assertEquals(75, plan.getSegments().get(plan.getSegments().size() - 1).getToLevel());
+        assertTrue(plan.getSegments().stream().allMatch(segment -> segment.getFromLevel() >= 68
+            && segment.getToLevel() <= 75));
+    }
+
+    @Test
+    public void goalSynergyProducesDeterministicGoalReason() throws Exception
+    {
+        GoalCatalog goals = new GoalLoader(new Gson()).loadResource("/goals/ironman-goals-2026.json");
+        GoalDefinition hunter75 = goals.find("goal.skill.hunter-75");
+        GoalPlanProjection active = new GoalPlanProjection(goals, hunter75, null, TruthValue.FALSE,
+            Collections.emptyList(), null, null, null, Collections.emptyList(), null, null);
+        AccountState state = AccountState.builder().skill("Hunter", 68)
+            .quest("Children of the Sun", QuestProgress.FINISHED).build();
+
+        SkillTrainingPlan first = planner.plan(catalog, "Hunter", 75, state, preferences,
+            Collections.singletonList(active));
+        SkillTrainingPlan second = planner.plan(catalog, "Hunter", 75, state, preferences,
+            Collections.singletonList(active));
+        assertEquals(first.getFirstRecommendation().getRecommended().getId(),
+            second.getFirstRecommendation().getRecommended().getId());
+        assertTrue(first.getFirstRecommendation().getReason().contains("active goal"));
+    }
+
+    @Test
+    public void fullGuidesHaveCoverageAndSearchableMetadata()
+    {
+        for (String skill : catalog.getFullGuideSkills())
+        {
+            AccountState state = AccountState.builder().skill(skill, 1).build();
+            SkillTrainingPlan guide = planner.fullGuide(catalog, skill, state, preferences,
+                Collections.emptyList());
+            assertNotNull(skill, guide);
+            assertFalse(skill, guide.getSegments().isEmpty());
+            assertEquals(skill, 1, guide.getSegments().get(0).getFromLevel());
+            assertEquals(skill, 99, guide.getSegments().get(guide.getSegments().size() - 1).getToLevel());
+        }
+        assertTrue(catalog.search("golem").stream().anyMatch(method -> method.getId().equals("method.crafting.golem")));
+        assertTrue(catalog.search("prayer").stream().anyMatch(method -> method.getSkill().equals("Herblore")));
+        assertTrue(catalog.search("low cost").stream().anyMatch(method -> !method.getStyles().isEmpty()));
+    }
+
+    @Test
+    public void unsupportedSkillProducesNoAttachableRecommendation()
+    {
+        AccountState state = AccountState.builder().skill("Prayer", 43).build();
+        SkillTrainingPlan unsupported = planner.plan(catalog, "Prayer", 70, state, preferences,
+            Collections.emptyList());
+        GoalPlanProjection empty = new GoalPlanProjection(null, null, null, TruthValue.FALSE,
+            Collections.emptyList(), null, null, null, Collections.emptyList(), null, null);
+
+        GoalPlanProjection projection = empty.withSkillTrainingPlan(unsupported);
+
+        assertTrue(unsupported.getSegments().isEmpty());
+        assertTrue(projection.getSkillTrainingPlan() == null);
+        assertTrue(projection.getMethodRecommendation() == null);
+    }
+
+    private SkillTrainingPlan plan(String skill, int target, AccountState state)
+    {
+        return planner.plan(catalog, skill, target, state, preferences, Collections.emptyList());
     }
 }

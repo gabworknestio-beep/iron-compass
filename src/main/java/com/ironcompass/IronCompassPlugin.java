@@ -168,6 +168,7 @@ public final class IronCompassPlugin extends Plugin
             new GoalValidator(quests).validate(goalCatalog, gearCatalog, route);
             routeVariables = new RouteVariables(route);
             persistence.migrate(route);
+            panel.setSkillPlanner(methodCatalog, methodPlanner);
             log.debug("Loaded Iron Compass route {} v{}, gear catalog v{}, and {} training methods",
                 route.getRouteId(), route.getVersion(), gearCatalog.getVersion(), methodCatalog.getMethods().size());
         }
@@ -404,8 +405,10 @@ public final class IronCompassPlugin extends Plugin
         GoalResolution nextGoal = goalResolver.resolve(nextGear, next);
         GoalPlanProjection nextPlan = goalPlanner.evaluate(goalCatalog, accountState, nextGear, next, persistence,
             persistence);
-        nextPlan = nextPlan.withMethodRecommendation(methodPlanner.recommend(methodCatalog,
-            nextPlan.getNextAction(), accountState, persistence, nextPlan.getActiveGoals()));
+        nextPlan = nextPlan.withSkillTrainingPlan(nextPlan.getNextAction() == null
+            || nextPlan.getNextAction().getSkill() == null ? null
+            : methodPlanner.plan(methodCatalog, nextPlan.getNextAction().getSkill(),
+                nextPlan.getNextAction().getTargetLevel(), accountState, persistence, nextPlan.getActiveGoals()));
         RecommendationProjection nextRecommendations = recommendationService.evaluate(next, nextGear, nextPlan,
             accountState, persistence);
         UnlockOpportunity opportunity = unlockRadar.evaluate(nextGear, nextPlan);

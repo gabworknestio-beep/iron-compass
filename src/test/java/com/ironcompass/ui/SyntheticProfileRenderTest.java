@@ -46,7 +46,10 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Collections;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.imageio.ImageIO;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import org.junit.Test;
 
@@ -145,6 +148,81 @@ public class SyntheticProfileRenderTest
         shortSession.addSecondaryGoalId("goal.skill.herblore-70");
         shortSession.setSessionLength(SessionLength.FIFTEEN_MINUTES);
         render("profile-q-15-minute-session.png", route, songGoal, shortSession, panel -> { });
+
+        TestPreferences threeSecondary = new TestPreferences();
+        threeSecondary.setPrimaryGoalId("goal.quest.song-of-the-elves");
+        threeSecondary.addSecondaryGoalId("goal.skill.herblore-70");
+        threeSecondary.addSecondaryGoalId("goal.account.strong-poh");
+        threeSecondary.addSecondaryGoalId("gear.mid.bowfa");
+        render("profile-r-primary-three-secondary.png", route, songGoal, threeSecondary, panel -> { });
+        renderDialog("profile-s-goal-picker.png", route, songGoal, threeSecondary,
+            IronCompassPanel::goalPickerContentForTesting, 470, 650);
+        renderDialog("profile-t-account-insights.png", route, songGoal, threeSecondary,
+            IronCompassPanel::accountInsightsContentForTesting, 430, 650);
+        render("profile-u-path-detail.png", route, midgame, midOverrides,
+            IronCompassPanel::showCurrentPathDetailForTesting);
+        renderDialog("profile-v-account-insights-lower.png", route, songGoal, threeSecondary,
+            IronCompassPanel::accountInsightsContentForTesting, 430, 650, 430);
+        renderSkillPlanner("profile-w-skill-planner-hunter.png",
+            AccountState.builder().accountMode(AccountMode.IRONMAN).skill("Hunter", 68)
+                .quest("Children of the Sun", QuestProgress.FINISHED).build(),
+            new TestPreferences(), "Hunter", 75, false);
+        renderSkillPlanner("profile-x-skill-guide-hunter-1-99.png",
+            AccountState.builder().accountMode(AccountMode.IRONMAN).skill("Hunter", 68)
+                .quest("Children of the Sun", QuestProgress.FINISHED).build(),
+            new TestPreferences(), "Hunter", 99, true);
+    }
+
+    private void renderDialog(String name, Route route, AccountState state, TestPreferences overrides,
+                              Function<IronCompassPanel, JPanel> content, int width, int height) throws Exception
+    {
+        renderDialog(name, route, state, overrides, content, width, height, 0);
+    }
+
+    private void renderDialog(String name, Route route, AccountState state, TestPreferences overrides,
+                              Function<IronCompassPanel, JPanel> content, int width, int height,
+                              int scrollPosition) throws Exception
+    {
+        RouteProjection routeProjection = new RouteEvaluator(conditions).evaluate(route, state, overrides, true, 4, 7);
+        GearCatalog catalog = new GearLoader(gson).loadResource("/gear/ironman-gear-2026.json");
+        GearProjection gearProjection = new GearRecommendationService(conditions).evaluate(catalog, state,
+            overrides, overrides);
+        GoalCatalog goals = new GoalLoader(gson).loadResource("/goals/ironman-goals-2026.json");
+        GoalPlanProjection baseGoalPlan = new GoalPlannerService(conditions, new GoalDependencyResolver(),
+            new SupplyForecastService()).evaluate(goals, state, gearProjection, routeProjection, overrides);
+        IronmanMethodCatalog methods = new IronmanMethodLoader(gson)
+            .loadResource("/methods/ironman-methods-2026.json");
+        MethodPlannerService methodPlanner = new MethodPlannerService(conditions);
+        GoalPlanProjection goalPlan = baseGoalPlan.withSkillTrainingPlan(baseGoalPlan.getNextAction() == null
+            || baseGoalPlan.getNextAction().getSkill() == null ? null
+            : methodPlanner.plan(methods, baseGoalPlan.getNextAction().getSkill(),
+                baseGoalPlan.getNextAction().getTargetLevel(), state, overrides, baseGoalPlan.getActiveGoals()));
+        RecommendationProjection recommendations = new ProgressionRecommendationService().evaluate(
+            routeProjection, gearProjection, goalPlan, state, overrides);
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        SwingUtilities.invokeAndWait(() ->
+        {
+            IronCompassPanel panel = new IronCompassPanel(new IronCompassConfig() { }, new WikiBridge(), null,
+                new QuestHelperBridge(), overrides, () -> { });
+            panel.setSkillPlanner(methods, methodPlanner);
+            panel.update(state, routeProjection, gearProjection, null, null, goalPlan, recommendations);
+            JPanel root = content.apply(panel);
+            root.setSize(new Dimension(width, height));
+            for (int pass = 0; pass < 5; pass++) layoutRecursively(root);
+            if (scrollPosition > 0)
+            {
+                JScrollPane scroll = findScrollPane(root);
+                if (scroll != null) scroll.getVerticalScrollBar().setValue(scrollPosition);
+                for (int pass = 0; pass < 2; pass++) layoutRecursively(root);
+            }
+            Graphics2D graphics = image.createGraphics();
+            root.printAll(graphics);
+            graphics.dispose();
+        });
+        File report = new File("build/reports/progression-ux/" + name);
+        assertTrue(report.getParentFile().mkdirs() || report.getParentFile().isDirectory());
+        assertTrue(ImageIO.write(image, "png", report));
+        assertTrue(report.getName(), distinctColorCount(image) > 8);
     }
 
     private void render(String name, Route route, AccountState state, TestPreferences overrides,
@@ -160,8 +238,11 @@ public class SyntheticProfileRenderTest
             .evaluate(goals, state, gearProjection, routeProjection, overrides);
         IronmanMethodCatalog methods = new IronmanMethodLoader(gson)
             .loadResource("/methods/ironman-methods-2026.json");
-        GoalPlanProjection goalPlan = baseGoalPlan.withMethodRecommendation(new MethodPlannerService(conditions)
-            .recommend(methods, baseGoalPlan.getNextAction(), state, overrides, baseGoalPlan.getActiveGoals()));
+        MethodPlannerService methodPlanner = new MethodPlannerService(conditions);
+        GoalPlanProjection goalPlan = baseGoalPlan.withSkillTrainingPlan(baseGoalPlan.getNextAction() == null
+            || baseGoalPlan.getNextAction().getSkill() == null ? null
+            : methodPlanner.plan(methods, baseGoalPlan.getNextAction().getSkill(),
+                baseGoalPlan.getNextAction().getTargetLevel(), state, overrides, baseGoalPlan.getActiveGoals()));
         RecommendationProjection recommendations = new ProgressionRecommendationService().evaluate(
             routeProjection, gearProjection, goalPlan, state, overrides);
         BufferedImage image = new BufferedImage(242, 900, BufferedImage.TYPE_INT_ARGB);
@@ -169,6 +250,7 @@ public class SyntheticProfileRenderTest
         {
             IronCompassPanel panel = new IronCompassPanel(new IronCompassConfig() { }, new WikiBridge(), null,
                 new QuestHelperBridge(), overrides, () -> { });
+            panel.setSkillPlanner(methods, methodPlanner);
             panel.setSize(new Dimension(242, 900));
             panel.update(state, routeProjection, gearProjection, null, null, goalPlan, recommendations);
             view.accept(panel);
@@ -178,6 +260,30 @@ public class SyntheticProfileRenderTest
             graphics.dispose();
         });
 
+        File report = new File("build/reports/progression-ux/" + name);
+        assertTrue(report.getParentFile().mkdirs() || report.getParentFile().isDirectory());
+        assertTrue(ImageIO.write(image, "png", report));
+        assertTrue(report.getName(), distinctColorCount(image) > 8);
+    }
+
+    private void renderSkillPlanner(String name, AccountState state, TestPreferences preferences,
+                                    String skill, int target, boolean fullGuide) throws Exception
+    {
+        IronmanMethodCatalog methods = new IronmanMethodLoader(gson)
+            .loadResource("/methods/ironman-methods-2026.json");
+        MethodPlannerService methodPlanner = new MethodPlannerService(conditions);
+        BufferedImage image = new BufferedImage(470, 680, BufferedImage.TYPE_INT_ARGB);
+        SwingUtilities.invokeAndWait(() ->
+        {
+            SkillPlannerDialog dialog = new SkillPlannerDialog(new JPanel(), methods, methodPlanner, state,
+                preferences, Collections.emptyList(), new WikiBridge(), skill, target, fullGuide);
+            JPanel root = dialog.contentForTesting();
+            root.setSize(new Dimension(470, 680));
+            for (int pass = 0; pass < 5; pass++) layoutRecursively(root);
+            Graphics2D graphics = image.createGraphics();
+            root.printAll(graphics);
+            graphics.dispose();
+        });
         File report = new File("build/reports/progression-ux/" + name);
         assertTrue(report.getParentFile().mkdirs() || report.getParentFile().isDirectory());
         assertTrue(ImageIO.write(image, "png", report));
@@ -236,6 +342,20 @@ public class SyntheticProfileRenderTest
         for (int y = 0; y < image.getHeight(); y += 4)
             for (int x = 0; x < image.getWidth(); x += 4) colors.add(image.getRGB(x, y));
         return colors.size();
+    }
+
+    private static JScrollPane findScrollPane(Container container)
+    {
+        for (java.awt.Component child : container.getComponents())
+        {
+            if (child instanceof JScrollPane) return (JScrollPane) child;
+            if (child instanceof Container)
+            {
+                JScrollPane found = findScrollPane((Container) child);
+                if (found != null) return found;
+            }
+        }
+        return null;
     }
 
     private static final class TestPreferences

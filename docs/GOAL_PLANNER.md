@@ -63,11 +63,13 @@ The service produces four deduplicated roles:
 
 Balanced, Efficient, PvM, and Skilling playstyles change ranking only. **Avoid Wilderness** excludes unsafe Method suggestions and strongly penalizes Wilderness candidates without rewriting factual access or completion. Hardcore accounts never receive a Wilderness Method recommendation. Session effort remains qualitative and is not an ETA promise.
 
-## Structured Method Planner
+## Ironman Skill Planner
 
-`src/main/resources/methods/ironman-methods-2026.json` contains a focused set of important methods for goal skill gates. Definitions include stable ID, skill/range, verified requirements, risk, attention, qualitative effort/speed/resource efficiency, starting resource groups, useful outputs, acquisition sources, tags, playstyles, account types, related goals, and Wiki title.
+`src/main/resources/methods/ironman-methods-2026.json` is the shared source for Goal skill gates, route training details, target plans, full guides, milestones, alternatives, and method search. Phase one provides gap-validated 1–99 coverage for Hunter, Crafting, Herblore, Construction, and Slayer.
 
-The Method Planner filters locked or account-incompatible methods, applies the Wilderness/Hardcore preference, evaluates observed carried/banked starting inputs, and returns one recommended good fit plus at most two alternatives. A sufficient state means only that an authored **starting threshold** is observed; it is explicitly not a target-level or banked-XP claim. When the bank is unknown, the exact unconfirmed-bank message takes precedence.
+Definitions include stable ID, skill/range, verified and recommended requirements, risk, attention, effort, broad XP-rate range, Ironman value, styles, starting resource groups, consumes/outputs, supply chains, tags, account types, related goals, milestones, and structured source references. Support-chain records are searchable but are not incorrectly treated as direct XP methods.
+
+The planner builds deterministic multi-segment plans from current level to target. It filters account-incompatible and disallowed Wilderness methods, keeps false requirements visible as locked alternatives, treats unknown requirements honestly, and scores total Ironman usefulness rather than XP/hour alone. A sufficient resource state means only that an authored **starting threshold** is observed; it is not a target-level or banked-XP claim. An unopened bank is neutral and always remains `UNKNOWN`.
 
 All preferences use RuneLite's per-character RS-profile configuration. Logout and both profile-change events clear the in-memory cache before the next profile is read.
 

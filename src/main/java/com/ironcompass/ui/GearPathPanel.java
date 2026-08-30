@@ -40,6 +40,8 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
+import static com.ironcompass.ui.UiComponents.*;
+
 public final class GearPathPanel extends JPanel
 {
     private static final String[] STYLE_FILTERS = {"ALL", "MELEE", "RANGED", "MAGIC", "PRAYER", "UTILITY", "SKILLING"};
@@ -50,7 +52,7 @@ public final class GearPathPanel extends JPanel
     private final ManualOverrideStore overrides;
     private final Runnable reevaluate;
     private final JPanel content = verticalPanel();
-    private final JTextField search = new JTextField();
+    private final JTextField search = textField("Search gear...");
     private final JComboBox<String> styleFilter = new JComboBox<>(STYLE_FILTERS);
     private final JComboBox<String> statusFilter = new JComboBox<>(STATUS_FILTERS);
     private AccountState state = AccountState.loggedOut();
@@ -71,11 +73,7 @@ public final class GearPathPanel extends JPanel
         this.reevaluate = reevaluate;
         setLayout(new BorderLayout());
         setBackground(UiTokens.BACKGROUND);
-        JScrollPane scroll = new JScrollPane(content);
-        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        scroll.setBorder(null);
-        scroll.getViewport().setBackground(UiTokens.BACKGROUND);
-        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        JScrollPane scroll = scrollPane(content);
         add(scroll, BorderLayout.CENTER);
 
         search.setToolTipText("Search gear, source, tags, or region");
@@ -83,8 +81,8 @@ public final class GearPathPanel extends JPanel
         search.getAccessibleContext().setAccessibleDescription("Filter gear by name, source, tag, or region");
         styleFilter.getAccessibleContext().setAccessibleName("Gear combat style filter");
         statusFilter.getAccessibleContext().setAccessibleName("Gear status filter");
-        UiTokens.styleComboBox(styleFilter);
-        UiTokens.styleComboBox(statusFilter);
+        styleComboBox(styleFilter);
+        styleComboBox(statusFilter);
         search.getDocument().addDocumentListener(new DocumentListener()
         {
             @Override public void insertUpdate(DocumentEvent event) { rebuild(); }
@@ -191,7 +189,7 @@ public final class GearPathPanel extends JPanel
         JPanel row = new JPanel(new BorderLayout(6, 0));
         row.setOpaque(false);
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JButton back = smallButton("BACK");
+        JButton back = ghostButton("BACK");
         back.setVisible(detailId != null);
         back.addActionListener(event -> { detailId = null; rebuild(); });
         JLabel title = new JLabel("GEAR PATH");
@@ -207,7 +205,7 @@ public final class GearPathPanel extends JPanel
     private JPanel buildSummary()
     {
         JPanel body = verticalPanel();
-        body.add(sectionLabel("GEAR OWNERSHIP"));
+        body.add(sectionLabel("GEAR COLLECTION"));
         body.add(gap(4));
         if (state.getBank().isObserved())
         {
@@ -235,7 +233,7 @@ public final class GearPathPanel extends JPanel
             body.add(labelHtml("Open your bank once to detect stored gear. All "
                 + projection.getTotalCount() + " objectives are loaded.", UiTokens.MUTED));
         }
-        return card(body);
+        return card(body, state.getBank().isObserved() ? CardStyle.STANDARD : CardStyle.WARNING);
     }
 
     private JPanel buildFilters()
@@ -245,21 +243,21 @@ public final class GearPathPanel extends JPanel
         body.add(gap(4));
         body.add(sectionLabel("SEARCH GEAR"));
         body.add(gap(2));
-        search.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        search.setMaximumSize(new Dimension(Integer.MAX_VALUE, UiTokens.CONTROL_HEIGHT));
         body.add(search);
         body.add(gap(5));
         body.add(sectionLabel("STYLE"));
         body.add(gap(2));
-        styleFilter.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
+        styleFilter.setMaximumSize(new Dimension(190, UiTokens.CONTROL_HEIGHT));
         styleFilter.setAlignmentX(Component.LEFT_ALIGNMENT);
         body.add(styleFilter);
         body.add(gap(5));
         body.add(sectionLabel("STATUS"));
         body.add(gap(2));
-        statusFilter.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
+        statusFilter.setMaximumSize(new Dimension(190, UiTokens.CONTROL_HEIGHT));
         statusFilter.setAlignmentX(Component.LEFT_ALIGNMENT);
         body.add(statusFilter);
-        return card(body);
+        return card(body, CardStyle.SUBTLE);
     }
 
     private JPanel buildRecommendation(GearEvaluation evaluation)
@@ -278,12 +276,12 @@ public final class GearPathPanel extends JPanel
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         JButton details = smallButton("DETAILS");
         details.addActionListener(event -> { detailId = evaluation.getUpgrade().getId(); rebuild(); });
-        JButton goal = smallButton(evaluation.isSelectedGoal() ? "GOAL SET" : "DO THIS NOW");
+        JButton goal = primaryButton(evaluation.isSelectedGoal() ? "GOAL SET" : "DO THIS NOW");
         goal.addActionListener(event -> setGoal(evaluation));
         row.add(details);
         row.add(goal);
         body.add(row);
-        return card(body);
+        return card(body, CardStyle.HERO);
     }
 
     private JPanel buildList()
@@ -317,28 +315,30 @@ public final class GearPathPanel extends JPanel
                 previousGroup = group;
             }
             JPanel row = new JPanel(new BorderLayout(5, 0));
-            row.setBackground(UiTokens.CARD);
+            Color rowColor = evaluation.isSelectedGoal() ? UiTokens.SURFACE_SELECTED : UiTokens.SURFACE;
+            row.setBackground(rowColor);
             row.setAlignmentX(Component.LEFT_ALIGNMENT);
-            row.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UiTokens.BORDER));
+            row.setBorder(BorderFactory.createMatteBorder(0, evaluation.isSelectedGoal() ? 2 : 0, 1, 0,
+                evaluation.isSelectedGoal() ? UiTokens.ACCENT : UiTokens.BORDER_SUBTLE));
             JLabel glyph = new JLabel(statusGlyph(evaluation.getStatus()));
             glyph.setForeground(statusColor(evaluation.getStatus()));
-            JLabel name = labelHtml("<b>" + escape(evaluation.getUpgrade().getName()) + "</b>"
-                + (evaluation.isSelectedGoal() ? " <span style='color:#d9a441'>[goal]</span>" : "")
+            WrappingText name = labelHtml("<b>" + escape(evaluation.getUpgrade().getName()) + "</b>"
+                + (evaluation.isSelectedGoal() ? " <span style='color:#d6b765'>PRIMARY</span>" : "")
                 + "<br><span style='color:#8f8f8f'>T" + evaluation.getUpgrade().getTier() + " · "
                 + escape(humanize(evaluation.getUpgrade().getSlot().name())) + " · "
                 + escape(statusText(evaluation.getStatus())) + "</span>", UiTokens.TEXT);
-            JButton open = smallButton("›");
-            open.setToolTipText("Open objective details");
+            JButton open = iconButton("›", "Open objective details");
             open.addActionListener(event -> { detailId = evaluation.getUpgrade().getId(); rebuild(); });
             row.add(glyph, BorderLayout.WEST);
             row.add(name, BorderLayout.CENTER);
             row.add(open, BorderLayout.EAST);
+            installHover(row, rowColor);
             row.setMaximumSize(new Dimension(Integer.MAX_VALUE, row.getPreferredSize().height));
             body.add(row);
             shown++;
         }
         if (shown == 0) body.add(labelHtml("No gear objective matches these filters.", UiTokens.MUTED));
-        return card(body);
+        return card(body, CardStyle.STANDARD);
     }
 
     private JPanel buildDetail(GearEvaluation evaluation)
@@ -443,7 +443,7 @@ public final class GearPathPanel extends JPanel
                 body.add(gap(3));
             }
         }
-        return card(body);
+        return card(body, CardStyle.HERO);
     }
 
     private JPanel detailActions(GearEvaluation evaluation)
@@ -451,7 +451,7 @@ public final class GearPathPanel extends JPanel
         JPanel body = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
         body.setOpaque(false);
         body.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JButton goal = smallButton(evaluation.isSelectedGoal() ? "CLEAR GOAL" : "SET AS GOAL");
+        JButton goal = evaluation.isSelectedGoal() ? smallButton("CLEAR GOAL") : primaryButton("SET AS GOAL");
         goal.addActionListener(event -> setGoal(evaluation));
         body.add(goal);
         if (evaluation.getUpgrade().getWikiPage() != null)
@@ -460,7 +460,7 @@ public final class GearPathPanel extends JPanel
             wikiButton.addActionListener(event -> wiki.open(evaluation.getUpgrade().getWikiPage()));
             body.add(wikiButton);
         }
-        JButton manage = smallButton("MANAGE");
+        JButton manage = ghostButton("MANAGE");
         manage.setToolTipText("Skip, priority, manual ownership, and reset controls");
         manage.addActionListener(event -> showManageMenu(manage, evaluation));
         body.add(manage);
@@ -470,6 +470,7 @@ public final class GearPathPanel extends JPanel
     private void showManageMenu(Component anchor, GearEvaluation evaluation)
     {
         JPopupMenu menu = new JPopupMenu();
+        stylePopupMenu(menu);
         addMenuItem(menu, evaluation.getStatus() == GearStatus.SKIPPED ? "Unskip" : "Skip", () ->
         {
             preferences.setSkipped(evaluation.getUpgrade().getId(), evaluation.getStatus() != GearStatus.SKIPPED);
@@ -497,7 +498,7 @@ public final class GearPathPanel extends JPanel
 
     private static void addMenuItem(JPopupMenu menu, String text, Runnable action)
     {
-        javax.swing.JMenuItem item = new javax.swing.JMenuItem(text);
+        javax.swing.JMenuItem item = styleMenuItem(new javax.swing.JMenuItem(text));
         item.addActionListener(event -> action.run());
         menu.add(item);
     }
@@ -590,78 +591,6 @@ public final class GearPathPanel extends JPanel
         if (evaluation.isSelectedGoal())
             return "Selected by you; Iron Compass will route the first unfinished dependency to Overview.";
         return "Ready and useful at this account stage; choose it to turn the objective into concrete route steps.";
-    }
-
-    private static JPanel verticalPanel()
-    {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(UiTokens.BACKGROUND);
-        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return panel;
-    }
-
-    private static JPanel card(Component component)
-    {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(UiTokens.CARD);
-        if (component instanceof JPanel) component.setBackground(UiTokens.CARD);
-        panel.setBorder(UiTokens.cardBorder());
-        panel.add(component, BorderLayout.CENTER);
-        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, panel.getPreferredSize().height));
-        return panel;
-    }
-
-    private static JLabel sectionLabel(String text)
-    {
-        JLabel label = new JLabel(text);
-        label.setForeground(UiTokens.MUTED);
-        label.setFont(UiTokens.LABEL);
-        label.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return label;
-    }
-
-    private static JLabel labelHtml(String body, Color color)
-    {
-        JLabel label = new JLabel("<html><table width='155' cellspacing='0' cellpadding='0'><tr><td>"
-            + body + "</td></tr></table></html>");
-        label.setForeground(color);
-        label.setFont(UiTokens.BODY);
-        label.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return label;
-    }
-
-    private static JLabel statusLine(TruthValue value, String text)
-    {
-        String glyph = value == TruthValue.TRUE ? "✓" : value == TruthValue.FALSE ? "×" : "?";
-        Color color = value == TruthValue.TRUE ? UiTokens.SUCCESS : value == TruthValue.FALSE ? UiTokens.DANGER : UiTokens.UNKNOWN;
-        return labelHtml(glyph + "  " + escape(text), color);
-    }
-
-    private static JButton smallButton(String text)
-    {
-        JButton button = new JButton(text);
-        button.setFocusable(true);
-        button.setFont(UiTokens.LABEL);
-        button.setMargin(new java.awt.Insets(4, 7, 4, 7));
-        return button;
-    }
-
-    private static Component gap(int height)
-    {
-        Box.Filler filler = new Box.Filler(new Dimension(0, height), new Dimension(0, height),
-            new Dimension(Integer.MAX_VALUE, height));
-        filler.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return filler;
-    }
-
-    private static Component verticalGlue()
-    {
-        Box.Filler filler = new Box.Filler(new Dimension(0, 0), new Dimension(0, 0),
-            new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
-        filler.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return filler;
     }
 
     private static String statusGlyph(GearStatus status)

@@ -45,6 +45,12 @@ Ladlor's repository was inspected before use and is MIT licensed (Copyright 2025
 
 The older TheFX V2 route was not used as the current route authority.
 
+## Ironman Skill Planner factual references — original synthesis
+
+The bundled Hunter, Crafting, Herblore, Construction, and Slayer pilot guides were independently structured from the factual Wiki and Jagex pages listed in `docs/METHOD_PLANNER_RESEARCH.md`. The plugin redistributes no Wiki/Jagex HTML, prose, images, calculators, or scripts. Stable method IDs, concise explanations, level segments, scoring metadata, resource-chain descriptions, and milestone value statements are original Iron Compass data.
+
+The broad post-launch Golem Crafting XP range was cross-checked against https://osrsiron.com/crafting/golem-crafting. That community calculator is referenced only for a conservative variable-rate band; it is not bundled or called at runtime. Golem access and mechanics are grounded in the OSRS Wiki and the official Wyrmscraig release/poll material.
+
 ## Icon
 
 The pickaxe-and-path icon was generated specifically for Iron Compass with OpenAI ImageGen from an original prompt and then downscaled to 48×48. It does not reproduce a RuneLite, Jagex, community-guide, or third-party logo.

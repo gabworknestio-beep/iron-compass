@@ -21,11 +21,8 @@ import com.ironcompass.planner.GoalPlanProjection;
 import com.ironcompass.planner.AccountNeedEvaluation;
 import com.ironcompass.planner.AccountNeedLevel;
 import com.ironcompass.planner.AccountNeedService;
-import com.ironcompass.planner.GoalBlocker;
 import com.ironcompass.planner.GoalInsightService;
 import com.ironcompass.planner.GoalInsightsProjection;
-import com.ironcompass.planner.GoalPathNode;
-import com.ironcompass.planner.GoalProximityCandidate;
 import com.ironcompass.planner.InMemoryPlannerPreferenceStore;
 import com.ironcompass.planner.PlannedAction;
 import com.ironcompass.planner.PlannerPreferenceStore;
@@ -36,6 +33,7 @@ import com.ironcompass.planner.ResourceReadiness;
 import com.ironcompass.planner.SessionLength;
 import com.ironcompass.planner.UnlockOpportunity;
 import com.ironcompass.requirement.RequirementResult;
+import com.ironcompass.requirement.ConditionSpec;
 import com.ironcompass.requirement.TruthValue;
 import com.ironcompass.route.PreparationEvaluation;
 import com.ironcompass.route.PreparationStatus;
@@ -51,11 +49,13 @@ import com.ironcompass.state.AccountMode;
 import com.ironcompass.state.AccountState;
 import com.ironcompass.supply.SupplyForecast;
 import com.ironcompass.supply.SupplyLine;
-import com.ironcompass.training.SkillTrainingAdvisor;
-import com.ironcompass.training.TrainingAdvice;
+import com.ironcompass.training.IronmanMethodCatalog;
 import com.ironcompass.training.IronmanMethodDefinition;
+import com.ironcompass.training.MethodPlannerService;
 import com.ironcompass.training.MethodRecommendation;
 import com.ironcompass.training.MethodResourceStatus;
+import com.ironcompass.training.SkillTrainingPlan;
+import com.ironcompass.training.TrainingPlanSegment;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -73,29 +73,25 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JComboBox;
-import javax.swing.DefaultListModel;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
-import javax.swing.ListSelectionModel;
 import javax.swing.Scrollable;
 import javax.swing.JTextField;
-import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import net.runelite.client.ui.PluginPanel;
 
+import static com.ironcompass.ui.UiComponents.*;
+
 public final class IronCompassPanel extends PluginPanel
 {
-    private static final SkillTrainingAdvisor TRAINING_ADVISOR = new SkillTrainingAdvisor();
     private static final RouteJourneyService JOURNEY_SERVICE = new RouteJourneyService();
     private static final AccountNeedService ACCOUNT_NEEDS = new AccountNeedService();
     private static final GoalInsightService GOAL_INSIGHTS = new GoalInsightService(
@@ -123,9 +119,9 @@ public final class IronCompassPanel extends PluginPanel
     private final JPanel home = scrollableVerticalPanel();
     private final JPanel browserResults = scrollableVerticalPanel();
     private final GearPathPanel gearPanel;
-    private final JTextField search = new JTextField();
-    private final JButton goalPickerButton = smallButton("CHOOSE GOALS");
-    private final JButton pathBack = smallButton("BACK");
+    private final JTextField search = textField("Search path...");
+    private final JButton goalPickerButton = primaryButton("CHOOSE GOALS");
+    private final JButton pathBack = ghostButton("BACK");
     private RouteProjection projection;
     private GearProjection gearProjection;
     private GoalResolution goalResolution;
@@ -137,6 +133,9 @@ public final class IronCompassPanel extends PluginPanel
     private AccountState accountState = AccountState.loggedOut();
     private String routeDetailId;
     private boolean showUsefulBreaks;
+    private boolean showGoalDetails;
+    private IronmanMethodCatalog methodCatalog;
+    private MethodPlannerService methodPlanner;
 
     public IronCompassPanel(IronCompassConfig config, WikiBridge wikiBridge, ShortestPathBridge shortestPathBridge,
                          QuestHelperBridge questHelperBridge, ManualOverrideStore persistence, Runnable reevaluate)
@@ -173,6 +172,12 @@ public final class IronCompassPanel extends PluginPanel
         goalPickerButton.addActionListener(event -> showGoalPicker());
         showView(HOME);
         showIdle();
+    }
+
+    public void setSkillPlanner(IronmanMethodCatalog catalog, MethodPlannerService planner)
+    {
+        methodCatalog = catalog;
+        methodPlanner = planner;
     }
 
     public void update(AccountState state, RouteProjection newProjection)
@@ -245,6 +250,16 @@ public final class IronCompassPanel extends PluginPanel
         showView(BROWSER);
     }
 
+    void showCurrentPathDetailForTesting()
+    {
+        if (projection == null || projection.getSteps().isEmpty()) return;
+        StepEvaluation selected = projection.getCurrent();
+        if (selected == null) selected = projection.getSteps().get(0);
+        routeDetailId = selected.getStep().getId();
+        rebuildBrowser();
+        showView(BROWSER);
+    }
+
     void showGearForTesting(String style)
     {
         gearPanel.selectStyleForTesting(style);
@@ -267,6 +282,19 @@ public final class IronCompassPanel extends PluginPanel
     {
         showUsefulBreaks = true;
         rebuildHome();
+    }
+
+    JPanel goalPickerContentForTesting()
+    {
+        if (goalPlan == null || goalPlan.getCatalog() == null) return new JPanel();
+        return new GoalPickerDialog(this, goalPicker, goalPlan, accountState, gearProjection, projection,
+            gearPreferences, persistence, goalCompletion, reevaluate).contentForTesting();
+    }
+
+    JPanel accountInsightsContentForTesting()
+    {
+        if (goalInsights == null) return new JPanel();
+        return new AccountInsightsDialog(this, goalInsights).contentForTesting();
     }
 
     private void rebuildHome()
@@ -396,7 +424,7 @@ public final class IronCompassPanel extends PluginPanel
         if (!recommendations.getUsefulBreaks().isEmpty())
         {
             home.add(gap(8));
-            JButton alternatives = smallButton(showUsefulBreaks ? "HIDE OTHER PROGRESS" : "TAKE A USEFUL BREAK");
+            JButton alternatives = ghostButton(showUsefulBreaks ? "HIDE OTHER PROGRESS" : "TAKE A USEFUL BREAK");
             alternatives.setAlignmentX(Component.LEFT_ALIGNMENT);
             alternatives.setToolTipText("Show other actions that still advance this account");
             alternatives.addActionListener(event ->
@@ -423,20 +451,42 @@ public final class IronCompassPanel extends PluginPanel
     {
         JPanel body = verticalPanel();
         body.add(sectionLabel("ACTIVE GOALS"));
-        body.add(gap(4));
+        body.add(gap(UiTokens.SM));
         if (goalPlan.hasSelectedGoal())
-            body.add(labelHtml("<span style='color:#8f8f8f'>PRIMARY</span><br><b>" + escape(goalPlan.getTitle())
-                + "</b>", UiTokens.ACCENT));
+        {
+            body.add(badge("PRIMARY", UiTokens.ACCENT));
+            body.add(gap(UiTokens.XS));
+            body.add(labelHtml("<b>" + escape(goalPlan.getTitle()) + "</b>", UiTokens.ACCENT_HOVER));
+            if (goalPlan.getGoal() != null && (goalPlan.getGoal().isRng()
+                || goalPlan.getGoal().getCompletionMode() != com.ironcompass.goal.GoalCompletionMode.AUTO))
+            {
+                JPanel flags = new JPanel(new FlowLayout(FlowLayout.LEFT, UiTokens.XS, 0));
+                flags.setOpaque(false);
+                flags.setAlignmentX(Component.LEFT_ALIGNMENT);
+                if (goalPlan.getGoal().isRng()) flags.add(badge("RNG", UiTokens.WARNING));
+                if (goalPlan.getGoal().getCompletionMode() != com.ironcompass.goal.GoalCompletionMode.AUTO)
+                    flags.add(badge("MANUAL", UiTokens.UNKNOWN));
+                body.add(flags);
+            }
+            long blockers = goalPlan.getProgress().stream()
+                .filter(value -> value.getValue() == TruthValue.FALSE).count();
+            long unknown = goalPlan.getProgress().stream()
+                .filter(value -> value.getValue() == TruthValue.UNKNOWN).count();
+            if (blockers > 0 || unknown > 0)
+                body.add(labelHtml(blockers + " blocker(s)" + (unknown > 0 ? " · " + unknown + " unknown" : ""),
+                    UiTokens.TEXT_MUTED));
+        }
         else
             body.add(labelHtml("No primary goal selected.", UiTokens.MUTED));
         if (!goalPlan.getSecondaryGoals().isEmpty())
         {
-            body.add(gap(5));
+            body.add(gap(UiTokens.SM));
             body.add(sectionLabel("SECONDARY"));
             for (GoalPlanProjection secondary : goalPlan.getSecondaryGoals())
-                body.add(labelHtml("○  " + escape(secondary.getTitle()), UiTokens.TEXT));
+                body.add(new WrappingText("○  " + escape(secondary.getTitle()),
+                    UiTokens.TEXT_SECONDARY, UiTokens.META));
         }
-        body.add(gap(6));
+        body.add(gap(UiTokens.MD));
         body.add(goalPickerButton);
         if (goalPlan.getUnavailableSelectedId() != null)
         {
@@ -449,48 +499,68 @@ public final class IronCompassPanel extends PluginPanel
             PlannedAction action = goalPlan.getNextAction();
             if (action != null)
             {
-                body.add(gap(8));
+                body.add(gap(UiTokens.LG));
                 body.add(sectionLabel("NEXT BEST MOVE"));
-                body.add(gap(3));
+                body.add(gap(UiTokens.XS));
                 body.add(labelHtml("<b>" + escape(action.getTitle()) + "</b>",
-                    action.getKind() == PlannedAction.Kind.COMPLETE ? UiTokens.SUCCESS : UiTokens.TEXT));
-                body.add(gap(7));
+                    action.getKind() == PlannedAction.Kind.COMPLETE ? UiTokens.SUCCESS : UiTokens.ACCENT_HOVER));
+                body.add(gap(UiTokens.SM));
                 body.add(sectionLabel("WHY THIS?"));
-                body.add(gap(3));
+                body.add(gap(UiTokens.XS));
                 ProgressionCandidate ranked = recommendations == null ? null : recommendations.getRecommended();
                 if (recommendationMatchesPrimaryAction(ranked))
-                    for (String why : ranked.getWhyLines()) body.add(labelHtml("•  " + escape(why), UiTokens.MUTED));
+                {
+                    int shown = 0;
+                    for (String why : ranked.getWhyLines())
+                    {
+                        body.add(labelHtml("•  " + escape(why), UiTokens.TEXT_SECONDARY));
+                        if (++shown == 1) break;
+                    }
+                }
                 else
                     body.add(labelHtml(escape(goalPlan.getWhyNow()), UiTokens.MUTED));
-                addMethodRecommendation(body);
+                addMethodRecommendation(body, showGoalDetails);
             }
             addGoalProgress(body);
-            if (goalPlan.getAfterThis() != null)
+            if (showGoalDetails && goalPlan.getAfterThis() != null)
             {
                 body.add(gap(7));
                 body.add(sectionLabel("AFTER THIS"));
                 body.add(gap(3));
                 body.add(labelHtml(escape(goalPlan.getAfterThis()), UiTokens.TEXT));
             }
-            body.add(gap(7));
-            body.add(sectionLabel("WHAT THIS UNLOCKS"));
-            body.add(gap(3));
-            int shown = 0;
-            for (String unlock : goalPlan.getUnlocks())
+            if (showGoalDetails)
             {
-                body.add(labelHtml("○  " + escape(unlock), UiTokens.TEXT));
-                if (++shown == 1) break;
+                body.add(gap(UiTokens.MD));
+                body.add(sectionLabel("UNLOCKS"));
+                body.add(gap(UiTokens.XS));
+                int shown = 0;
+                for (String unlock : goalPlan.getUnlocks())
+                {
+                    body.add(labelHtml("○  " + escape(unlock), UiTokens.TEXT));
+                    if (++shown == 1) break;
+                }
+                if (goalPlan.getUnlocks().size() > shown)
+                    body.add(labelHtml("+ " + (goalPlan.getUnlocks().size() - shown)
+                        + " more unlock(s)", UiTokens.MUTED));
             }
-            if (goalPlan.getUnlocks().size() > shown)
-                body.add(labelHtml("+ " + (goalPlan.getUnlocks().size() - shown) + " more unlock(s)", UiTokens.MUTED));
             ResourceReadiness resources = goalPlan.getResourceReadiness();
-            if (resources != null)
+            if (resources != null && (showGoalDetails || resources.getValue() != TruthValue.TRUE))
             {
                 body.add(gap(7));
                 body.add(sectionLabel("RESOURCE READINESS"));
                 body.add(gap(3));
                 body.add(statusLine(resources.getValue(), resources.getSummary()));
             }
+            body.add(gap(UiTokens.SM));
+            JButton disclosure = ghostButton(showGoalDetails ? "LESS DETAIL" : "MORE DETAILS");
+            disclosure.setToolTipText("Show or hide supporting goal information");
+            disclosure.addActionListener(event ->
+            {
+                showGoalDetails = !showGoalDetails;
+                rebuildHome();
+            });
+            body.add(disclosure);
         }
         body.add(gap(8));
         body.add(goalPlannerActions());
@@ -498,104 +568,96 @@ public final class IronCompassPanel extends PluginPanel
         body.add(labelHtml(humanize(plannerPreferences.getPlaystyle().name()) + " · "
             + plannerPreferences.getSessionLength().getLabel()
             + (plannerPreferences.isAvoidWilderness() ? " · Avoid Wilderness" : ""), UiTokens.MUTED));
-        return card(body);
+        return card(body, CardStyle.HERO);
     }
 
     private JPanel buildGoalInsights()
     {
         JPanel body = verticalPanel();
         body.add(sectionLabel("ACCOUNT HEALTH"));
+        body.add(gap(UiTokens.SM));
         List<AccountNeedEvaluation> health = new java.util.ArrayList<>(goalInsights.getHealth().getEvaluations());
-        health.sort(java.util.Comparator.comparingInt(value -> healthRank(value.getLevel())));
+        health.sort(java.util.Comparator.comparingInt(IronCompassPanel::healthSummaryOrder));
         int shown = 0;
         for (AccountNeedEvaluation value : health)
         {
-            body.add(statusLine(healthTruth(value.getLevel()), humanize(value.getIntent().name())
-                + " · " + humanize(value.getLevel().name())));
+            body.add(healthRow(value));
             if (++shown == 4) break;
         }
         if (!accountState.getBank().isObserved())
-            body.add(labelHtml("BANK UNKNOWN · reserves are not treated as empty", UiTokens.MUTED));
+        {
+            body.add(gap(UiTokens.SM));
+            body.add(labelHtml("<b>BANK UNKNOWN</b> · reserves are not treated as empty", UiTokens.WARNING));
+        }
 
-        if (!goalInsights.getQuickWins().isEmpty())
-        {
-            GoalProximityCandidate quick = goalInsights.getQuickWins().get(0);
-            body.add(gap(7));
-            body.add(sectionLabel("QUICK WIN"));
-            body.add(labelHtml("<b>" + escape(quick.getGoal().getTitle()) + "</b>", UiTokens.ACCENT));
-            body.add(labelHtml(escape(quick.getSummary()), UiTokens.MUTED));
-        }
-        if (!goalInsights.getNearbyUnlocks().isEmpty())
-        {
-            GoalProximityCandidate nearby = goalInsights.getNearbyUnlocks().get(0);
-            body.add(gap(7));
-            body.add(sectionLabel("UNLOCK RADAR"));
-            body.add(labelHtml("<b>" + escape(nearby.getGoal().getTitle()) + "</b>", UiTokens.TEXT));
-            body.add(labelHtml(escape(nearby.getSummary())
-                + (nearby.isKnown() ? "" : " · UNKNOWN"), UiTokens.MUTED));
-        }
-        if (!goalInsights.getBlockers().isEmpty())
-        {
-            GoalBlocker blocker = goalInsights.getBlockers().get(0);
-            body.add(gap(7));
-            body.add(sectionLabel("PRIMARY BLOCKER"));
-            body.add(labelHtml("<b>" + escape(blocker.getTitle()) + "</b>", UiTokens.TEXT));
-            body.add(labelHtml(humanize(blocker.getKind().name()), UiTokens.MUTED));
-        }
         JButton details = smallButton("VIEW ACCOUNT INSIGHTS");
         details.setAlignmentX(Component.LEFT_ALIGNMENT);
         details.addActionListener(event -> showGoalInsights());
         body.add(gap(8));
         body.add(details);
-        return card(body);
+        return card(body, CardStyle.SUBTLE);
+    }
+
+    private JPanel healthRow(AccountNeedEvaluation evaluation)
+    {
+        JPanel row = new JPanel(new BorderLayout(UiTokens.SM, 0));
+        row.setOpaque(false);
+        row.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel name = new JLabel("•  " + compactHealthLabel(evaluation));
+        name.setForeground(UiTokens.TEXT_SECONDARY);
+        name.setFont(UiTokens.BODY);
+        JLabel status = new JLabel(humanize(evaluation.getLevel().name()));
+        status.setForeground(healthColor(evaluation.getLevel()));
+        status.setFont(UiTokens.META.deriveFont(java.awt.Font.BOLD));
+        row.add(name, BorderLayout.CENTER);
+        row.add(status, BorderLayout.EAST);
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, row.getPreferredSize().height + 2));
+        row.getAccessibleContext().setAccessibleName(name.getText() + " " + status.getText());
+        return row;
+    }
+
+    private static Color healthColor(AccountNeedLevel level)
+    {
+        if (level == AccountNeedLevel.STRONG) return UiTokens.SUCCESS.brighter();
+        if (level == AccountNeedLevel.GOOD) return UiTokens.SUCCESS;
+        if (level == AccountNeedLevel.DEVELOPING) return UiTokens.WARNING;
+        if (level == AccountNeedLevel.WEAK) return new Color(178, 126, 91);
+        return UiTokens.TEXT_MUTED;
+    }
+
+    private static int healthSummaryOrder(AccountNeedEvaluation evaluation)
+    {
+        switch (evaluation.getIntent())
+        {
+            case BOSSING_READINESS: return 0;
+            case MELEE_POWER: return 1;
+            case RANGED_POWER: return 2;
+            case MAGIC_POWER: return 3;
+            default: return 10 + healthRank(evaluation.getLevel());
+        }
+    }
+
+    private static String compactHealthLabel(AccountNeedEvaluation evaluation)
+    {
+        switch (evaluation.getIntent())
+        {
+            case BOSSING_READINESS: return "Bossing";
+            case FOOD_SUSTAIN: return "Food";
+            case MAGIC_POWER: return "Magic";
+            case MELEE_POWER: return "Melee";
+            case POH_NETWORK: return "POH";
+            case PRAYER_SUSTAIN: return "Prayer";
+            case RANGED_POWER: return "Ranged";
+            case RUNE_SUPPLY: return "Runes";
+            case TRANSPORT_NETWORK: return "Transport";
+            default: return humanize(evaluation.getIntent().name());
+        }
     }
 
     private void showGoalInsights()
     {
         if (goalInsights == null) return;
-        StringBuilder text = new StringBuilder("ACCOUNT HEALTH\n\n");
-        for (AccountNeedEvaluation value : goalInsights.getHealth().getEvaluations())
-            text.append(humanize(value.getIntent().name())).append(" — ")
-                .append(humanize(value.getLevel().name())).append('\n')
-                .append(value.getPrimaryExplanation()).append("\n\n");
-        appendProximity(text,"QUICK WINS",goalInsights.getQuickWins());
-        appendProximity(text,"UNLOCK RADAR",goalInsights.getNearbyUnlocks());
-        text.append("PRIMARY BLOCKERS\n\n");
-        if (goalInsights.getBlockers().isEmpty()) text.append("No primary-goal blocker is currently selected.\n");
-        for (GoalBlocker blocker : goalInsights.getBlockers())
-            text.append("• [").append(humanize(blocker.getKind().name())).append("] ")
-                .append(blocker.getTitle()).append("\n  ").append(blocker.getExplanation()).append('\n');
-        text.append('\n').append(goalInsights.getAlternativeHeading()).append("\n\n");
-        if (goalInsights.getAlternatives().isEmpty()) text.append("No relevant improvement is currently ranked.\n");
-        for (GoalDefinition alternative : goalInsights.getAlternatives())
-            text.append("• ").append(alternative.getTitle()).append(" — ")
-                .append(alternative.getWhyItMatters()).append('\n');
-        text.append("\nPATH TO MY GOAL\n\n");
-        if (goalInsights.getPersonalPath().isEmpty()) text.append("Choose a primary goal to build this view.\n");
-        for (GoalPathNode node : goalInsights.getPersonalPath())
-            text.append(node.getStatus().name().startsWith("COMPLETE") ? "✓ " : "○ ")
-                .append(node.getGoal().getTitle()).append(" — ").append(node.getStatus().getLabel())
-                .append(node.isRng() ? " · RNG" : "").append(node.isManual() ? " · MANUAL" : "").append('\n');
-        JTextArea details = new JTextArea(text.toString(), 26, 36);
-        details.setEditable(false);
-        details.setLineWrap(true);
-        details.setWrapStyleWord(true);
-        details.setCaretPosition(0);
-        JScrollPane scroll = new JScrollPane(details);
-        scroll.setPreferredSize(new Dimension(390, 510));
-        JOptionPane.showMessageDialog(this, scroll, "Iron Compass Account Insights",
-            JOptionPane.PLAIN_MESSAGE);
-    }
-
-    private static void appendProximity(StringBuilder text, String heading,
-                                        List<GoalProximityCandidate> candidates)
-    {
-        text.append(heading).append("\n\n");
-        if (candidates.isEmpty()) text.append("No reliable candidate in the current snapshot.\n");
-        for (GoalProximityCandidate candidate : candidates)
-            text.append("• ").append(candidate.getGoal().getTitle()).append(" — ")
-                .append(candidate.getSummary()).append(candidate.isKnown() ? "" : " · UNKNOWN").append('\n');
-        text.append('\n');
+        new AccountInsightsDialog(this, goalInsights).showDialog();
     }
 
     private static TruthValue healthTruth(AccountNeedLevel level)
@@ -637,10 +699,26 @@ public final class IronCompassPanel extends PluginPanel
         JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
         row.setOpaque(false);
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
+        SkillTrainingPlan training = goalPlan.getSkillTrainingPlan();
+        if (training != null)
+        {
+            JButton skillPlan = primaryButton("VIEW SKILL PLAN");
+            skillPlan.setToolTipText("Open the account-aware training path for this skill target");
+            skillPlan.addActionListener(event -> showSkillPlanner(training.getSkill(),
+                training.getTargetLevel(), false));
+            row.add(skillPlan);
+        }
+        if (goalPlan.hasSelectedGoal() && goalPlan.getWikiPage() != null)
+        {
+            JButton wiki = training == null ? primaryButton("OPEN WIKI") : smallButton("WIKI");
+            wiki.addActionListener(event -> wikiBridge.open(goalPlan.getWikiPage()));
+            row.add(wiki);
+        }
         if (goalPlan.hasSelectedGoal() || goalPlan.getUnavailableSelectedId() != null)
         {
-            JButton clear = smallButton("CLEAR PRIMARY");
+            JButton clear = ghostButton("CLEAR");
             clear.setToolTipText("Clear the primary progression goal");
+            clear.getAccessibleContext().setAccessibleName("Clear primary goal");
             clear.addActionListener(event ->
             {
                 gearPreferences.setPrimaryGoalId(null);
@@ -648,16 +726,18 @@ public final class IronCompassPanel extends PluginPanel
             });
             row.add(clear);
         }
-        if (goalPlan.hasSelectedGoal() && goalPlan.getWikiPage() != null)
-        {
-            JButton wiki = smallButton("WIKI");
-            wiki.addActionListener(event -> wikiBridge.open(goalPlan.getWikiPage()));
-            row.add(wiki);
-        }
-        JButton preferences = smallButton("PREFERENCES");
+        JButton preferences = ghostButton(goalPlan.hasSelectedGoal() ? "PREFS" : "PREFERENCES");
         preferences.setToolTipText("Change playstyle, Wilderness, and session ranking preferences");
+        preferences.getAccessibleContext().setAccessibleName("Planner preferences");
         preferences.addActionListener(event -> showPlannerPreferences(preferences));
         row.add(preferences);
+        if (training == null && methodCatalog != null)
+        {
+            JButton skills = ghostButton("SKILLS");
+            skills.setToolTipText("Open the Ironman Skill Planner");
+            skills.addActionListener(event -> showSkillPlanner(defaultSkill(), 99, false));
+            row.add(skills);
+        }
         return row;
     }
 
@@ -672,7 +752,12 @@ public final class IronCompassPanel extends PluginPanel
         body.add(gap(5));
         body.add(sectionLabel("WHY THIS?"));
         body.add(gap(2));
-        for (String why : candidate.getWhyLines()) body.add(labelHtml("•  " + escape(why), UiTokens.TEXT));
+        int reasonCount = 0;
+        for (String why : candidate.getWhyLines())
+        {
+            body.add(labelHtml("•  " + escape(why), UiTokens.TEXT_SECONDARY));
+            if (++reasonCount == 1) break;
+        }
         if (candidate.getActiveGoalCount() > 1)
             body.add(labelHtml("Goals: " + escape(String.join(", ", candidate.getAdvancedGoals())), UiTokens.MUTED));
         else if (candidate.getUnlockSummary() != null && !candidate.getUnlockSummary().equals(candidate.getReason()))
@@ -685,30 +770,61 @@ public final class IronCompassPanel extends PluginPanel
             body.add(gap(7));
             body.add(open);
         }
-        return card(body);
+        CardStyle style = "RECOMMENDED".equals(label) ? CardStyle.HERO
+            : "QUICK WIN".equals(label) ? CardStyle.SUCCESS : CardStyle.SUBTLE;
+        return card(body, style);
     }
 
-    private void addMethodRecommendation(JPanel body)
+    private void showSkillPlanner(String skill, int target, boolean fullGuide)
+    {
+        if (methodCatalog == null || methodPlanner == null) return;
+        List<GoalPlanProjection> active = goalPlan == null
+            ? java.util.Collections.emptyList() : goalPlan.getActiveGoals();
+        new SkillPlannerDialog(this, methodCatalog, methodPlanner, accountState, plannerPreferences, active,
+            wikiBridge, skill, target, fullGuide).showDialog();
+    }
+
+    private String defaultSkill()
+    {
+        if (goalPlan != null && goalPlan.getNextAction() != null
+            && goalPlan.getNextAction().getSkill() != null
+            && methodCatalog.hasFullGuide(goalPlan.getNextAction().getSkill()))
+            return goalPlan.getNextAction().getSkill();
+        return methodCatalog == null || methodCatalog.getFullGuideSkills().isEmpty()
+            ? "Hunter" : methodCatalog.getFullGuideSkills().get(0);
+    }
+
+    private void addMethodRecommendation(JPanel body, boolean expanded)
     {
         MethodRecommendation recommendation = goalPlan.getMethodRecommendation();
         if (recommendation == null || recommendation.getRecommended() == null) return;
         IronmanMethodDefinition method = recommendation.getRecommended();
-        body.add(gap(8));
-        body.add(sectionLabel("GOOD FIT FOR THIS ACCOUNT"));
-        body.add(gap(3));
-        body.add(labelHtml("<b>" + escape(method.getTitle()) + "</b>", UiTokens.ACCENT));
-        body.add(labelHtml(escape(method.getDescription()), UiTokens.TEXT));
-        body.add(gap(3));
-        body.add(labelHtml(escape(recommendation.getReason()), UiTokens.MUTED));
         MethodResourceStatus resource = recommendation.getResourceStatus();
-        if (resource != MethodResourceStatus.NOT_APPLICABLE)
+        SkillTrainingPlan plan = goalPlan.getSkillTrainingPlan();
+        TrainingPlanSegment first = plan == null || plan.getSegments().isEmpty() ? null : plan.getSegments().get(0);
+        body.add(gap(UiTokens.MD));
+        body.add(sectionLabel("RECOMMENDED METHOD"));
+        body.add(gap(UiTokens.XS));
+        body.add(labelHtml("<b>" + escape(method.getTitle()) + "</b>", UiTokens.ACCENT));
+        body.add(labelHtml((first == null ? "" : first.getFromLevel() + " → " + first.getToLevel() + " · ")
+            + escape(recommendation.getXpRateSummary()), UiTokens.MUTED));
+        if (expanded)
+        {
+            body.add(labelHtml(escape(method.getDescription()), UiTokens.TEXT));
+            body.add(labelHtml(escape(recommendation.getReason()), UiTokens.MUTED));
+            if (recommendation.getRequirementStatus() == TruthValue.UNKNOWN)
+                body.add(statusLine(TruthValue.UNKNOWN, "Method access is not fully confirmed."));
+        }
+        boolean criticalResource = resource == MethodResourceStatus.UNKNOWN
+            || resource == MethodResourceStatus.EMPTY || resource == MethodResourceStatus.PARTIAL;
+        if (resource != MethodResourceStatus.NOT_APPLICABLE && (expanded || criticalResource))
         {
             TruthValue value = resource == MethodResourceStatus.SUFFICIENT ? TruthValue.TRUE
                 : resource == MethodResourceStatus.EMPTY ? TruthValue.FALSE : TruthValue.UNKNOWN;
-            body.add(gap(5));
+            body.add(gap(UiTokens.SM));
             body.add(sectionLabel("RESOURCE READINESS"));
             body.add(statusLine(value, recommendation.getResourceSummary()));
-            if ((resource == MethodResourceStatus.EMPTY || resource == MethodResourceStatus.PARTIAL)
+            if (expanded && (resource == MethodResourceStatus.EMPTY || resource == MethodResourceStatus.PARTIAL)
                 && !method.getAcquisitionSources().isEmpty())
             {
                 body.add(gap(4));
@@ -721,9 +837,12 @@ public final class IronCompassPanel extends PluginPanel
                 }
             }
         }
-        if (!recommendation.getAlternatives().isEmpty())
+        if (expanded && !recommendation.getAlternatives().isEmpty())
             body.add(labelHtml("Alternative: " + escape(recommendation.getAlternatives().get(0).getTitle()),
                 UiTokens.MUTED));
+        if (expanded && !recommendation.getLockedAlternatives().isEmpty())
+            body.add(labelHtml("Locked option: "
+                + escape(recommendation.getLockedAlternatives().get(0).getTitle()), UiTokens.UNKNOWN));
     }
 
     private JPanel buildUsefulBreaks(List<ProgressionCandidate> alternatives)
@@ -739,7 +858,7 @@ public final class IronCompassPanel extends PluginPanel
             body.add(labelHtml(escape(why), UiTokens.MUTED));
             if (shown == 3) break;
         }
-        return card(body);
+        return card(body, CardStyle.SUBTLE);
     }
 
     private JButton candidateAction(ProgressionCandidate candidate)
@@ -767,6 +886,18 @@ public final class IronCompassPanel extends PluginPanel
             });
             return open;
         }
+        if (candidate.getGoal() != null && methodCatalog != null && methodPlanner != null)
+        {
+            ConditionSpec target = skillTarget(candidate.getGoal().getCompletion());
+            if (target != null && methodCatalog.hasFullGuide(target.getSkill())
+                && accountState.skillLevel(target.getSkill()) < target.getLevel())
+            {
+                JButton open = smallButton("VIEW SKILL PLAN");
+                open.setAlignmentX(Component.LEFT_ALIGNMENT);
+                open.addActionListener(event -> showSkillPlanner(target.getSkill(), target.getLevel(), false));
+                return open;
+            }
+        }
         return null;
     }
 
@@ -778,7 +909,7 @@ public final class IronCompassPanel extends PluginPanel
         body.add(labelHtml("<b>" + escape(opportunity.getTitle()) + "</b>", UiTokens.SUCCESS));
         body.add(gap(3));
         body.add(labelHtml(escape(opportunity.getExplanation()), UiTokens.TEXT));
-        return card(body);
+        return card(body, CardStyle.SUCCESS);
     }
 
     private JPanel buildHeader()
@@ -788,13 +919,23 @@ public final class IronCompassPanel extends PluginPanel
         JPanel titleRow = new JPanel(new BorderLayout());
         titleRow.setOpaque(false);
         titleRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JPanel brand = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        brand.setOpaque(false);
+        if (compassIcon() != null)
+        {
+            JLabel icon = new JLabel(compassIcon());
+            icon.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, UiTokens.SM));
+            icon.getAccessibleContext().setAccessibleName("Iron Compass logo");
+            brand.add(icon);
+        }
         JLabel title = new JLabel("IRON COMPASS");
         title.setForeground(UiTokens.ACCENT);
-        title.setFont(UiTokens.TITLE);
+        title.setFont(UiTokens.APP_TITLE);
+        brand.add(title);
         JLabel percentage = new JLabel(String.format(Locale.ENGLISH, "%.0f%%", projection.getProgressPercent()));
-        percentage.setForeground(UiTokens.TEXT);
-        percentage.setFont(UiTokens.BODY);
-        titleRow.add(title, BorderLayout.WEST);
+        percentage.setForeground(UiTokens.TEXT_PRIMARY);
+        percentage.setFont(UiTokens.META.deriveFont(java.awt.Font.BOLD));
+        titleRow.add(brand, BorderLayout.WEST);
         titleRow.add(percentage, BorderLayout.EAST);
         titleRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, titleRow.getPreferredSize().height));
         panel.add(titleRow);
@@ -802,18 +943,17 @@ public final class IronCompassPanel extends PluginPanel
         RouteChapterProgress chapter = journey == null ? null : journey.getCurrent();
         String context = chapter == null ? projection.getRoute().getName()
             : chapter.getChapter().getName() + " " + chapter.getCompleteCount() + "/" + chapter.getTotalCount();
-        JLabel route = labelHtml("v" + escape(IronCompassVersion.get()) + " · " + escape(context)
-            + "<br>Overall " + projection.getCompleteCount()
+        WrappingText route = labelHtml(escape(context) + "<br>Overall " + projection.getCompleteCount()
             + "/" + projection.getTotalCount() + "  ·  " + escape(humanize(accountState.getAccountMode().name())),
             UiTokens.MUTED);
         panel.add(route);
-        panel.add(gap(5));
+        panel.add(gap(UiTokens.SM));
         JProgressBar progress = new JProgressBar(0, Math.max(1, projection.getTotalCount()));
         progress.setValue(projection.getCompleteCount());
         progress.setPreferredSize(new Dimension(PANEL_WIDTH - 20, 6));
         progress.setMaximumSize(new Dimension(Integer.MAX_VALUE, 6));
         progress.setForeground(UiTokens.ACCENT);
-        progress.setBackground(UiTokens.CARD);
+        progress.setBackground(UiTokens.SURFACE);
         progress.setBorderPainted(false);
         progress.setAlignmentX(Component.LEFT_ALIGNMENT);
         panel.add(progress);
@@ -870,7 +1010,7 @@ public final class IronCompassPanel extends PluginPanel
             showView(GEAR);
         });
         body.add(gear);
-        return card(body);
+        return card(body, CardStyle.HERO);
     }
 
     private JPanel buildGoalRouteStep(GoalAction action)
@@ -879,7 +1019,7 @@ public final class IronCompassPanel extends PluginPanel
         JPanel body = verticalPanel();
         body.add(sectionLabel("DO THIS NOW"));
         body.add(gap(6));
-        JLabel title = labelHtml("<b>" + escape(evaluation.getStep().getTitle()) + "</b>", UiTokens.ACCENT);
+        WrappingText title = labelHtml("<b>" + escape(evaluation.getStep().getTitle()) + "</b>", UiTokens.ACCENT);
         title.setFont(UiTokens.STEP_TITLE);
         body.add(title);
         body.add(labelHtml("Goal dependency  ·  " + escape(evaluation.getStep().getCategory()), UiTokens.MUTED));
@@ -910,7 +1050,7 @@ public final class IronCompassPanel extends PluginPanel
         }
         body.add(gap(9));
         body.add(actionRow(evaluation));
-        return card(body);
+        return card(body, CardStyle.HERO);
     }
 
     private JPanel buildGoalAction(GoalAction action)
@@ -950,7 +1090,7 @@ public final class IronCompassPanel extends PluginPanel
             showView(GEAR);
         });
         body.add(gear);
-        return card(body);
+        return card(body, CardStyle.HERO);
     }
 
     private JPanel buildNextGear(GearEvaluation evaluation)
@@ -968,7 +1108,7 @@ public final class IronCompassPanel extends PluginPanel
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
         actions.setOpaque(false);
         actions.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JButton doNow = smallButton(evaluation.isSelectedGoal() ? "GOAL SET" : "DO THIS NOW");
+        JButton doNow = evaluation.isSelectedGoal() ? smallButton("GOAL SET") : primaryButton("DO THIS NOW");
         doNow.addActionListener(event ->
         {
             gearPreferences.setSelectedGoalId(evaluation.getUpgrade().getId());
@@ -983,7 +1123,7 @@ public final class IronCompassPanel extends PluginPanel
         actions.add(doNow);
         actions.add(gear);
         body.add(actions);
-        return card(body);
+        return card(body, CardStyle.HERO);
     }
 
     private JPanel buildSupplyForecast(SupplyForecast forecast)
@@ -1041,7 +1181,7 @@ public final class IronCompassPanel extends PluginPanel
             }
             if (shown == 0) body.add(labelHtml("Choose any Gear objective to build a dependency path.", UiTokens.MUTED));
         }
-        return card(body);
+        return card(body, CardStyle.SUBTLE);
     }
 
     private JPanel buildCurrent(StepEvaluation evaluation)
@@ -1050,7 +1190,7 @@ public final class IronCompassPanel extends PluginPanel
         body.add(sectionLabel(evaluation.getStatus() == StepStatus.CURRENT ? "DO THIS NOW"
             : "STEP DETAIL  ·  " + humanize(evaluation.getStatus().name()).toUpperCase(Locale.ENGLISH)));
         body.add(gap(6));
-        JLabel title = labelHtml("<b>" + escape(evaluation.getStep().getTitle()) + "</b>", UiTokens.ACCENT);
+        WrappingText title = labelHtml("<b>" + escape(evaluation.getStep().getTitle()) + "</b>", UiTokens.ACCENT);
         title.setFont(UiTokens.STEP_TITLE);
         body.add(title);
         JLabel category = new JLabel(evaluation.getStep().getCategory() + riskSuffix(evaluation));
@@ -1091,7 +1231,7 @@ public final class IronCompassPanel extends PluginPanel
         }
         body.add(gap(9));
         body.add(actionRow(evaluation));
-        return card(body);
+        return card(body, CardStyle.HERO);
     }
 
     private void addUnlocks(JPanel body, StepEvaluation evaluation)
@@ -1141,16 +1281,47 @@ public final class IronCompassPanel extends PluginPanel
 
     private void addTrainingAdvice(JPanel body, StepEvaluation evaluation)
     {
-        TrainingAdvice advice = TRAINING_ADVISOR.advise(evaluation.getStep(), accountState);
-        if (advice == null) return;
+        if (methodCatalog == null || methodPlanner == null || evaluation.getStep().getType() != StepType.TRAIN)
+            return;
+        ConditionSpec target = skillTarget(evaluation.getStep().getCompletion());
+        if (target == null || !methodCatalog.hasFullGuide(target.getSkill())) return;
+        List<GoalPlanProjection> active = goalPlan == null
+            ? java.util.Collections.emptyList() : goalPlan.getActiveGoals();
+        SkillTrainingPlan plan = methodPlanner.plan(methodCatalog, target.getSkill(), target.getLevel(),
+            accountState, plannerPreferences, active);
+        if (plan == null || plan.getFirstRecommendation() == null) return;
+        MethodRecommendation recommendation = plan.getFirstRecommendation();
+        IronmanMethodDefinition method = recommendation.getRecommended();
+        TrainingPlanSegment first = plan.getSegments().get(0);
         body.add(gap(8));
         body.add(sectionLabel("TRAINING METHOD"));
         body.add(gap(3));
-        body.add(labelHtml(escape(advice.getPrimaryMethod()), UiTokens.TEXT));
-        body.add(gap(3));
-        body.add(labelHtml("Alternative: " + escape(advice.getAlternativeMethod()), UiTokens.MUTED));
-        body.add(gap(3));
-        body.add(labelHtml(escape(advice.getBankContext()), UiTokens.UNKNOWN));
+        body.add(labelHtml("<b>" + escape(method.getTitle()) + "</b>", UiTokens.ACCENT));
+        body.add(labelHtml(first.getFromLevel() + " → " + first.getToLevel() + " · "
+            + escape(recommendation.getXpRateSummary()), UiTokens.MUTED));
+        body.add(labelHtml(escape(recommendation.getReason()), UiTokens.TEXT_SECONDARY));
+        MethodResourceStatus resource = recommendation.getResourceStatus();
+        if (resource == MethodResourceStatus.UNKNOWN || resource == MethodResourceStatus.EMPTY
+            || resource == MethodResourceStatus.PARTIAL)
+            body.add(statusLine(resource == MethodResourceStatus.EMPTY ? TruthValue.FALSE : TruthValue.UNKNOWN,
+                recommendation.getResourceSummary()));
+        JButton view = smallButton("VIEW TRAINING PLAN");
+        view.setAlignmentX(Component.LEFT_ALIGNMENT);
+        view.addActionListener(event -> showSkillPlanner(plan.getSkill(), plan.getTargetLevel(), false));
+        body.add(gap(UiTokens.SM));
+        body.add(view);
+    }
+
+    private static ConditionSpec skillTarget(ConditionSpec condition)
+    {
+        if (condition == null) return null;
+        if ("SKILL_AT_LEAST".equalsIgnoreCase(condition.getType())) return condition;
+        for (ConditionSpec child : condition.getChildren())
+        {
+            ConditionSpec target = skillTarget(child);
+            if (target != null) return target;
+        }
+        return skillTarget(condition.getChild());
     }
 
     private void addQuestHelperHint(JPanel body, StepEvaluation evaluation)
@@ -1187,12 +1358,12 @@ public final class IronCompassPanel extends PluginPanel
             && evaluation.getStep().getCompletion() != null
             && "MANUAL_ONLY".equalsIgnoreCase(evaluation.getStep().getCompletion().getType()))
         {
-            JButton done = smallButton("DONE");
+            JButton done = primaryButton("DONE");
             done.setToolTipText("Confirm that this authored milestone is complete");
             done.addActionListener(event -> applyOverride(evaluation, ManualOverride.FORCE_COMPLETE));
             row.add(done);
         }
-        JButton manage = smallButton("MANAGE");
+        JButton manage = ghostButton("MANAGE");
         manage.setToolTipText("Manual completion, skip, and reset controls");
         manage.addActionListener(event -> showManageMenu(manage, evaluation));
         row.add(manage);
@@ -1208,12 +1379,12 @@ public final class IronCompassPanel extends PluginPanel
         int number = 2;
         for (StepEvaluation evaluation : upcoming)
         {
-            JLabel line = labelHtml("<span style='color:#8f8f8f'>" + number++ + ".</span> "
+            WrappingText line = labelHtml("<span style='color:#8f8f8f'>" + number++ + ".</span> "
                 + escape(evaluation.getStep().getTitle()), statusColor(evaluation.getStatus()));
             line.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
             body.add(line);
         }
-        return card(body);
+        return card(body, CardStyle.SUBTLE);
     }
 
     private JPanel buildPreparation(List<PreparationEvaluation> preparation)
@@ -1239,7 +1410,7 @@ public final class IronCompassPanel extends PluginPanel
             body.add(labelHtml(icon + "  " + escape(item.getPreparation().getName())
                 + " <span style='color:#8f8f8f'>" + escape(detail) + "</span>", color));
         }
-        return card(body);
+        return card(body, CardStyle.WARNING);
     }
 
     private JPanel buildWhileHere(List<WhileHereSpec> items)
@@ -1255,18 +1426,20 @@ public final class IronCompassPanel extends PluginPanel
                 + "<span style='color:#8f8f8f'>" + escape(item.getDetail()) + "</span>", UiTokens.TEXT));
             body.add(gap(5));
         }
-        return card(body);
+        return card(body, CardStyle.SUBTLE);
     }
 
     private JPanel buildFooter()
     {
         JPanel footer = verticalPanel();
         footer.setOpaque(false);
-        JButton refresh = smallButton("RE-EVALUATE");
+        JButton refresh = ghostButton("RE-EVALUATE");
         refresh.addActionListener(event -> reevaluate.run());
         refresh.setAlignmentX(Component.LEFT_ALIGNMENT);
         refresh.setMaximumSize(new Dimension(Integer.MAX_VALUE, refresh.getPreferredSize().height));
         footer.add(refresh);
+        footer.add(gap(UiTokens.XS));
+        footer.add(labelHtml("Iron Compass v" + escape(IronCompassVersion.get()), UiTokens.TEXT_MUTED));
         footer.setMaximumSize(new Dimension(Integer.MAX_VALUE, footer.getPreferredSize().height));
         return footer;
     }
@@ -1299,23 +1472,15 @@ public final class IronCompassPanel extends PluginPanel
         searchBox.add(search);
         top.add(searchBox, BorderLayout.CENTER);
         browser.add(top, BorderLayout.NORTH);
-        JScrollPane scroll = new JScrollPane(browserResults);
-        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        scroll.setBorder(null);
-        scroll.getViewport().setBackground(UiTokens.BACKGROUND);
-        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        JScrollPane scroll = scrollPane(browserResults);
         browser.add(scroll, BorderLayout.CENTER);
         return browser;
     }
 
     private JScrollPane buildHomeScroll()
     {
-        JScrollPane scroll = new JScrollPane(home);
-        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        JScrollPane scroll = scrollPane(home);
         scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scroll.setBorder(null);
-        scroll.getViewport().setBackground(UiTokens.BACKGROUND);
-        scroll.getVerticalScrollBar().setUnitIncrement(16);
         return scroll;
     }
 
@@ -1352,7 +1517,7 @@ public final class IronCompassPanel extends PluginPanel
             chapter.add(labelHtml("<b>" + escape(currentChapter.getChapter().getName()) + "</b>", UiTokens.ACCENT));
             chapter.add(gap(3));
             chapter.add(labelHtml(escape(currentChapter.getChapter().getDescription()), UiTokens.MUTED));
-            browserResults.add(card(chapter));
+            browserResults.add(card(chapter, CardStyle.HERO));
             browserResults.add(gap(7));
         }
         int shown = 0;
@@ -1366,19 +1531,23 @@ public final class IronCompassPanel extends PluginPanel
                 continue;
             }
             JPanel row = new JPanel(new BorderLayout(6, 0));
-            row.setBackground(UiTokens.CARD);
+            boolean current = evaluation.getStatus() == StepStatus.CURRENT;
+            Color rowColor = current ? UiTokens.SURFACE_SELECTED : UiTokens.SURFACE;
+            row.setBackground(rowColor);
             row.setAlignmentX(Component.LEFT_ALIGNMENT);
             row.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, UiTokens.BORDER),
+                BorderFactory.createMatteBorder(0, current ? 2 : 0, 1, 0,
+                    current ? UiTokens.ACCENT : UiTokens.BORDER_SUBTLE),
                 BorderFactory.createEmptyBorder(6, 6, 6, 6)));
             JLabel status = new JLabel(statusGlyph(evaluation.getStatus()));
             status.setForeground(statusColor(evaluation.getStatus()));
-            JLabel title = labelHtml("<b>" + escape(evaluation.getStep().getTitle()) + "</b><br>"
+            WrappingText title = labelHtml("<b>" + escape(evaluation.getStep().getTitle()) + "</b><br>"
                 + "<span style='color:#8f8f8f'>" + escape(humanize(evaluation.getStatus().name())) + "</span>",
-                UiTokens.TEXT);
+                current ? UiTokens.ACCENT_HOVER
+                    : evaluation.getStatus() == StepStatus.COMPLETE ? UiTokens.TEXT_SECONDARY : UiTokens.TEXT_PRIMARY);
             row.add(status, BorderLayout.WEST);
             row.add(title, BorderLayout.CENTER);
-            JButton view = smallButton("›");
+            JButton view = iconButton("›", "Open step details");
             view.setToolTipText("Open step details");
             view.addActionListener(event ->
             {
@@ -1386,6 +1555,7 @@ public final class IronCompassPanel extends PluginPanel
                 rebuildBrowser();
             });
             row.add(view, BorderLayout.EAST);
+            installHover(row, rowColor);
             row.setMaximumSize(new Dimension(Integer.MAX_VALUE, row.getPreferredSize().height));
             browserResults.add(row);
             shown++;
@@ -1401,7 +1571,8 @@ public final class IronCompassPanel extends PluginPanel
             {
                 browserResults.add(gap(7));
                 browserResults.add(card(labelHtml("<span style='color:#8f8f8f'>NEXT CHAPTER</span><br><b>○  "
-                    + escape(journey.getChapters().get(chapterIndex + 1).getChapter().getName()) + "</b>", UiTokens.TEXT)));
+                    + escape(journey.getChapters().get(chapterIndex + 1).getChapter().getName()) + "</b>", UiTokens.TEXT),
+                    CardStyle.SUBTLE));
             }
         }
         browserResults.revalidate();
@@ -1421,6 +1592,7 @@ public final class IronCompassPanel extends PluginPanel
     private void showManageMenu(Component anchor, StepEvaluation evaluation)
     {
         JPopupMenu menu = new JPopupMenu();
+        stylePopupMenu(menu);
         addMenuItem(menu, "Mark complete", () -> applyOverride(evaluation, ManualOverride.FORCE_COMPLETE));
         addMenuItem(menu, "Mark incomplete", () -> applyOverride(evaluation, ManualOverride.FORCE_INCOMPLETE));
         addMenuItem(menu, evaluation.getStatus() == StepStatus.SKIPPED_MANUALLY ? "Unskip" : "Skip",
@@ -1433,7 +1605,7 @@ public final class IronCompassPanel extends PluginPanel
 
     private void addMenuItem(JPopupMenu menu, String title, Runnable action)
     {
-        javax.swing.JMenuItem item = new javax.swing.JMenuItem(title);
+        javax.swing.JMenuItem item = styleMenuItem(new javax.swing.JMenuItem(title));
         item.addActionListener(event -> action.run());
         menu.add(item);
     }
@@ -1491,171 +1663,27 @@ public final class IronCompassPanel extends PluginPanel
     {
         int active = goalPlan == null ? 0 : goalPlan.getActiveGoals().size();
         goalPickerButton.setText(active == 0 ? "CHOOSE GOALS" : "MANAGE GOALS  ·  " + active);
+        goalPickerButton.putClientProperty(PremiumButtonUI.STYLE_PROPERTY,
+            active == 0 ? ButtonStyle.PRIMARY : ButtonStyle.SECONDARY);
+        goalPickerButton.repaint();
     }
 
     private void showGoalPicker()
     {
         if (goalPlan == null || goalPlan.getCatalog() == null) return;
-        JTextField goalSearch = new JTextField();
-        JComboBox<String> category = new JComboBox<>(goalPicker.categories(goalPlan.getCatalog()).toArray(new String[0]));
-        JComboBox<String> stage = new JComboBox<>(goalPicker.stages().toArray(new String[0]));
-        JComboBox<String> role = new JComboBox<>(new String[]{"Set as primary", "Add as secondary", "Remove from active"});
-        UiTokens.styleComboBox(category);
-        UiTokens.styleComboBox(stage);
-        UiTokens.styleComboBox(role);
-        DefaultListModel<GoalChoice> choices = new DefaultListModel<>();
-        JList<GoalChoice> list = new JList<>(choices);
-        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        list.setVisibleRowCount(9);
-        JTextArea detail = new JTextArea(10, 28);
-        detail.setEditable(false);
-        detail.setLineWrap(true);
-        detail.setWrapStyleWord(true);
-        detail.setBackground(UiTokens.CARD);
-        detail.setForeground(UiTokens.TEXT);
-        detail.setFont(UiTokens.BODY);
-        detail.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
-        Runnable updateDetail = () ->
-        {
-            GoalChoice selected = list.getSelectedValue();
-            detail.setText(selected == null ? "Select a goal to see why it matters."
-                : goalDetail(selected.suggestion));
-            detail.setCaretPosition(0);
-        };
-        Runnable refresh = () ->
-        {
-            choices.clear();
-            Set<String> active = new HashSet<>();
-            for (GoalPlanProjection plan : goalPlan.getActiveGoals()) active.add(plan.getGoalId());
-            for (GoalSuggestion suggestion : goalPicker.suggestions(goalPlan.getCatalog(), goalSearch.getText(),
-                (String) category.getSelectedItem(), (String) stage.getSelectedItem(), active,
-                accountState, gearProjection, projection == null ? -1.0 : projection.getProgressPercent()))
-            {
-                GoalDefinition goal = suggestion.getGoal();
-                String marker = goal.getId().equals(gearPreferences.getPrimaryGoalId()) ? "PRIMARY  ·  "
-                    : gearPreferences.getSecondaryGoalIds().contains(goal.getId()) ? "SECONDARY  ·  " : "";
-                choices.addElement(new GoalChoice(goal.getId(), marker + goal.getTitle() + "  ·  "
-                    + goal.getStage().getLabel(), suggestion));
-            }
-            if (!choices.isEmpty()) list.setSelectedIndex(0);
-            updateDetail.run();
-        };
-        goalSearch.getDocument().addDocumentListener(new DocumentListener()
-        {
-            @Override public void insertUpdate(DocumentEvent event) { refresh.run(); }
-            @Override public void removeUpdate(DocumentEvent event) { refresh.run(); }
-            @Override public void changedUpdate(DocumentEvent event) { refresh.run(); }
-        });
-        category.addActionListener(event -> refresh.run());
-        stage.addActionListener(event -> refresh.run());
-        list.addListSelectionListener(event ->
-        {
-            if (!event.getValueIsAdjusting()) updateDetail.run();
-        });
-        JButton markComplete = smallButton("MARK COMPLETE");
-        JButton markIncomplete = smallButton("MARK INCOMPLETE");
-        JButton clearManual = smallButton("CLEAR MANUAL");
-        markComplete.addActionListener(event ->
-        {
-            GoalChoice selected = list.getSelectedValue();
-            if (selected == null) return;
-            goalCompletion.markComplete(selected.id, persistence);
-            reevaluate.run();
-            refresh.run();
-        });
-        markIncomplete.addActionListener(event ->
-        {
-            GoalChoice selected = list.getSelectedValue();
-            if (selected == null) return;
-            goalCompletion.markIncomplete(selected.id, persistence);
-            reevaluate.run();
-            refresh.run();
-        });
-        clearManual.addActionListener(event ->
-        {
-            GoalChoice selected = list.getSelectedValue();
-            if (selected == null) return;
-            goalCompletion.clear(selected.id, persistence);
-            reevaluate.run();
-            refresh.run();
-        });
-        refresh.run();
-        JPanel picker = new JPanel(new BorderLayout(5, 5));
-        JPanel filters = new JPanel(new GridLayout(0, 1, 3, 3));
-        filters.add(new JLabel("Search"));
-        filters.add(goalSearch);
-        filters.add(category);
-        filters.add(stage);
-        filters.add(role);
-        picker.add(filters, BorderLayout.NORTH);
-        picker.add(new JScrollPane(list), BorderLayout.CENTER);
-        JScrollPane detailScroll = new JScrollPane(detail);
-        detailScroll.setPreferredSize(new Dimension(350, 175));
-        detailScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        JPanel details = new JPanel(new BorderLayout(3, 3));
-        details.add(detailScroll, BorderLayout.CENTER);
-        JPanel manualActions = new JPanel(new GridLayout(1, 3, 3, 0));
-        manualActions.add(markComplete);
-        manualActions.add(markIncomplete);
-        manualActions.add(clearManual);
-        details.add(manualActions, BorderLayout.SOUTH);
-        picker.add(details, BorderLayout.SOUTH);
-        picker.setPreferredSize(new Dimension(365, 505));
-        int answer = JOptionPane.showConfirmDialog(this, picker, "Iron Compass Goal Picker · "
-                + goalPlan.getCatalog().getGoals().size() + " goals",
-            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        GoalChoice selected = list.getSelectedValue();
-        if (answer != JOptionPane.OK_OPTION || selected == null) return;
-        String selectedRole = (String) role.getSelectedItem();
-        if ("Set as primary".equals(selectedRole)) gearPreferences.setPrimaryGoalId(selected.id);
-        else if ("Add as secondary".equals(selectedRole))
-        {
-            if (!gearPreferences.addSecondaryGoalId(selected.id))
-                JOptionPane.showMessageDialog(this, "Secondary goals are limited to three and cannot duplicate the primary goal.",
-                    "Goal queue", JOptionPane.INFORMATION_MESSAGE);
-        }
-        else
-        {
-            if (selected.id.equals(gearPreferences.getPrimaryGoalId())) gearPreferences.setPrimaryGoalId(null);
-            gearPreferences.removeSecondaryGoalId(selected.id);
-        }
-        reevaluate.run();
-    }
-
-    private String goalDetail(GoalSuggestion suggestion)
-    {
-        GoalDefinition goal = suggestion.getGoal();
-        com.ironcompass.requirement.ConditionSpec effective =
-            GoalRequirementResolver.effectiveRequirements(goal,gearProjection);
-        String requirements = effective == null ? "Confirm in game or mark complete manually"
-            : effective.getLabel();
-        StringBuilder text = new StringBuilder();
-        text.append(goal.getTitle()).append('\n')
-            .append(goal.getCategory()).append(" · ").append(goal.getStage().getLabel())
-            .append(" · ").append(humanize(goal.getEffort().name())).append('\n')
-            .append("Status: ").append(suggestion.getEvaluation().getStatus().getLabel())
-            .append(" · ").append(humanize(goal.getPriority().name()))
-            .append(" · ").append(humanize(goal.getCompletionMode().name())).append('\n');
-        if (goal.getRiskLevel() != com.ironcompass.route.RiskLevel.SAFE)
-            text.append("Risk: ").append(humanize(goal.getRiskLevel().name())).append('\n');
-        text.append("\nWHAT\n").append(goal.getDescription())
-            .append("\n\nWHY\n").append(goal.getWhyItMatters())
-            .append("\n\nREQUIREMENTS\n").append(requirements)
-            .append("\n\nUNLOCKS\n• ").append(String.join("\n• ", goal.getUnlocks()))
-            .append("\n\nBENEFITS\n• ").append(String.join("\n• ", goal.getBenefits()))
-            .append("\n\nWHY SUGGESTED\n• ").append(String.join("\n• ", suggestion.getReasons()));
-        if (goal.isRng()) text.append("\n\nOptional RNG goal: Iron Compass never assumes a drop by a kill count.");
-        return text.toString();
+        new GoalPickerDialog(this, goalPicker, goalPlan, accountState, gearProjection, projection,
+            gearPreferences, persistence, goalCompletion, reevaluate).showDialog();
     }
 
     private void showPlannerPreferences(Component anchor)
     {
         JPopupMenu menu = new JPopupMenu();
+        stylePopupMenu(menu);
         ButtonGroup styles = new ButtonGroup();
         for (Playstyle style : Playstyle.values())
         {
-            JRadioButtonMenuItem item = new JRadioButtonMenuItem(humanize(style.name()),
-                plannerPreferences.getPlaystyle() == style);
+            JRadioButtonMenuItem item = styleMenuItem(new JRadioButtonMenuItem(humanize(style.name()),
+                plannerPreferences.getPlaystyle() == style));
             item.addActionListener(event ->
             {
                 plannerPreferences.setPlaystyle(style);
@@ -1665,8 +1693,8 @@ public final class IronCompassPanel extends PluginPanel
             menu.add(item);
         }
         menu.addSeparator();
-        JCheckBoxMenuItem wilderness = new JCheckBoxMenuItem("Avoid Wilderness",
-            plannerPreferences.isAvoidWilderness());
+        JCheckBoxMenuItem wilderness = styleMenuItem(new JCheckBoxMenuItem("Avoid Wilderness",
+            plannerPreferences.isAvoidWilderness()));
         wilderness.addActionListener(event ->
         {
             plannerPreferences.setAvoidWilderness(wilderness.isSelected());
@@ -1677,8 +1705,8 @@ public final class IronCompassPanel extends PluginPanel
         ButtonGroup sessions = new ButtonGroup();
         for (SessionLength session : SessionLength.values())
         {
-            JRadioButtonMenuItem item = new JRadioButtonMenuItem("Session: " + session.getLabel(),
-                plannerPreferences.getSessionLength() == session);
+            JRadioButtonMenuItem item = styleMenuItem(new JRadioButtonMenuItem("Session: " + session.getLabel(),
+                plannerPreferences.getSessionLength() == session));
             item.addActionListener(event ->
             {
                 plannerPreferences.setSessionLength(session);
@@ -1700,20 +1728,18 @@ public final class IronCompassPanel extends PluginPanel
 
     private static void updateNavigationState(JButton button, boolean selected)
     {
-        button.setEnabled(!selected);
+        button.putClientProperty(PremiumButtonUI.SELECTED_PROPERTY, selected);
+        button.repaint();
         button.getAccessibleContext().setAccessibleDescription(selected
             ? "Current Iron Compass view" : button.getToolTipText());
     }
 
     private static JButton navigationButton(String text, String description)
     {
-        JButton button = smallButton(text);
+        JButton button = button(text, ButtonStyle.NAVIGATION);
         button.setFocusable(true);
         button.setFont(UiTokens.LABEL.deriveFont(8f));
         button.setMargin(new java.awt.Insets(3, 0, 3, 0));
-        button.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(UiTokens.BORDER),
-            BorderFactory.createEmptyBorder(3, 0, 3, 0)));
         button.setToolTipText(description);
         button.getAccessibleContext().setAccessibleName(text + " view");
         button.getAccessibleContext().setAccessibleDescription(description);
@@ -1727,86 +1753,9 @@ public final class IronCompassPanel extends PluginPanel
         return notice;
     }
 
-    private static JPanel card(Component content)
-    {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(UiTokens.CARD);
-        if (content instanceof JPanel)
-        {
-            content.setBackground(UiTokens.CARD);
-        }
-        panel.setBorder(UiTokens.cardBorder());
-        panel.add(content, BorderLayout.CENTER);
-        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
-        return panel;
-    }
-
-    private static JPanel verticalPanel()
-    {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(UiTokens.BACKGROUND);
-        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return panel;
-    }
-
     private static JPanel scrollableVerticalPanel()
     {
         return new ScrollableVerticalPanel();
-    }
-
-    private static JLabel sectionLabel(String text)
-    {
-        JLabel label = new JLabel(text);
-        label.setForeground(UiTokens.MUTED);
-        label.setFont(UiTokens.LABEL);
-        label.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return label;
-    }
-
-    private static JLabel labelHtml(String body, Color color)
-    {
-        JLabel label = new JLabel("<html><table width='155' cellspacing='0' cellpadding='0'><tr><td>"
-            + body + "</td></tr></table></html>");
-        label.setForeground(color);
-        label.setFont(UiTokens.BODY);
-        label.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return label;
-    }
-
-    private static JLabel statusLine(TruthValue value, String text)
-    {
-        String icon = value == TruthValue.TRUE ? "✓" : value == TruthValue.FALSE ? "×" : "?";
-        Color color = value == TruthValue.TRUE ? UiTokens.SUCCESS : value == TruthValue.FALSE ? UiTokens.DANGER : UiTokens.UNKNOWN;
-        JLabel line = labelHtml(icon + "  " + escape(text), color);
-        line.setBorder(BorderFactory.createEmptyBorder(1, 0, 1, 0));
-        return line;
-    }
-
-    private static JButton smallButton(String text)
-    {
-        JButton button = new JButton(text);
-        button.setFocusable(true);
-        button.setFont(UiTokens.LABEL);
-        button.setMargin(new java.awt.Insets(4, 7, 4, 7));
-        return button;
-    }
-
-    private static Component gap(int height)
-    {
-        Box.Filler filler = new Box.Filler(
-            new Dimension(0, height), new Dimension(0, height), new Dimension(Integer.MAX_VALUE, height));
-        filler.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return filler;
-    }
-
-    private static Component verticalGlue()
-    {
-        Box.Filler filler = new Box.Filler(
-            new Dimension(0, 0), new Dimension(0, 0), new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
-        filler.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return filler;
     }
 
     private static String readinessTitle(StepEvaluation evaluation)
@@ -1914,23 +1863,4 @@ public final class IronCompassPanel extends PluginPanel
         }
     }
 
-    private static final class GoalChoice
-    {
-        private final String id;
-        private final String label;
-        private final GoalSuggestion suggestion;
-
-        private GoalChoice(String id, String label, GoalSuggestion suggestion)
-        {
-            this.id = id;
-            this.label = label;
-            this.suggestion = suggestion;
-        }
-
-        @Override
-        public String toString()
-        {
-            return label;
-        }
-    }
 }

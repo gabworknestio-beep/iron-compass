@@ -2,6 +2,19 @@
 
 All notable Iron Compass changes are recorded here. The project follows semantic versioning once a release is published.
 
+## [1.1.0] - 2026-08-30
+
+### Added
+
+- Added the account-aware Ironman Skill Planner with multi-segment target plans and complete pilot guides for Hunter, Crafting, Herblore, Construction, and Slayer.
+- Added 44 local methods/support chains, 46 important milestones, structured sources, resource chains, broad XP-rate/time estimates, method search, locked alternatives, and goal-aware deterministic scoring.
+- Added a premium compact Skill Planner dialog plus shared integration for Primary Goal skill gates and canonical route training steps.
+
+### Changed
+
+- Replaced the route UI's separate hard-coded training advice with the same structured planner used by the Goal Planner.
+- Preserved unknown-bank safety: unobserved resources remain neutral and never make a method impossible.
+
 ## [1.0.5] - 2026-08-29
 
 ### Added
