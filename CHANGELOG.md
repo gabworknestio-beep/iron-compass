@@ -14,6 +14,7 @@ All notable Iron Compass changes are recorded here. The project follows semantic
 
 - Replaced the route UI's separate hard-coded training advice with the same structured planner used by the Goal Planner.
 - Preserved unknown-bank safety: unobserved resources remain neutral and never make a method impossible.
+- Improved the Plugin Hub description, search tags, and README first screen so players can discover the goal, gear, route, and skill-planning features more easily.
 
 ## [1.0.5] - 2026-08-29
 
