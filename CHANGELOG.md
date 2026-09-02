@@ -2,7 +2,7 @@
 
 All notable Iron Compass changes are recorded here. The project follows semantic versioning once a release is published.
 
-## [1.2.0] - 2026-09-02
+## [1.1.5] - 2026-09-02
 
 ### Added
 

@@ -106,8 +106,8 @@ public final class PublicationReadinessTest
         {
             gradle.load(input);
         }
-        assertEquals("1.2.0",gradle.getProperty("pluginVersion"));
-        assertEquals("1.2.0",IronCompassVersion.get());
+        assertEquals("1.1.5",gradle.getProperty("pluginVersion"));
+        assertEquals("1.1.5",IronCompassVersion.get());
         assertFalse(new String(Files.readAllBytes(Paths.get("runelite-plugin.properties")),
             java.nio.charset.StandardCharsets.UTF_8).contains("1.5.0"));
     }
