@@ -5,7 +5,7 @@
 [![RuneLite Plugin Hub](https://img.shields.io/badge/RuneLite-Plugin%20Hub-F4A000)](https://runelite.net/plugin-hub/show/ironpath)
 [![Build](https://github.com/gabworknestio-beep/iron-compass/actions/workflows/build.yml/badge.svg)](https://github.com/gabworknestio-beep/iron-compass/actions/workflows/build.yml)
 
-**An OSRS Ironman progression planner for RuneLite.** Iron Compass turns your account's skills, quests, gear, goals, playstyle, and observed bank into one clear answer: *what should I do next?*
+**An OSRS Ironman progression and bank-to-goal planner for RuneLite.** Iron Compass turns your account's skills, quests, gear, goals, playstyle, and observed bank into one clear answer: *what should I do next?*
 
 [Install Iron Compass from the RuneLite Plugin Hub](https://runelite.net/plugin-hub/show/ironpath), or search for **Iron Compass**, **Ironman**, **progression**, **goals**, **gear**, or **skill planner** inside RuneLite.
 
@@ -14,7 +14,8 @@
 - **Next Best Move:** get one explainable recommendation based on this character instead of a generic checklist.
 - **Goal Planner:** choose one Primary Goal and up to three Secondary Goals, then see the nearest real blocker and useful shared progress.
 - **Gear Path:** follow account-aware melee, ranged, and magic upgrades without treating Bowfa or another long grind as universally mandatory.
-- **Skill Planner:** build target plans and researched 1–99 pilot guides for Hunter, Crafting, Herblore, Construction, and Slayer.
+- **Skill Planner:** build target plans and researched 1–99 guides for every skill, including Sailing.
+- **Bank-to-Goal:** open your bank to estimate which skill targets are already banked, the level your recognized supplies can reach, and what XP remains.
 - **Efficient Ironman Path:** automatically skip completed quests and levels while preserving a reviewed progression route.
 - **Private by design:** all account evaluation and bundled guide data stay local; there is no Iron Compass server, analytics, or runtime AI.
 
@@ -38,8 +39,10 @@ The plugin is available from RuneLite's Plugin Hub. Every update is pinned to a 
 - Adds a Goal Queue with one Primary and up to three Secondary Goals, profile-specific migration from the former single selected goal, and duplicate/skip protection.
 - Detects when one skill, quest, route step, or Gear action advances multiple active goals and shows deterministic reasons instead of an internal score.
 - Produces distinct **Recommended**, **Quick Win**, **Long-Term**, and opt-in **Useful Break** suggestions from a broader candidate pool. Balanced, Efficient, PvM, and Skilling playstyles influence priority without changing factual requirements.
-- Builds an account-aware Ironman Skill Plan from current level to target, with multi-band recommendations, relevant alternatives, locked methods, resource chains, milestones, broad XP-rate/time estimates, and full 1–99 pilot guides for Hunter, Crafting, Herblore, Construction, and Slayer.
-- Searches bundled method titles, tags, resources, outputs, and styles. Unknown banks stay neutral; observed resources are described qualitatively and are never presented as an exact banked-XP calculation.
+- Builds an account-aware Ironman Skill Plan from current level to target, with multi-band recommendations, relevant alternatives, locked methods, resource chains, milestones, broad XP-rate/time estimates, and full 1–99 guides for all 24 skills, including Sailing.
+- Projects observed bank and carried resources toward selected Construction, Herblore, Prayer, Cooking, Crafting, Smithing, Farming, Fletching, and Firemaking targets. It shows recognized XP, estimated reachable level, remaining XP, and the contributing conversions.
+- Labels Bank-to-Goal results as estimates, respects current-level unlocks, limits multi-input recipes by observed secondaries, and leaves an unopened bank explicitly `UNKNOWN`. Skills that are not honestly bankable receive no invented total.
+- Searches bundled method titles, tags, resources, outputs, and styles. Method selection uses resources qualitatively, while the separate Bank-to-Goal card provides clearly labelled conservative XP estimates from exact observed quantities.
 - Provides a compact searchable Goal Picker backed by the bundled researched catalog, with Suggested/Popular/Active/Completed views, broad categories, seven progression stages, and rich goal details.
 - Summarizes Account Health from the same GoalIntent evaluator used by recommendations, with honest Weak/Developing/Good/Strong/Unknown explanations.
 - Shows goal-based Quick Wins, nearby unlocks, typed Primary Goal blockers, intent-compatible alternatives, and a dependency-backed Path to My Goal view.
@@ -53,7 +56,7 @@ The plugin is available from RuneLite's Plugin Hub. Every update is pinned to a 
 
 ## What it does not do
 
-Iron Compass does not perform game actions, send input, start quests, duplicate detailed Quest Helper walkthroughs, predict combat, calculate DPS, or generate a route with an AI at runtime. Its Gear Path is a focused progression companion, not a loadout optimizer, collection-log dashboard, encounter helper, or giant PvM hub.
+Iron Compass does not perform game actions, send input, start quests, duplicate detailed Quest Helper walkthroughs, predict combat, calculate DPS, or generate a route with an AI at runtime. Bank-to-Goal does not promise exact completion when burns, RNG, future level unlocks, unobserved storage, or alternate recipes affect the outcome. Its Gear Path is a focused progression companion, not a loadout optimizer, collection-log dashboard, encounter helper, or giant PvM hub.
 
 ## Current route coverage
 
@@ -87,7 +90,7 @@ The queue deliberately stays small: one Primary Goal and no more than three Seco
 
 The goal catalog is intentionally broader than the canonical route. It includes small transformative unlocks (for example 75 Hunter for moonlight moths), benefit-led intentions, optional clue/RNG branches, and endgame targets without turning stages into mandatory rules. See [docs/GOAL_CATALOG_RESEARCH.md](docs/GOAL_CATALOG_RESEARCH.md).
 
-Iron Compass v1.1.0 keeps readiness honest: observed skills, quest access, gear requirements, and manual-only unlock facts are evaluated through one shared requirement policy before anything is labelled ready.
+Iron Compass v1.2.0 keeps readiness honest: observed skills, quest access, gear requirements, banked skill progress, and manual-only unlock facts are evaluated through explicit conservative policies before anything is labelled ready.
 
 For supported skill gates, the bundled Skill Planner suggests a **good fit for this account**, never an unjustified universal “best method.” It considers verified unlocks, Wilderness/Hardcore constraints, observed starting resources, active-goal synergy, playstyle, session length, outputs, costs, and Ironman resource value. The same projection powers Primary Goals and route training details; **View Skill Plan** opens the compact target path, while **Full 1–99 Guide** exposes the researched bands and important milestones. Useful supply chains are shown when authored inputs are missing; an unopened bank always produces the explicit unconfirmed-bank message.
 

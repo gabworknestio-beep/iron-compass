@@ -18,9 +18,9 @@ public final class IronmanMethodCatalogValidationTest
     public void bundledPilotCatalogHasValidUniqueMethodsMilestonesAndReferences() throws Exception
     {
         IronmanMethodCatalog catalog = loader.loadResource("/methods/ironman-methods-2026.json");
-        assertEquals(5, catalog.getFullGuideSkills().size());
-        assertTrue(catalog.getMethods().size() >= 40);
-        assertTrue(catalog.getMilestones().size() >= 40);
+        assertEquals(24, catalog.getFullGuideSkills().size());
+        assertTrue(catalog.getMethods().size() >= 110);
+        assertTrue(catalog.getMilestones().size() >= 130);
         Set<String> ids = new HashSet<>();
         for (IronmanMethodDefinition method : catalog.getMethods())
         {

@@ -51,6 +51,10 @@ The bundled Hunter, Crafting, Herblore, Construction, and Slayer pilot guides we
 
 The broad post-launch Golem Crafting XP range was cross-checked against https://osrsiron.com/crafting/golem-crafting. That community calculator is referenced only for a conservative variable-rate band; it is not bundled or called at runtime. Golem access and mechanics are grounded in the OSRS Wiki and the official Wyrmscraig release/poll material.
 
+## Bank-to-Goal factual references — original implementation
+
+Bank-to-Goal's common item conversions and XP values were cross-checked against current OSRS Wiki skilling pages, RuneLite's current `ItemID` constants, and the public Banked Experience project at https://github.com/TheStonedTurtle/banked-experience (BSD 2-Clause, Copyright TheStonedTurtle). That project was reviewed for factual coverage and known limitations such as current-level gating, burn/RNG uncertainty, and shared secondaries. Iron Compass does not redistribute its source code, UI, prose, or data structures; its goal projection, secondary allocation, state model, explanations, tests, and UI are original. All calculations run locally against Iron Compass's own session-scoped bank snapshot.
+
 ## Icon
 
 The pickaxe-and-path icon was generated specifically for Iron Compass with OpenAI ImageGen from an original prompt and then downscaled to 48×48. It does not reproduce a RuneLite, Jagex, community-guide, or third-party logo.

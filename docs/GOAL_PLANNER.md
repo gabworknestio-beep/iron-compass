@@ -65,7 +65,7 @@ Balanced, Efficient, PvM, and Skilling playstyles change ranking only. **Avoid W
 
 ## Ironman Skill Planner
 
-`src/main/resources/methods/ironman-methods-2026.json` is the shared source for Goal skill gates, route training details, target plans, full guides, milestones, alternatives, and method search. Phase one provides gap-validated 1–99 coverage for Hunter, Crafting, Herblore, Construction, and Slayer.
+`src/main/resources/methods/ironman-methods-2026.json` is the shared source for Goal skill gates, route training details, target plans, full guides, milestones, alternatives, and method search. It provides gap-validated 1–99 coverage for all 24 skills, including Sailing.
 
 Definitions include stable ID, skill/range, verified and recommended requirements, risk, attention, effort, broad XP-rate range, Ironman value, styles, starting resource groups, consumes/outputs, supply chains, tags, account types, related goals, milestones, and structured source references. Support-chain records are searchable but are not incorrectly treated as direct XP methods.
 

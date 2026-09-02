@@ -11,6 +11,7 @@ public final class AccountState
     private final boolean loggedIn;
     private final AccountMode accountMode;
     private final Map<String, Integer> skills;
+    private final Map<String, Integer> skillExperiences;
     private final Map<String, QuestProgress> quests;
     private final Map<Integer, Integer> inventory;
     private final Map<Integer, Integer> equipment;
@@ -27,6 +28,7 @@ public final class AccountState
         loggedIn = builder.loggedIn;
         accountMode = builder.accountMode;
         skills = immutableCopy(builder.skills);
+        skillExperiences = immutableCopy(builder.skillExperiences);
         quests = Collections.unmodifiableMap(new HashMap<>(builder.quests));
         inventory = immutableCopy(builder.inventory);
         equipment = immutableCopy(builder.equipment);
@@ -67,6 +69,12 @@ public final class AccountState
     public int skillLevel(String skill)
     {
         return skills.getOrDefault(normalize(skill), 0);
+    }
+
+    /** Exact XP observed from RuneLite, or -1 when a synthetic/offline snapshot only supplied a level. */
+    public int skillExperience(String skill)
+    {
+        return skillExperiences.getOrDefault(normalize(skill), -1);
     }
 
     public QuestProgress questState(String quest)
@@ -147,6 +155,7 @@ public final class AccountState
         projected.accountMode = accountMode;
         projected.skills.putAll(skills);
         projected.skills.put(normalize(skill), level);
+        projected.skillExperiences.putAll(skillExperiences);
         projected.quests.putAll(quests);
         projected.inventory.putAll(inventory);
         projected.equipment.putAll(equipment);
@@ -171,6 +180,7 @@ public final class AccountState
         private boolean loggedIn = true;
         private AccountMode accountMode = AccountMode.UNKNOWN;
         private final Map<String, Integer> skills = new HashMap<>();
+        private final Map<String, Integer> skillExperiences = new HashMap<>();
         private final Map<String, QuestProgress> quests = new HashMap<>();
         private final Map<Integer, Integer> inventory = new HashMap<>();
         private final Map<Integer, Integer> equipment = new HashMap<>();
@@ -197,6 +207,12 @@ public final class AccountState
         public Builder skill(String name, int level)
         {
             skills.put(normalize(name), level);
+            return this;
+        }
+
+        public Builder skillExperience(String name, int experience)
+        {
+            skillExperiences.put(normalize(name), Math.max(0, experience));
             return this;
         }
 

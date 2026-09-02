@@ -6,9 +6,9 @@ Iron Compass bundles an original, structured synthesis of current training facts
 
 ## Phase-one coverage
 
-The first complete guides intentionally cover five skills: **Hunter, Crafting, Herblore, Construction, and Slayer**. They exercise passive routines, modern unlocks, competing methods, bank-dependent inputs, GP costs, supply chains, combat progression, and quest locks before the same model is extended to every skill.
+The complete guide catalog now covers all 24 RuneLite skills, including Sailing. It includes passive routines, modern unlocks, competing methods, bank-dependent inputs, GP costs, supply chains, combat progression, quest locks, Hardcore/Wilderness risk boundaries, and account-useful alternatives.
 
-The catalog currently contains 44 methods/support chains and 46 Ironman-relevant milestones. A loader validator rejects duplicate IDs, unknown skills, invalid levels, malformed references, invalid styles, and any level gap in a guide that claims full 1–99 coverage.
+The catalog currently contains 115 methods/support chains and 136 Ironman-relevant milestones. A loader validator rejects duplicate IDs, unknown skills, invalid levels, malformed references, invalid styles, and any level gap in a guide that claims full 1–99 coverage.
 
 ## Primary factual references
 
@@ -34,7 +34,7 @@ The Wyrmscraig Golem Crafting rate band was conservatively cross-checked against
 
 ## Deliberate limitations
 
-- Only the five pilot skills claim complete 1–99 coverage in this phase.
+- All 24 skills claim complete 1–99 coverage through at least one researched account-aware method band, with richer alternative bands for high-impact Ironman skills.
 - Combat level is not stored in `AccountState`; Slayer methods that require a combat threshold expose it as recommended setup instead of pretending it was verified.
 - The planner does not calculate exact banked XP, exact material totals, drop times, or RNG completion dates.
 - Golem Crafting rates are still execution- and fur-dependent; the UI presents a range and labels total time as rough.

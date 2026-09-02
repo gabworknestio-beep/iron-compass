@@ -40,7 +40,8 @@ public final class AccountStateService
 
         for (Skill skill : Skill.values())
         {
-            builder.skill(skill.getName(), client.getRealSkillLevel(skill));
+            builder.skill(skill.getName(), client.getRealSkillLevel(skill))
+                .skillExperience(skill.getName(), client.getSkillExperience(skill));
         }
         if (refreshQuests || quests.isEmpty())
         {

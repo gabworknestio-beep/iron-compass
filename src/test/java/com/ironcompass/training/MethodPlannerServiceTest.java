@@ -207,19 +207,21 @@ public final class MethodPlannerServiceTest
     }
 
     @Test
-    public void unsupportedSkillProducesNoAttachableRecommendation()
+    public void supportedPrayerSkillProducesAttachableRecommendation()
     {
         AccountState state = AccountState.builder().skill("Prayer", 43).build();
-        SkillTrainingPlan unsupported = planner.plan(catalog, "Prayer", 70, state, preferences,
+        SkillTrainingPlan supported = planner.plan(catalog, "Prayer", 70, state, preferences,
             Collections.emptyList());
         GoalPlanProjection empty = new GoalPlanProjection(null, null, null, TruthValue.FALSE,
             Collections.emptyList(), null, null, null, Collections.emptyList(), null, null);
 
-        GoalPlanProjection projection = empty.withSkillTrainingPlan(unsupported);
+        GoalPlanProjection projection = empty.withSkillTrainingPlan(supported);
 
-        assertTrue(unsupported.getSegments().isEmpty());
-        assertTrue(projection.getSkillTrainingPlan() == null);
-        assertTrue(projection.getMethodRecommendation() == null);
+        assertFalse(supported.getSegments().isEmpty());
+        assertTrue(supported.getSegments().stream()
+            .anyMatch(segment -> segment.getRecommendation().getRecommended().getSkill().equals("Prayer")));
+        assertNotNull(projection.getSkillTrainingPlan());
+        assertNotNull(projection.getMethodRecommendation());
     }
 
     private SkillTrainingPlan plan(String skill, int target, AccountState state)

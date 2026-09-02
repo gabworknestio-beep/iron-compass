@@ -5,6 +5,10 @@ import com.ironcompass.planner.GoalPlanProjection;
 import com.ironcompass.planner.PlannerPreferenceStore;
 import com.ironcompass.requirement.TruthValue;
 import com.ironcompass.state.AccountState;
+import com.ironcompass.training.BankedGoalBreakdown;
+import com.ironcompass.training.BankedGoalProjection;
+import com.ironcompass.training.BankedGoalService;
+import com.ironcompass.training.BankedGoalStatus;
 import com.ironcompass.training.IronmanMethodCatalog;
 import com.ironcompass.training.IronmanMethodDefinition;
 import com.ironcompass.training.MethodPlannerService;
@@ -30,6 +34,7 @@ import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
@@ -48,6 +53,7 @@ final class SkillPlannerDialog
     private final PlannerPreferenceStore preferences;
     private final List<GoalPlanProjection> activeGoals;
     private final WikiBridge wiki;
+    private final BankedGoalService bankedGoals = new BankedGoalService();
     private final JComboBox<String> skill;
     private final JComboBox<Integer> target = new JComboBox<>();
     private final JTextField search = textField("Search methods, resources, or styles...");
@@ -202,6 +208,8 @@ final class SkillPlannerDialog
             + " XP remaining · " + escape(plan.getEstimatedTime()), UiTokens.TEXT_MUTED));
         planHost.add(card(summary, CardStyle.HERO));
 
+        addBankedGoal(plan);
+
         if (plan.isComplete())
         {
             planHost.add(gap(UiTokens.MD));
@@ -221,6 +229,118 @@ final class SkillPlannerDialog
         disclosure.addActionListener(event -> { expanded = !expanded; rebuildPlan(plan); });
         planHost.add(disclosure);
         finishRefresh();
+    }
+
+    private void addBankedGoal(SkillTrainingPlan plan)
+    {
+        int targetLevel = fullGuide ? 99 : plan.getTargetLevel();
+        BankedGoalProjection projection = bankedGoals.project(state, plan.getSkill(), targetLevel);
+        JPanel body = verticalPanel();
+        JPanel heading = new JPanel(new BorderLayout(UiTokens.SM, 0));
+        heading.setOpaque(false);
+        heading.setAlignmentX(Component.LEFT_ALIGNMENT);
+        heading.add(sectionLabel("BANK-TO-GOAL"), BorderLayout.WEST);
+        heading.add(badge(bankedBadge(projection), bankedColor(projection)), BorderLayout.EAST);
+        body.add(heading);
+        body.add(gap(UiTokens.SM));
+
+        NumberFormat numbers = NumberFormat.getIntegerInstance(Locale.ENGLISH);
+        switch (projection.getStatus())
+        {
+            case UNKNOWN:
+                body.add(cardTitle("OPEN YOUR BANK TO CALCULATE", UiTokens.UNKNOWN));
+                break;
+            case NOT_SUPPORTED:
+                body.add(cardTitle("NO HONEST BANKED-XP TOTAL", UiTokens.TEXT_SECONDARY));
+                break;
+            case COMPLETE:
+                body.add(cardTitle("TARGET ALREADY COMPLETE", UiTokens.SUCCESS));
+                break;
+            case NO_RESOURCES:
+                body.add(cardTitle("NO RECOGNIZED RESOURCES", UiTokens.TEXT_PRIMARY));
+                break;
+            case READY:
+                body.add(cardTitle("TARGET BANKED · ~" + numbers.format(projection.getRecognizedXp())
+                    + " XP", UiTokens.SUCCESS));
+                addBankedProgress(body, projection);
+                break;
+            case IN_PROGRESS:
+                body.add(cardTitle(projection.getProgressPercent() + "% BANKED · ~"
+                    + numbers.format(projection.getRecognizedXp()) + " XP", UiTokens.ACCENT_HOVER));
+                addBankedProgress(body, projection);
+                break;
+            default:
+                break;
+        }
+        body.add(gap(UiTokens.SM));
+        body.add(labelHtml(escape(projection.getExplanation()), UiTokens.TEXT_MUTED));
+
+        if (expanded && !projection.getBreakdown().isEmpty())
+        {
+            body.add(gap(UiTokens.MD));
+            body.add(sectionLabel("RECOGNIZED RESOURCES"));
+            int limit = Math.min(8, projection.getBreakdown().size());
+            for (int index = 0; index < limit; index++)
+            {
+                BankedGoalBreakdown line = projection.getBreakdown().get(index);
+                body.add(labelHtml("•  " + numbers.format(line.getActions()) + " × "
+                    + escape(line.getLabel()) + " · ~" + numbers.format(line.getExperience()) + " XP",
+                    UiTokens.TEXT_SECONDARY));
+            }
+            if (projection.getBreakdown().size() > limit)
+                body.add(labelHtml("+ " + (projection.getBreakdown().size() - limit)
+                    + " other recognized conversions", UiTokens.MUTED));
+        }
+        planHost.add(gap(UiTokens.MD));
+        planHost.add(card(body, projection.getStatus() == BankedGoalStatus.READY
+            ? CardStyle.SUCCESS : CardStyle.SUBTLE));
+    }
+
+    private static void addBankedProgress(JPanel body, BankedGoalProjection projection)
+    {
+        JProgressBar progress = new JProgressBar(0, 100);
+        progress.setValue(projection.getProgressPercent());
+        progress.setPreferredSize(new Dimension(200, 6));
+        progress.setMaximumSize(new Dimension(Integer.MAX_VALUE, 6));
+        progress.setForeground(projection.getStatus() == BankedGoalStatus.READY
+            ? UiTokens.SUCCESS : UiTokens.ACCENT);
+        progress.setBackground(UiTokens.SURFACE);
+        progress.setBorderPainted(false);
+        progress.setAlignmentX(Component.LEFT_ALIGNMENT);
+        body.add(gap(UiTokens.SM));
+        body.add(progress);
+        body.add(gap(UiTokens.XS));
+        NumberFormat numbers = NumberFormat.getIntegerInstance(Locale.ENGLISH);
+        int shortfall = Math.max(0, projection.getXpRemaining() - projection.getRecognizedXp());
+        String summary = projection.getStatus() == BankedGoalStatus.READY
+            ? "Recognized resources cover this target · estimated level " + projection.getProjectedLevel()
+            : "Estimated level " + projection.getProjectedLevel() + " · ~" + numbers.format(shortfall)
+                + " XP still needed";
+        body.add(labelHtml(summary, UiTokens.TEXT_SECONDARY));
+    }
+
+    private static String bankedBadge(BankedGoalProjection projection)
+    {
+        switch (projection.getStatus())
+        {
+            case UNKNOWN: return "UNKNOWN";
+            case NOT_SUPPORTED: return "NOT BANKABLE";
+            case COMPLETE: return "COMPLETE";
+            case READY: return "READY · ESTIMATE";
+            default: return "ESTIMATE";
+        }
+    }
+
+    private static java.awt.Color bankedColor(BankedGoalProjection projection)
+    {
+        switch (projection.getStatus())
+        {
+            case UNKNOWN: return UiTokens.UNKNOWN;
+            case COMPLETE:
+            case READY: return UiTokens.SUCCESS;
+            case NOT_SUPPORTED: return UiTokens.MUTED;
+            default: return UiTokens.ACCENT;
+        }
     }
 
     private JPanel segmentCard(TrainingPlanSegment segment, boolean first)

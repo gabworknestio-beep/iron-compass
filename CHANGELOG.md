@@ -2,6 +2,19 @@
 
 All notable Iron Compass changes are recorded here. The project follows semantic versioning once a release is published.
 
+## [1.2.0] - 2026-09-02
+
+### Added
+
+- Expanded the Skill Planner data from five pilot guides to researched 1–99 coverage for all 24 skills, including Sailing.
+- Added Bank-to-Goal projections for nine bankable skills using the current character's exact XP and locally observed bank: recognized XP, target coverage, estimated reachable level, remaining XP, and contributing conversions.
+- Added honest `UNKNOWN`, `NOT BANKABLE`, `ESTIMATE`, `READY`, and `COMPLETE` states, including secondary-limited Herblore calculations and current-level recipe gating.
+
+### Changed
+
+- Updated Plugin Hub discovery metadata so searches for bank, banked progress, and XP can find Iron Compass.
+- Preserved the existing UI system while adding one compact Bank-to-Goal card inside the Skill Planner.
+
 ## [1.1.0] - 2026-08-30
 
 ### Added

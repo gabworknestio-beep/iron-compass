@@ -78,8 +78,8 @@ import org.slf4j.LoggerFactory;
 
 @PluginDescriptor(
     name = "Iron Compass",
-    description = "OSRS Ironman progression planner for RuneLite with account-aware goals, gear upgrades, quest routing, and skill guides.",
-    tags = {"ironman", "osrs", "progression", "planner", "goals", "gear", "skills", "quests", "guide", "route"}
+    description = "OSRS Ironman planner that turns your account and bank into next goals, banked skill progress, gear upgrades, quest routes, and skill guides.",
+    tags = {"ironman", "progression", "planner", "goals", "gear", "skills", "quests", "bank", "banked", "xp"}
 )
 public final class IronCompassPlugin extends Plugin
 {

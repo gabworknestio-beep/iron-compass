@@ -5,6 +5,7 @@ import com.ironcompass.integration.WikiBridge;
 import com.ironcompass.planner.InMemoryPlannerPreferenceStore;
 import com.ironcompass.requirement.ConditionEvaluator;
 import com.ironcompass.state.AccountState;
+import com.ironcompass.state.BankSnapshot;
 import com.ironcompass.state.QuestProgress;
 import com.ironcompass.training.IronmanMethodCatalog;
 import com.ironcompass.training.IronmanMethodLoader;
@@ -12,12 +13,15 @@ import com.ironcompass.training.MethodPlannerService;
 import java.awt.Component;
 import java.awt.Container;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
+import net.runelite.api.gameval.ItemID;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
@@ -41,6 +45,8 @@ public final class SkillPlannerDialogTest
             JPanel content = dialog.contentForTesting();
             assertNotNull(findText(content, "IRONMAN SKILL PLANNER"));
             assertNotNull(findText(content, "HUNTER  68 → 75"));
+            assertNotNull(findText(content, "BANK-TO-GOAL"));
+            assertNotNull(findText(content, "NO HONEST BANKED-XP TOTAL"));
             assertNotNull(findText(content, "Adept Hunter Rumours"));
             assertNotNull(findText(content, "Moonlight moths"));
             assertNotNull(findButton(content, "VIEW METHOD"));
@@ -49,6 +55,29 @@ public final class SkillPlannerDialogTest
             JScrollPane scroll = find(content, JScrollPane.class);
             assertNotNull(scroll);
             assertTrue(scroll.getHorizontalScrollBarPolicy() == ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        });
+    }
+
+    @Test
+    public void cookingTargetShowsBankedGoalWhenObservedResourcesCoverIt() throws Exception
+    {
+        IronmanMethodCatalog catalog = new IronmanMethodLoader(new Gson())
+            .loadResource("/methods/ironman-methods-2026.json");
+        Map<Integer, Integer> items = new HashMap<>();
+        items.put(ItemID.TBWT_RAW_KARAMBWAN, 1_000);
+        AccountState state = AccountState.builder().skill("Cooking", 70)
+            .bank(BankSnapshot.observed(items, 123L)).build();
+        SwingUtilities.invokeAndWait(() ->
+        {
+            SkillPlannerDialog dialog = new SkillPlannerDialog(new JPanel(), catalog,
+                new MethodPlannerService(new ConditionEvaluator()), state,
+                new InMemoryPlannerPreferenceStore(), Collections.emptyList(), new WikiBridge(),
+                "Cooking", 71, false);
+            JPanel content = dialog.contentForTesting();
+            assertNotNull(findText(content, "BANK-TO-GOAL"));
+            assertNotNull(findText(content, "READY · ESTIMATE"));
+            assertNotNull(findText(content, "TARGET BANKED"));
+            assertNotNull(findText(content, "Recognized resources cover this target"));
         });
     }
 
