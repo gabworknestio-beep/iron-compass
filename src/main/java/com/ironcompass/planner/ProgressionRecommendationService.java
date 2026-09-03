@@ -4,6 +4,8 @@ import com.ironcompass.gear.CombatStyle;
 import com.ironcompass.gear.GearEvaluation;
 import com.ironcompass.gear.GearProjection;
 import com.ironcompass.gear.GearStatus;
+import com.ironcompass.goal.GoalCatalog;
+import com.ironcompass.goal.GoalIntent;
 import com.ironcompass.requirement.ConditionSpec;
 import com.ironcompass.route.RouteProjection;
 import com.ironcompass.route.RiskLevel;
@@ -24,16 +26,18 @@ import java.util.Set;
 public final class ProgressionRecommendationService
 {
     private static final int ROUTE_LOOKAHEAD = 10;
+    private static final AccountNeedService ACCOUNT_NEEDS = new AccountNeedService();
 
     public RecommendationProjection evaluate(RouteProjection route, GearProjection gear, GoalPlanProjection goals,
                                              AccountState state, PlannerPreferenceStore preferences)
     {
         List<ProgressionCandidate> pool = new ArrayList<>();
-        addRouteCandidates(pool, route, state, preferences);
-        addGearCandidates(pool, gear, preferences);
-        pool.addAll(activeGoalCandidates(goals, preferences));
+        GoalCatalog catalog = goals == null ? null : goals.getCatalog();
+        addRouteCandidates(pool, route, state, gear, catalog, preferences);
+        addGearCandidates(pool, gear, state, catalog, preferences);
+        pool.addAll(activeGoalCandidates(goals, state, gear, catalog, preferences));
 
-        ProgressionCandidate longTerm = primaryGoalSummary(goals, preferences);
+        ProgressionCandidate longTerm = primaryGoalSummary(goals, state, gear, catalog, preferences);
         Set<String> used = new HashSet<>();
         ProgressionCandidate recommended = best(pool, used, false, preferences);
         if (recommended != null) used.add(recommended.getId());
@@ -61,33 +65,35 @@ public final class ProgressionRecommendationService
     }
 
     private void addRouteCandidates(List<ProgressionCandidate> target, RouteProjection route, AccountState state,
-                                    PlannerPreferenceStore preferences)
+                                    GearProjection gear, GoalCatalog catalog, PlannerPreferenceStore preferences)
     {
         if (route == null) return;
-        if (route.getCurrent() != null) target.add(routeCandidate(route.getCurrent(), state, preferences, 0));
+        if (route.getCurrent() != null) target.add(routeCandidate(route.getCurrent(), state, gear, catalog,
+            preferences, 0));
         int offset = 1;
         for (StepEvaluation step : route.getUpcoming())
         {
             if (offset > ROUTE_LOOKAHEAD) break;
             if (step.getStatus() != StepStatus.COMPLETE && step.getStatus() != StepStatus.SKIPPED_MANUALLY
                 && step.getStatus() != StepStatus.OPTIONAL)
-                target.add(routeCandidate(step, state, preferences, offset));
+                target.add(routeCandidate(step, state, gear, catalog, preferences, offset));
             offset++;
         }
     }
 
-    private void addGearCandidates(List<ProgressionCandidate> target, GearProjection gear,
-                                   PlannerPreferenceStore preferences)
+    private void addGearCandidates(List<ProgressionCandidate> target, GearProjection gear, AccountState state,
+                                   GoalCatalog catalog, PlannerPreferenceStore preferences)
     {
         if (gear == null) return;
         for (GearEvaluation item : gear.getEvaluations())
         {
             if (item.getStatus() == GearStatus.RECOMMENDED || item.getStatus() == GearStatus.AVAILABLE)
-                target.add(gearCandidate(item, preferences));
+                target.add(gearCandidate(item, gear, state, catalog, preferences));
         }
     }
 
-    private List<ProgressionCandidate> activeGoalCandidates(GoalPlanProjection root,
+    private List<ProgressionCandidate> activeGoalCandidates(GoalPlanProjection root, AccountState state,
+                                                            GearProjection gear, GoalCatalog catalog,
                                                             PlannerPreferenceStore preferences)
     {
         Map<String, GoalCandidateGroup> grouped = new LinkedHashMap<>();
@@ -103,11 +109,12 @@ public final class ProgressionRecommendationService
         }
         List<ProgressionCandidate> result = new ArrayList<>();
         for (Map.Entry<String, GoalCandidateGroup> entry : grouped.entrySet())
-            result.add(entry.getValue().toCandidate(entry.getKey(), preferences));
+            result.add(entry.getValue().toCandidate(entry.getKey(), state, gear, catalog, preferences));
         return result;
     }
 
     private ProgressionCandidate routeCandidate(StepEvaluation evaluation, AccountState state,
+                                                GearProjection gear, GoalCatalog catalog,
                                                 PlannerPreferenceStore preferences, int routeOffset)
     {
         EffortClass effort = routeEffort(evaluation, state);
@@ -123,13 +130,17 @@ public final class ProgressionRecommendationService
         if (preferences.getPlaystyle() == Playstyle.PVM && contains(evaluation.getStep().getTags(), "pvm"))
             score += 18;
         if (preferences.isAvoidWilderness() && evaluation.getStep().getRisk() == RiskLevel.WILDERNESS) score -= 1000;
+        NeedScore need = needScore(routeIntents(evaluation), state, gear, catalog);
+        score += need.bonus;
+        why.addAll(need.whyLines);
         return new ProgressionCandidate(evaluation.getStep().getId(), evaluation.getStep().getTitle(),
             evaluation.getStep().getReason(), evaluation.getStep().getReason(), effort,
             "MAJOR".equalsIgnoreCase(evaluation.getStep().getImportance()) ? "High impact" : "Route progress",
             ProgressionCandidate.Source.ROUTE, evaluation, null, null, score, why, new ArrayList<>());
     }
 
-    private ProgressionCandidate gearCandidate(GearEvaluation evaluation, PlannerPreferenceStore preferences)
+    private ProgressionCandidate gearCandidate(GearEvaluation evaluation, GearProjection gear, AccountState state,
+                                               GoalCatalog catalog, PlannerPreferenceStore preferences)
     {
         int score = evaluation.getScore();
         List<String> why = new ArrayList<>();
@@ -145,13 +156,17 @@ public final class ProgressionRecommendationService
         if (preferences.isAvoidWilderness() && isWilderness(evaluation)) score -= 1000;
         EffortClass effort = EffortClass.valueOf(evaluation.getUpgrade().getEffort().name());
         if (effort.fits(preferences.getSessionLength())) { score += 8; why.add("Fits your selected session"); }
+        NeedScore need = needScore(gearIntents(evaluation), state, gear, catalog);
+        score += need.bonus;
+        why.addAll(need.whyLines);
         return new ProgressionCandidate(evaluation.getUpgrade().getId(), evaluation.getUpgrade().getName(),
             evaluation.getUpgrade().getWhy(), evaluation.getUpgrade().getWhy(), effort,
             evaluation.getUpgrade().getUsefulness() >= 5 ? "High impact" : "Useful upgrade",
             ProgressionCandidate.Source.GEAR, null, evaluation, null, score, why, new ArrayList<>());
     }
 
-    private ProgressionCandidate primaryGoalSummary(GoalPlanProjection root, PlannerPreferenceStore preferences)
+    private ProgressionCandidate primaryGoalSummary(GoalPlanProjection root, AccountState state, GearProjection gear,
+                                                    GoalCatalog catalog, PlannerPreferenceStore preferences)
     {
         if (root == null || !root.hasSelectedGoal() || root.getNextAction() == null
             || root.getNextAction().getKind() == PlannedAction.Kind.COMPLETE) return null;
@@ -160,6 +175,10 @@ public final class ProgressionRecommendationService
         List<String> why = new ArrayList<>();
         why.add("Your primary long-term goal");
         why.add("Next: " + root.getNextAction().getTitle());
+        NeedScore need = needScore(root.getGoal() == null ? java.util.Collections.emptyList()
+            : root.getGoal().getIntents(), state, gear, catalog);
+        score += need.bonus;
+        why.addAll(need.whyLines);
         return new ProgressionCandidate(root.getGoalId(), root.getTitle(), "Next: " + root.getNextAction().getTitle(),
             firstUnlock(root), root.getEffort(), impactLabel(root), ProgressionCandidate.Source.GOAL,
             root.getNextAction().getRouteStep(), root.getNextAction().getGearStep(), root.getGoal(), score, why,
@@ -252,7 +271,8 @@ public final class ProgressionRecommendationService
             primary |= isPrimary;
         }
 
-        private ProgressionCandidate toCandidate(String id, PlannerPreferenceStore preferences)
+        private ProgressionCandidate toCandidate(String id, AccountState state, GearProjection gear,
+                                                 GoalCatalog catalog, PlannerPreferenceStore preferences)
         {
             int score = primary ? 145 : 88;
             int highestImpact = 0;
@@ -278,6 +298,9 @@ public final class ProgressionRecommendationService
             if (preferences.getPlaystyle() == Playstyle.SKILLING
                 && (action.getSkill() != null || plans.stream().anyMatch(plan -> contains(plan.getTags(), "skilling"))))
                 score += 12;
+            NeedScore need = needScoreForPlans(plans, state, gear, catalog);
+            score += need.bonus;
+            why.addAll(need.whyLines);
             String reason = why.get(0) + ". " + action.getExplanation();
             return new ProgressionCandidate(id, action.getTitle(), reason, String.join(", ", titles), effort,
                 highestImpact >= 30 ? "High impact" : "Goal progress", ProgressionCandidate.Source.GOAL,
@@ -288,5 +311,114 @@ public final class ProgressionRecommendationService
     static int sharedGoalSynergy(int planCount)
     {
         return Math.min(ScoringWeights.MAX_SHARED_GOAL_SYNERGY,Math.max(0,planCount - 1) * 38);
+    }
+
+    private static NeedScore needScoreForPlans(List<GoalPlanProjection> plans, AccountState state,
+                                               GearProjection gear, GoalCatalog catalog)
+    {
+        Set<GoalIntent> intents = new HashSet<>();
+        for (GoalPlanProjection plan : plans)
+        {
+            if (plan.getGoal() != null) intents.addAll(plan.getGoal().getIntents());
+        }
+        return needScore(new ArrayList<>(intents), state, gear, catalog);
+    }
+
+    private static NeedScore needScore(List<GoalIntent> intents, AccountState state, GearProjection gear,
+                                       GoalCatalog catalog)
+    {
+        int bonus = 0;
+        List<String> why = new ArrayList<>();
+        Set<GoalIntent> seen = new HashSet<>();
+        for (GoalIntent intent : intents)
+        {
+            if (!seen.add(intent)) continue;
+            AccountNeedEvaluation need = ACCOUNT_NEEDS.evaluate(intent, state, gear, catalog, null);
+            if (need.getLevel() == AccountNeedLevel.WEAK)
+            {
+                bonus += ScoringWeights.ACCOUNT_NEED_WEAK;
+                if (why.size() < 2) why.add("Addresses weak " + needLabel(intent) + " need");
+            }
+            else if (need.getLevel() == AccountNeedLevel.DEVELOPING)
+            {
+                bonus += ScoringWeights.ACCOUNT_NEED_DEVELOPING;
+                if (why.size() < 2) why.add("Improves developing " + needLabel(intent) + " need");
+            }
+        }
+        return new NeedScore(bonus, why);
+    }
+
+    private static List<GoalIntent> gearIntents(GearEvaluation evaluation)
+    {
+        List<GoalIntent> result = new ArrayList<>();
+        for (CombatStyle style : evaluation.getUpgrade().getStyles())
+        {
+            if (style == CombatStyle.MELEE) result.add(GoalIntent.MELEE_POWER);
+            else if (style == CombatStyle.RANGED) result.add(GoalIntent.RANGED_POWER);
+            else if (style == CombatStyle.MAGIC) result.add(GoalIntent.MAGIC_POWER);
+            else if (style == CombatStyle.SKILLING) result.add(GoalIntent.ACCOUNT_INFRASTRUCTURE);
+        }
+        if (contains(evaluation.getUpgrade().getTags(), "bolts")
+            || contains(evaluation.getUpgrade().getTags(), "ammo")) result.add(GoalIntent.AMMO_SUPPLY);
+        return result;
+    }
+
+    private static List<GoalIntent> routeIntents(StepEvaluation evaluation)
+    {
+        List<GoalIntent> result = new ArrayList<>();
+        if (evaluation.getStep().getType() == StepType.TRAIN)
+        {
+            ConditionSpec target = evaluation.getStep().getCompletion();
+            if (target != null) addSkillIntent(result, target);
+        }
+        if (contains(evaluation.getStep().getTags(), "pvm")) result.add(GoalIntent.BOSSING_READINESS);
+        if (contains(evaluation.getStep().getTags(), "transport")
+            || contains(evaluation.getStep().getCategory(), "transport")) result.add(GoalIntent.TRANSPORT_NETWORK);
+        if (contains(evaluation.getStep().getTags(), "quest")
+            || contains(evaluation.getStep().getCategory(), "quest")) result.add(GoalIntent.ACCOUNT_INFRASTRUCTURE);
+        return result;
+    }
+
+    private static void addSkillIntent(List<GoalIntent> result, ConditionSpec condition)
+    {
+        if (condition == null) return;
+        if ("SKILL_AT_LEAST".equalsIgnoreCase(condition.getType()))
+        {
+            String skill = condition.getSkill();
+            if ("Prayer".equalsIgnoreCase(skill)) result.add(GoalIntent.PRAYER_SUSTAIN);
+            else if ("Herblore".equalsIgnoreCase(skill)) result.add(GoalIntent.HERB_SUPPLY);
+            else if ("Farming".equalsIgnoreCase(skill)) result.add(GoalIntent.HERB_SUPPLY);
+            else if ("Construction".equalsIgnoreCase(skill)) result.add(GoalIntent.POH_NETWORK);
+            else if ("Crafting".equalsIgnoreCase(skill)) result.add(GoalIntent.CRAFTING_SUPPLY);
+            else if ("Slayer".equalsIgnoreCase(skill)) result.add(GoalIntent.SLAYER_PROGRESS);
+            else if ("Ranged".equalsIgnoreCase(skill)) result.add(GoalIntent.RANGED_POWER);
+            else if ("Magic".equalsIgnoreCase(skill)) result.add(GoalIntent.MAGIC_POWER);
+            else if ("Attack".equalsIgnoreCase(skill) || "Strength".equalsIgnoreCase(skill))
+                result.add(GoalIntent.MELEE_POWER);
+        }
+        for (ConditionSpec child : condition.getChildren()) addSkillIntent(result, child);
+        addSkillIntent(result, condition.getChild());
+    }
+
+    private static boolean contains(String value, String expected)
+    {
+        return value != null && value.toLowerCase(Locale.ENGLISH).contains(expected.toLowerCase(Locale.ENGLISH));
+    }
+
+    private static String needLabel(GoalIntent intent)
+    {
+        return intent.name().toLowerCase(Locale.ENGLISH).replace('_', ' ');
+    }
+
+    private static final class NeedScore
+    {
+        private final int bonus;
+        private final List<String> whyLines;
+
+        private NeedScore(int bonus, List<String> whyLines)
+        {
+            this.bonus = bonus;
+            this.whyLines = whyLines;
+        }
     }
 }

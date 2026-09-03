@@ -12,19 +12,21 @@ public final class GoalInsightsProjection
     private final List<GoalProximityCandidate> nearbyUnlocks;
     private final List<GoalBlocker> blockers;
     private final List<GoalDefinition> alternatives;
+    private final List<GoalPackProjection> goalPacks;
     private final boolean explicitAlternatives;
     private final List<GoalPathNode> personalPath;
 
     public GoalInsightsProjection(AccountHealthProjection health, List<GoalProximityCandidate> quickWins,
                                   List<GoalProximityCandidate> nearbyUnlocks, List<GoalBlocker> blockers,
-                                  List<GoalDefinition> alternatives, boolean explicitAlternatives,
-                                  List<GoalPathNode> personalPath)
+                                  List<GoalDefinition> alternatives, List<GoalPackProjection> goalPacks,
+                                  boolean explicitAlternatives, List<GoalPathNode> personalPath)
     {
         this.health = health;
         this.quickWins = immutable(quickWins);
         this.nearbyUnlocks = immutable(nearbyUnlocks);
         this.blockers = immutable(blockers);
         this.alternatives = immutable(alternatives);
+        this.goalPacks = immutable(goalPacks);
         this.explicitAlternatives = explicitAlternatives;
         this.personalPath = immutable(personalPath);
     }
@@ -34,6 +36,7 @@ public final class GoalInsightsProjection
     public List<GoalProximityCandidate> getNearbyUnlocks() { return nearbyUnlocks; }
     public List<GoalBlocker> getBlockers() { return blockers; }
     public List<GoalDefinition> getAlternatives() { return alternatives; }
+    public List<GoalPackProjection> getGoalPacks() { return goalPacks; }
     public boolean hasExplicitAlternatives() { return explicitAlternatives; }
     public String getAlternativeHeading() { return explicitAlternatives ? "ALTERNATIVE PATHS" : "WAYS TO IMPROVE"; }
     public List<GoalPathNode> getPersonalPath() { return personalPath; }

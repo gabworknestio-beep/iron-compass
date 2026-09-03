@@ -106,6 +106,14 @@ public final class GoalCatalogValidationTest
         GoalCatalog catalog = new GoalLoader(gson).loadResource("/goals/ironman-goals-2026.json");
         org.junit.Assert.assertTrue(catalog.find("gear.mid.bowfa").getDependencyIds()
             .contains("goal.pvm.corrupted-gauntlet"));
+        org.junit.Assert.assertTrue(catalog.find("gear.early.melee-weapon").getDependencyIds()
+            .contains("goal.quest.monkey-madness-i"));
+        org.junit.Assert.assertTrue(catalog.find("gear.early.gloves").getDependencyIds()
+            .contains("goal.quest.recipe-disaster"));
+        org.junit.Assert.assertTrue(catalog.find("gear.early.rune-crossbow").getDependencyIds()
+            .contains("goal.skill.ranged-61"));
+        org.junit.Assert.assertTrue(catalog.find("goal.pvm.barrows").getDependencyIds()
+            .contains("goal.pvm.barrows-prep"));
         org.junit.Assert.assertTrue(catalog.find("goal.resource.food-karambwans").getDependencyIds()
             .contains("goal.transport.fairy-rings"));
         org.junit.Assert.assertTrue(catalog.find("gear.endgame.infernal").getDependencyIds()

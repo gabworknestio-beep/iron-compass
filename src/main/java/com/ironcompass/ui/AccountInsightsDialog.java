@@ -5,6 +5,7 @@ import com.ironcompass.planner.AccountNeedEvaluation;
 import com.ironcompass.planner.AccountNeedLevel;
 import com.ironcompass.planner.GoalBlocker;
 import com.ironcompass.planner.GoalInsightsProjection;
+import com.ironcompass.planner.GoalPackProjection;
 import com.ironcompass.planner.GoalPathNode;
 import com.ironcompass.planner.GoalProximityCandidate;
 import java.awt.BorderLayout;
@@ -72,6 +73,8 @@ final class AccountInsightsDialog
         content.add(healthCard());
         content.add(gap(UiTokens.MD));
         content.add(proximityCard());
+        content.add(gap(UiTokens.MD));
+        content.add(goalPackCard());
         content.add(gap(UiTokens.MD));
         content.add(blockerCard());
         content.add(gap(UiTokens.MD));
@@ -210,6 +213,40 @@ final class AccountInsightsDialog
         return card(body, CardStyle.WARNING);
     }
 
+    private JPanel goalPackCard()
+    {
+        JPanel body = verticalPanel();
+        body.add(sectionLabel("GOAL PACKS"));
+        body.add(gap(UiTokens.SM));
+        if (insights.getGoalPacks().isEmpty())
+        {
+            body.add(labelHtml("No active pack is currently ranked.", UiTokens.TEXT_MUTED));
+            return card(body, CardStyle.SUBTLE);
+        }
+        for (GoalPackProjection pack : insights.getGoalPacks())
+        {
+            JPanel title = new JPanel(new BorderLayout(UiTokens.SM, 0));
+            title.setOpaque(false);
+            title.setAlignmentX(Component.LEFT_ALIGNMENT);
+            title.add(cardTitle(pack.getTitle(), UiTokens.TEXT_PRIMARY), BorderLayout.CENTER);
+            title.add(badge(pack.getCompleteCount() + "/" + pack.getTotalCount(), packColor(pack.getStatus())),
+                BorderLayout.EAST);
+            body.add(title);
+            body.add(labelHtml(escape(pack.getSummary()), UiTokens.TEXT_MUTED));
+            int shown = 0;
+            for (GoalBlocker blocker : pack.getBlockers())
+            {
+                body.add(statusLine(blocker.getKind() == GoalBlocker.Kind.HARD_REQUIREMENT
+                    ? com.ironcompass.requirement.TruthValue.FALSE
+                    : com.ironcompass.requirement.TruthValue.UNKNOWN,
+                    blocker.getTitle() + ": " + blocker.getExplanation()));
+                if (++shown == 2) break;
+            }
+            body.add(gap(UiTokens.MD));
+        }
+        return card(body, CardStyle.SUBTLE);
+    }
+
     private JPanel alternativesCard()
     {
         JPanel body = verticalPanel();
@@ -272,6 +309,17 @@ final class AccountInsightsDialog
         return blocker.getKind() == GoalBlocker.Kind.HARD_REQUIREMENT ? UiTokens.DANGER
             : blocker.getKind() == GoalBlocker.Kind.RECOMMENDED_PREPARATION ? UiTokens.WARNING
             : UiTokens.UNKNOWN;
+    }
+
+    private static Color packColor(GoalPackProjection.Status status)
+    {
+        switch (status)
+        {
+            case READY: return UiTokens.SUCCESS;
+            case CLOSE: return UiTokens.ACCENT;
+            case BUILDING: return UiTokens.WARNING;
+            default: return UiTokens.UNKNOWN;
+        }
     }
 
     private static String humanize(String value)

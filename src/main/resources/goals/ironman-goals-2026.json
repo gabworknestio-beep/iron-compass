@@ -8972,6 +8972,10 @@
         "gear"
       ],
       "gearId": "gear.early.melee-weapon",
+      "dependencyIds": [
+        "goal.quest.monkey-madness-i",
+        "goal.skill.attack-60"
+      ],
       "relationships": [],
       "intents": [
         "MELEE_POWER"
@@ -9068,6 +9072,9 @@
         "gear"
       ],
       "gearId": "gear.early.gloves",
+      "dependencyIds": [
+        "goal.quest.recipe-disaster"
+      ],
       "relationships": [
         {
           "goalId": "gear.early.fire-cape",
@@ -9224,6 +9231,9 @@
         "gear"
       ],
       "gearId": "gear.early.rune-crossbow",
+      "dependencyIds": [
+        "goal.skill.ranged-61"
+      ],
       "relationships": [],
       "intents": [
         "RANGED_POWER",
@@ -14794,6 +14804,9 @@
         "pvm"
       ],
       "relationships": [],
+      "dependencyIds": [
+        "goal.pvm.barrows-prep"
+      ],
       "intents": [
         "BOSSING_READINESS",
         "MAGIC_POWER"

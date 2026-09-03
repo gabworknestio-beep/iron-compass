@@ -327,9 +327,13 @@ public class IronCompassPanelRenderTest
                 new QuestHelperBridge(),overrides,() -> { });
             panel.update(state,projection,gear,null,null,plan,null);
             assertNotNull(findVisibleButton(panel,"VIEW ACCOUNT INSIGHTS"));
+            assertNotNull(findLabel(panel, "ACCOUNT OVERVIEW"));
+            assertNotNull(findLabel(panel, "UNLOCK SOON"));
+            assertNotNull(findLabel(panel, "GOAL PACKS"));
             JPanel content = panel.accountInsightsContentForTesting();
             assertNotNull(findButton(content, "DONE"));
             assertNotNull(findLabel(content, "ACCOUNT HEALTH"));
+            assertNotNull(findLabel(content, "GOAL PACKS"));
             JPanel picker = panel.goalPickerContentForTesting();
             assertNotNull(findButton(picker, "SET PRIMARY"));
             assertNotNull(findButton(picker, "ADD SECONDARY"));

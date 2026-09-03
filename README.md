@@ -5,25 +5,38 @@
 [![RuneLite Plugin Hub](https://img.shields.io/badge/RuneLite-Plugin%20Hub-F4A000)](https://runelite.net/plugin-hub/show/ironpath)
 [![Build](https://github.com/gabworknestio-beep/iron-compass/actions/workflows/build.yml/badge.svg)](https://github.com/gabworknestio-beep/iron-compass/actions/workflows/build.yml)
 
-**An OSRS Ironman progression and bank-to-goal planner for RuneLite.** Iron Compass turns your account's skills, quests, gear, goals, playstyle, and observed bank into one clear answer: *what should I do next?*
+**A RuneLite progression companion built for Ironman accounts.** Iron Compass analyzes your local quests, skills, gear, observed bank, goals, and unlocks to answer one practical question: **what should I do next, and why?**
 
-[Install Iron Compass from the RuneLite Plugin Hub](https://runelite.net/plugin-hub/show/ironpath), or search for **Iron Compass**, **Ironman**, **progression**, **goals**, **gear**, or **skill planner** inside RuneLite.
+[Install Iron Compass from the RuneLite Plugin Hub](https://runelite.net/plugin-hub/show/ironpath), or search for **Iron Compass**, **Ironman**, **progression**, **goals**, **roadmap**, **quests**, **gear**, **upgrades**, or **skilling** inside RuneLite.
 
-## Why Ironmen use it
+## What Iron Compass does
 
-- **Next Best Move:** get one explainable recommendation based on this character instead of a generic checklist.
-- **Goal Planner:** choose one Primary Goal and up to three Secondary Goals, then see the nearest real blocker and useful shared progress.
-- **Gear Path:** follow account-aware melee, ranged, and magic upgrades without treating Bowfa or another long grind as universally mandatory.
-- **Skill Planner:** build target plans and researched 1–99 guides for every skill, including Sailing.
-- **Bank-to-Goal:** open your bank to estimate which skill targets are already banked, the level your recognized supplies can reach, and what XP remains.
-- **Efficient Ironman Path:** automatically skip completed quests and levels while preserving a reviewed progression route.
-- **Private by design:** all account evaluation and bundled guide data stay local; there is no Iron Compass server, analytics, or runtime AI.
+- **Suggested for You:** shows a recommended next action with human reasons tied to your current account needs.
+- **Account-aware recommendations:** weighs skills, quests, gear, equipment, observed bank resources, unlock value, dependencies, effort, playstyle, and account type.
+- **Quick Wins:** surfaces close, useful goals such as one-level gaps, ready unlocks, and nearby gear or quest progress.
+- **Unlocks:** shows what you can unlock soon and which requirements remain.
+- **Blockers:** explains what is stopping the important goal you selected, including hard requirements, unknown/manual checks, and recommended preparation.
+- **Goal / progression tracking:** lets you choose one Primary Goal and up to three Secondary Goals, then merges shared next steps.
+- **Supported Ironman progression:** covers early account foundations, transportation, quests, skilling, Slayer, gear upgrades, PvM readiness, Varlamore, Sailing, Hunter Rumours, Vale Totems, Golem Crafting, Perilous Moons, raids, and endgame preparation.
+- **Privacy:** all analysis is local. Iron Compass has no telemetry, no backend, no account upload, and no gameplay automation.
 
-Iron Compass projects its route, gear catalog, and multi-goal planner against the character's actual RuneLite state. The Overview follows one decision chain: **You are here → Next best move → Why this → How → What comes next**. Persistent **Overview**, **Path**, and **Gear** navigation provides detail without turning the sidebar into a giant checklist.
+Iron Compass projects its route, gear catalog, goal catalog, method catalog, and multi-goal planner against the character's actual RuneLite state. The Overview is built around: **Recommended next**, **Why this?**, **Quick Wins**, **Unlock Soon**, **Current Blockers**, and **Goal Packs**. Persistent **Overview**, **Path**, and **Gear** navigation provides detail without turning the sidebar into a giant checklist.
 
 The plugin is available from RuneLite's Plugin Hub. Every update is pinned to a reviewed source commit before it reaches players.
 
-## What it does
+## Suggested for You
+
+The first screen is meant to be useful immediately. It combines your selected goals with current account needs such as melee, ranged, magic, Prayer sustain, food, transport, POH, GP pressure, Slayer, supplies, and PvM readiness. Recommendations are explainable; Iron Compass does not show raw scores as account truth.
+
+## Account-aware Recommendations
+
+Goals in the catalog declare the account needs they satisfy. The recommendation engine uses those needs alongside stage, unlock value, distance, effort, dependencies, current gear, observed bank resources, account mode, and playstyle. `UNKNOWN` stays unknown: unopened-bank requirements, manual-only milestones, and unobserved quest or variable state are never converted into false just to produce a confident answer.
+
+## Quick Wins, Unlocks, Blockers, and Goal Packs
+
+Quick Wins and Unlock Soon are generated from the same requirement/dependency graph as the planner. Blockers distinguish hard requirements from helpful preparation and unknown/manual checks. Goal Packs such as Early Ironman Essentials, Transportation Unlocks, Slayer Foundation, Barrows Ready, Moons Ready, Questing Infrastructure, and Midgame PvM are views over existing goals, not a second roadmap engine.
+
+## What it tracks
 
 - Automatically skips satisfied quest and skill milestones without moving the remaining route into an opaque order.
 - Explains **why now**, not just what to click next.
@@ -137,6 +150,10 @@ Gear detail keeps **Set as goal**, **Wiki**, and **Manage** visible. Skip, optio
 The unique `ironcompass` configuration group keeps Iron Compass separate from unrelated plugins. On first load, Iron Compass copies only its explicitly known former settings when the corresponding new value is absent; it never scans, deletes, or bulk-copies the former shared namespace.
 
 Iron Compass reads the local character state listed above solely to evaluate the route. It does not upload username, skills, quests, inventory, equipment, bank, location, or progress. It has no analytics and no backend. Clicking **Wiki** opens a normal browser page; using **Path** posts an in-client event to an installed Shortest Path plugin. No player action is automated.
+
+## Feedback and bug reports
+
+Report bugs, missing requirements, unclear recommendations, or progression feedback through this repository's Issues tab. Include the goal or route step name, the account stage, what Iron Compass showed, and what you expected. Do not paste private account data unless you choose to; the plugin never collects it automatically.
 
 ## Development
 
