@@ -46,6 +46,20 @@ public final class RecommendationV2Test
     }
 
     @Test
+    public void weakAccountNeedRaisesMatchingGoalAndExplainsIt()
+    {
+        AccountState meleeStatsAheadOfGear = AccountState.builder()
+            .skill("Attack", 75).skill("Strength", 75).build();
+        GoalPlanProjection root = plan(goal("goal.melee", "Melee weapon", "HIGH", "MEDIUM",
+            "MELEE_POWER"), action("Unlock weapon", null, 0));
+
+        ProgressionCandidate candidate = service.evaluate(null, null, root, meleeStatsAheadOfGear,
+            preferences).getRecommended();
+
+        assertTrue(candidate.getWhyLines().contains("Addresses weak melee power need"));
+    }
+
+    @Test
     public void lowValueSecondarySynergyDoesNotOverrideCriticalPrimaryRequirement()
     {
         GoalPlanProjection primary = plan(goal("goal.primary", "Critical", "MAJOR", "LONG"),
@@ -88,10 +102,16 @@ public final class RecommendationV2Test
 
     private static GoalDefinition goal(String id, String title, String impact, String effort)
     {
+        return goal(id, title, impact, effort, null);
+    }
+
+    private static GoalDefinition goal(String id, String title, String impact, String effort, String intent)
+    {
+        String intents = intent == null ? "" : ",\"intents\":[\"" + intent + "\"]";
         return new Gson().fromJson("{\"id\":\"" + id + "\",\"title\":\"" + title
             + "\",\"description\":\"Test goal\",\"category\":\"Test\","
             + "\"completion\":{\"type\":\"MANUAL_ONLY\"},\"impact\":\"" + impact
             + "\",\"effort\":\"" + effort + "\",\"unlocks\":[\"Test unlock\"],"
-            + "\"wikiPage\":\"Test\",\"tags\":[]}", GoalDefinition.class);
+            + "\"wikiPage\":\"Test\",\"tags\":[]" + intents + "}", GoalDefinition.class);
     }
 }

@@ -151,6 +151,24 @@ public final class GoalInsightServiceTest
         assertTrue(result.getPersonalPath().get(result.getPersonalPath().size() - 1).isRng());
     }
 
+    @Test
+    public void goalPacksComposeExistingGoalsWithoutSeparateReadinessRules() throws Exception
+    {
+        GoalInsightsProjection result = project(AccountState.builder()
+            .skill("Prayer",42)
+            .bank(BankSnapshot.unknown()).build(),null);
+
+        assertTrue(result.getGoalPacks().stream()
+            .anyMatch(pack -> pack.getId().equals("pack.early-essentials")));
+        GoalPackProjection early = result.getGoalPacks().stream()
+            .filter(pack -> pack.getId().equals("pack.early-essentials"))
+            .findFirst().orElseThrow(AssertionError::new);
+        assertTrue(early.getGoals().stream()
+            .anyMatch(node -> node.getGoal().getId().equals("goal.skill.prayer-43")));
+        assertTrue(early.getBlockers().stream()
+            .anyMatch(blocker -> blocker.getTitle().contains("Prayer")));
+    }
+
     private GoalInsightsProjection project(AccountState state, String selected) throws Exception
     {
         InMemoryManualOverrideStore overrides = new InMemoryManualOverrideStore();

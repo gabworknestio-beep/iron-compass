@@ -18,8 +18,6 @@ import com.ironcompass.integration.WikiBridge;
 import com.ironcompass.persistence.ManualOverride;
 import com.ironcompass.persistence.ManualOverrideStore;
 import com.ironcompass.planner.GoalPlanProjection;
-import com.ironcompass.planner.AccountNeedEvaluation;
-import com.ironcompass.planner.AccountNeedLevel;
 import com.ironcompass.planner.AccountNeedService;
 import com.ironcompass.planner.GoalInsightService;
 import com.ironcompass.planner.GoalInsightsProjection;
@@ -93,9 +91,8 @@ import static com.ironcompass.ui.UiComponents.*;
 public final class IronCompassPanel extends PluginPanel
 {
     private static final RouteJourneyService JOURNEY_SERVICE = new RouteJourneyService();
-    private static final AccountNeedService ACCOUNT_NEEDS = new AccountNeedService();
     private static final GoalInsightService GOAL_INSIGHTS = new GoalInsightService(
-        new com.ironcompass.requirement.ConditionEvaluator(), ACCOUNT_NEEDS);
+        new com.ironcompass.requirement.ConditionEvaluator(), new AccountNeedService());
     private static final String HOME = "home";
     private static final String BROWSER = "browser";
     private static final String GEAR = "gear";
@@ -109,6 +106,8 @@ public final class IronCompassPanel extends PluginPanel
     private final PlannerPreferenceStore plannerPreferences;
     private final Runnable reevaluate;
     private final GoalPickerModel goalPicker;
+    private final AccountInsightSummaryRenderer insightSummary = new AccountInsightSummaryRenderer();
+    private final SuggestedRenderer suggestedRenderer = new SuggestedRenderer();
     private final GoalCompletionService goalCompletion = new GoalCompletionService(
         new com.ironcompass.requirement.ConditionEvaluator());
     private final CardLayout cards = new CardLayout();
@@ -330,7 +329,7 @@ public final class IronCompassPanel extends PluginPanel
         }
         if (goalInsights != null)
         {
-            home.add(buildGoalInsights());
+            home.add(insightSummary.render(goalInsights, accountState.getBank().isObserved(), this::showGoalInsights));
             home.add(gap(10));
         }
         if (recommendations != null && recommendations.getNewOpportunity() != null)
@@ -405,40 +404,12 @@ public final class IronCompassPanel extends PluginPanel
 
     private void addRecommendations()
     {
-        boolean primaryAlreadyShown = recommendationMatchesPrimaryAction(recommendations.getRecommended());
-        if (recommendations.getRecommended() != null && !primaryAlreadyShown)
-        {
-            home.add(buildCandidate("RECOMMENDED", recommendations.getRecommended()));
-        }
-        if (recommendations.getQuickWin() != null)
-        {
-            if (recommendations.getRecommended() != null && !primaryAlreadyShown) home.add(gap(10));
-            home.add(buildCandidate("QUICK WIN", recommendations.getQuickWin()));
-        }
-        if (recommendations.getLongTerm() != null)
-        {
-            if ((recommendations.getRecommended() != null && !primaryAlreadyShown)
-                || recommendations.getQuickWin() != null) home.add(gap(10));
-            home.add(buildCandidate("LONG-TERM", recommendations.getLongTerm()));
-        }
-        if (!recommendations.getUsefulBreaks().isEmpty())
-        {
-            home.add(gap(8));
-            JButton alternatives = ghostButton(showUsefulBreaks ? "HIDE OTHER PROGRESS" : "TAKE A USEFUL BREAK");
-            alternatives.setAlignmentX(Component.LEFT_ALIGNMENT);
-            alternatives.setToolTipText("Show other actions that still advance this account");
-            alternatives.addActionListener(event ->
+        suggestedRenderer.addRecommendations(home, recommendations,
+            recommendationMatchesPrimaryAction(recommendations.getRecommended()), showUsefulBreaks, () ->
             {
                 showUsefulBreaks = !showUsefulBreaks;
                 rebuildHome();
-            });
-            home.add(alternatives);
-            if (showUsefulBreaks)
-            {
-                home.add(gap(7));
-                home.add(buildUsefulBreaks(recommendations.getUsefulBreaks()));
-            }
-        }
+            }, this::candidateAction);
     }
 
     private boolean recommendationMatchesPrimaryAction(ProgressionCandidate candidate)
@@ -571,109 +542,10 @@ public final class IronCompassPanel extends PluginPanel
         return card(body, CardStyle.HERO);
     }
 
-    private JPanel buildGoalInsights()
-    {
-        JPanel body = verticalPanel();
-        body.add(sectionLabel("ACCOUNT HEALTH"));
-        body.add(gap(UiTokens.SM));
-        List<AccountNeedEvaluation> health = new java.util.ArrayList<>(goalInsights.getHealth().getEvaluations());
-        health.sort(java.util.Comparator.comparingInt(IronCompassPanel::healthSummaryOrder));
-        int shown = 0;
-        for (AccountNeedEvaluation value : health)
-        {
-            body.add(healthRow(value));
-            if (++shown == 4) break;
-        }
-        if (!accountState.getBank().isObserved())
-        {
-            body.add(gap(UiTokens.SM));
-            body.add(labelHtml("<b>BANK UNKNOWN</b> · reserves are not treated as empty", UiTokens.WARNING));
-        }
-
-        JButton details = smallButton("VIEW ACCOUNT INSIGHTS");
-        details.setAlignmentX(Component.LEFT_ALIGNMENT);
-        details.addActionListener(event -> showGoalInsights());
-        body.add(gap(8));
-        body.add(details);
-        return card(body, CardStyle.SUBTLE);
-    }
-
-    private JPanel healthRow(AccountNeedEvaluation evaluation)
-    {
-        JPanel row = new JPanel(new BorderLayout(UiTokens.SM, 0));
-        row.setOpaque(false);
-        row.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JLabel name = new JLabel("•  " + compactHealthLabel(evaluation));
-        name.setForeground(UiTokens.TEXT_SECONDARY);
-        name.setFont(UiTokens.BODY);
-        JLabel status = new JLabel(humanize(evaluation.getLevel().name()));
-        status.setForeground(healthColor(evaluation.getLevel()));
-        status.setFont(UiTokens.META.deriveFont(java.awt.Font.BOLD));
-        row.add(name, BorderLayout.CENTER);
-        row.add(status, BorderLayout.EAST);
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, row.getPreferredSize().height + 2));
-        row.getAccessibleContext().setAccessibleName(name.getText() + " " + status.getText());
-        return row;
-    }
-
-    private static Color healthColor(AccountNeedLevel level)
-    {
-        if (level == AccountNeedLevel.STRONG) return UiTokens.SUCCESS.brighter();
-        if (level == AccountNeedLevel.GOOD) return UiTokens.SUCCESS;
-        if (level == AccountNeedLevel.DEVELOPING) return UiTokens.WARNING;
-        if (level == AccountNeedLevel.WEAK) return new Color(178, 126, 91);
-        return UiTokens.TEXT_MUTED;
-    }
-
-    private static int healthSummaryOrder(AccountNeedEvaluation evaluation)
-    {
-        switch (evaluation.getIntent())
-        {
-            case BOSSING_READINESS: return 0;
-            case MELEE_POWER: return 1;
-            case RANGED_POWER: return 2;
-            case MAGIC_POWER: return 3;
-            default: return 10 + healthRank(evaluation.getLevel());
-        }
-    }
-
-    private static String compactHealthLabel(AccountNeedEvaluation evaluation)
-    {
-        switch (evaluation.getIntent())
-        {
-            case BOSSING_READINESS: return "Bossing";
-            case FOOD_SUSTAIN: return "Food";
-            case MAGIC_POWER: return "Magic";
-            case MELEE_POWER: return "Melee";
-            case POH_NETWORK: return "POH";
-            case PRAYER_SUSTAIN: return "Prayer";
-            case RANGED_POWER: return "Ranged";
-            case RUNE_SUPPLY: return "Runes";
-            case TRANSPORT_NETWORK: return "Transport";
-            default: return humanize(evaluation.getIntent().name());
-        }
-    }
-
     private void showGoalInsights()
     {
         if (goalInsights == null) return;
         new AccountInsightsDialog(this, goalInsights).showDialog();
-    }
-
-    private static TruthValue healthTruth(AccountNeedLevel level)
-    {
-        if (level == AccountNeedLevel.GOOD || level == AccountNeedLevel.STRONG) return TruthValue.TRUE;
-        if (level == AccountNeedLevel.WEAK) return TruthValue.FALSE;
-        return TruthValue.UNKNOWN;
-    }
-
-    private static int healthRank(AccountNeedLevel level)
-    {
-        if (level == AccountNeedLevel.WEAK) return 0;
-        if (level == AccountNeedLevel.DEVELOPING) return 1;
-        if (level == AccountNeedLevel.UNKNOWN) return 2;
-        if (level == AccountNeedLevel.GOOD) return 3;
-        return 4;
     }
 
     private void addGoalProgress(JPanel body)
@@ -739,40 +611,6 @@ public final class IronCompassPanel extends PluginPanel
             row.add(skills);
         }
         return row;
-    }
-
-    private JPanel buildCandidate(String label, ProgressionCandidate candidate)
-    {
-        JPanel body = verticalPanel();
-        body.add(sectionLabel(label));
-        body.add(gap(4));
-        body.add(labelHtml("<b>" + escape(candidate.getTitle()) + "</b>", UiTokens.ACCENT));
-        body.add(labelHtml(humanize(candidate.getImpact()) + " · "
-            + humanize(candidate.getEffort().name()) + " effort", UiTokens.MUTED));
-        body.add(gap(5));
-        body.add(sectionLabel("WHY THIS?"));
-        body.add(gap(2));
-        int reasonCount = 0;
-        for (String why : candidate.getWhyLines())
-        {
-            body.add(labelHtml("•  " + escape(why), UiTokens.TEXT_SECONDARY));
-            if (++reasonCount == 1) break;
-        }
-        if (candidate.getActiveGoalCount() > 1)
-            body.add(labelHtml("Goals: " + escape(String.join(", ", candidate.getAdvancedGoals())), UiTokens.MUTED));
-        else if (candidate.getUnlockSummary() != null && !candidate.getUnlockSummary().equals(candidate.getReason()))
-        {
-            body.add(labelHtml("Unlocks: " + escape(candidate.getUnlockSummary()), UiTokens.MUTED));
-        }
-        JButton open = candidateAction(candidate);
-        if (open != null)
-        {
-            body.add(gap(7));
-            body.add(open);
-        }
-        CardStyle style = "RECOMMENDED".equals(label) ? CardStyle.HERO
-            : "QUICK WIN".equals(label) ? CardStyle.SUCCESS : CardStyle.SUBTLE;
-        return card(body, style);
     }
 
     private void showSkillPlanner(String skill, int target, boolean fullGuide)
@@ -843,22 +681,6 @@ public final class IronCompassPanel extends PluginPanel
         if (expanded && !recommendation.getLockedAlternatives().isEmpty())
             body.add(labelHtml("Locked option: "
                 + escape(recommendation.getLockedAlternatives().get(0).getTitle()), UiTokens.UNKNOWN));
-    }
-
-    private JPanel buildUsefulBreaks(List<ProgressionCandidate> alternatives)
-    {
-        JPanel body = verticalPanel();
-        body.add(sectionLabel("OTHER USEFUL PROGRESS"));
-        int shown = 0;
-        for (ProgressionCandidate candidate : alternatives)
-        {
-            if (shown++ > 0) body.add(gap(5));
-            body.add(labelHtml("<b>" + shown + ". " + escape(candidate.getTitle()) + "</b>", UiTokens.TEXT));
-            String why = candidate.getWhyLines().isEmpty() ? candidate.getReason() : candidate.getWhyLines().get(0);
-            body.add(labelHtml(escape(why), UiTokens.MUTED));
-            if (shown == 3) break;
-        }
-        return card(body, CardStyle.SUBTLE);
     }
 
     private JButton candidateAction(ProgressionCandidate candidate)

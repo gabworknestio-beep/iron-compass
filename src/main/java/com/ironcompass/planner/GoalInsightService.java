@@ -33,12 +33,14 @@ public final class GoalInsightService
     private final ConditionEvaluator conditions;
     private final GoalCompletionService completion;
     private final AccountNeedService needs;
+    private final GoalPackService packs;
 
     public GoalInsightService(ConditionEvaluator conditions, AccountNeedService needs)
     {
         this.conditions = conditions;
         this.completion = new GoalCompletionService(conditions);
         this.needs = needs;
+        this.packs = new GoalPackService(conditions);
     }
 
     public GoalInsightsProjection evaluate(GoalCatalog catalog, AccountState state, GearProjection gear,
@@ -75,7 +77,7 @@ public final class GoalInsightService
             overrides);
         return new GoalInsightsProjection(health, quick, nearby,
             blockers(selected, primary, catalog, state, gear, relationships, overrides),
-            alternatives.goals, alternatives.explicit,
+            alternatives.goals, packs.evaluate(catalog, state, gear, overrides), alternatives.explicit,
             personalPath(selected, catalog, state, gear, overrides));
     }
 
